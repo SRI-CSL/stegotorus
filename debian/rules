@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --with autoreconf
+
+.PHONY: override_dh_strip
+override_dh_strip:
+	dh_strip --dbg-package=saferdefiance-stegotorus-dbg
+
+override_dh_auto_configure:
+	dh_auto_configure -- --with-stegtracesdir=/usr/share/stegotorus/traces/
+
+override_dh_auto_install:
+	mkdir -p debian/saferdefiance-stegotorus/usr/sbin/
+	mkdir -p debian/saferdefiance-stegotorus/usr/share/stegotorus/
+	cp stegotorus debian/saferdefiance-stegotorus/usr/sbin/
+
+override_dh_auto_test:
+

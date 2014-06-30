@@ -1,0 +1,70 @@
+
+README for ns_app_echo
+
+------------------------------------------------------------
+Overview:
+ns_app_echo is an example application that illustrates
+how one may use the steganography capabilities of StegoTorus.
+In this application, the client will send an 80-byte message
+to the server, and the server will send back the same message
+back to the client, both using StegoTorus's HTTP steganography module.
+
+
+------------------------------------------------------------
+Testing platform and procedure:
+This application was tested on a machine running Mac OS X 10.8.4.
+Moreover, the Makefile assumes that the net_steg_apps directory
+lives in the source directory of StegoTorus.
+
+To test ns_app_echo, perform the following steps:
+1) Adjust the paths in Makefile (e.g., pkgdir, pkgincludedir, pkglibdir)
+2) Run make
+3) Start the server by running 
+   ./ns_app_echo server 127.0.0.1:8080
+4) Wait until the server completes its initialization (as indicated
+   by the message "server ready to receive data")
+5) Start the client (in another window) by running
+   ./ns_app_echo client 127.0.0.1:8080 
+
+
+------------------------------------------------------------
+Example output:
+Both the server and the client will display the message sent by
+the other party, which contains 80 A's.
+
+Server-side output:
+clay:net_steg_apps alice$ ./ns_app_echo server 127.0.0.1:8080
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+[warn] decompression failure: incorrect header check
+*** server ready to receive data
+server received: [AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA]
+
+
+Client-side output:
+clay:net_steg_apps alice$ ./ns_app_echo client 127.0.0.1:8080
+client received: [AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA]
+
+
+------------------------------------------------------------
+Known issues:
+The Makefile doesn't work on Ubuntu 12.04
+
+
+------------------------------------------------------------

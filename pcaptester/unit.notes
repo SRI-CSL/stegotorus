@@ -1,0 +1,4 @@
+1. ./fake_server.csh 200000 |nc -l 1234 
+2. scripts/start-client-unit.csh
+3. scripts/start-server-unit.csh
+4. curl --socks4a 127.0.0.1:1080 http://ignored

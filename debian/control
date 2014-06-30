@@ -1,0 +1,23 @@
+Source: saferdefiance
+Maintainer: Jeroen Massar <massar@fsi.io>
+Section: web
+Priority: extra
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 8.0.0~), libc6-dev, libc6-dev-i386 [amd64] | libc6-dev-amd64 [i386], dh-autoreconf, pkg-config, libevent-dev, libjansson-dev, libssl-dev, zlib1g-dev
+Homepage: http://www.safdef.org
+
+Package: saferdefiance-stegotorus
+Architecture: any
+Depends: saferdefiance-stegotorus-traces-client | saferdefiance-stegotorus-traces-server, saferdefiance-stegotorus-traces-jpegs, saferdefiance-jel, libjansson4, openssl, libevent-2.0-5, zlib1g, ${shlibs:Depends}, ${misc:Depends}
+Description: SAFER DEFIANCE Stegotorus
+ Stegotorus
+
+Package: saferdefiance-stegotorus-dbg
+Architecture: any
+Section: debug
+Depends: saferdefiance-stegotorus, ${shlibs:Depends}, ${misc:Depends}
+Description: debugging symbols for djb
+ SAFER DEFIANCE Stegotorus
+ .
+ This package contains the debugging symbols for Stegotorus
+

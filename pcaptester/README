@@ -1,0 +1,32 @@
+PCAPTESTER  (so far tested only on mac and ubuntu)
+
+
+It downloads a large file (200K) using stegotorus on the loopback interface,
+captures packets using tcpdump  and  runs validation scripts against 
+generated cover files.   For longer runs just change the command line
+parameter for fake-server.csh in pcaptester.csh
+
+pcaptester/fake-server.csh <FILESIZE_IN_BYTES> |nc -l 1234 &  
+
+
+
+On mac:
+
+install bro, base64, perl, and js (i.e., SpiderMonkey's JavaScript Shell),
+and make sure user has permission to run tcpdump
+
+On ubuntu:
+
+install bro, ipfw, perl, and js,
+and make sure user has permission to run tcpdump
+ipfw is used to slow down the link so tcpdump can capture packets without
+loss.  However, on ubuntu this doesn't seem to work so well, i.e., we still
+lose some packets and are unable to reassemble all files on the wire.
+
+
+
+to run:
+
+type pcaptester/pcaptester.csh from the top directory
+
+pcaptester/files (all cover files used in this stegotorus run)

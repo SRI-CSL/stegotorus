@@ -1,0 +1,165 @@
+#!/bin/bash -e
+#
+# StegoTorus Windows cross-compile script
+#
+# Copyright (C)2013 Farsight Security, Inc.
+# written by Jeroen Massar <massar@fsi.io>
+#
+# Make sure that CFLAGS/LDFLAGS etc is not set...
+
+CXLog() {
+	echo "======================================"
+	echo "======================================"
+	echo "=== $@"
+	echo "======================================"
+	echo "======================================"
+}
+
+CXLog "Setting up cross-compile environment"
+
+CXHOME=$(pwd)
+MPFX=i586-mingw32msvc
+AR=${MPFX}-ar
+CC=${MPFX}-gcc
+RANLIB=${MPFX}-ranlib
+OBJDUMP=${MPFX}-objdump
+
+PREFIX=~/.cross/mingw
+SRC=/${PREFIX}/src/
+CROSSCFG="--build=amd64-pc-linux-gnu --host=${MPFX}"
+LINKCFG="--enable-static --disable-shared"
+PKGCONFIG="${PREFIX}/bin/${MPFX}-pkg-config"
+DEBSRC="${PREFIX}/deb-src"
+
+CXLog "Our MingW Prefix = ${PREFIX}"
+
+if [ "$(which ${CC})X" = "X" ];
+then
+	echo >&2 "Error: Please install mingw: apt-get install mingw32"
+	exit 1
+fi
+
+mkdir -p ${PREFIX} 2>/dev/null
+
+if [ ! -d ${PREFIX} ];
+then
+	echo >&2 "No ${PREFIX}, got sufficient permissions?"
+	echo >&2 "Please create ${PREFIX} as root and chown it to a normal user"
+	exit 1
+fi
+
+CXLog "Preparing environment"
+
+mkdir -p ${PREFIX}/bin ${PREFIX}/lib/pkgconfig
+
+cat >${PKGCONFIG} <<HERE
+#!/bin/sh
+
+PREFIX=${PREFIX}
+export PKG_CONFIG_LIBDIR=\${PREFIX}/lib/pkgconfig
+
+exec pkg-config "\$@"
+HERE
+chmod +x ${PKGCONFIG}
+
+##############################################################################
+
+cxenv() {
+	CC="${CC} -I/${PREFIX}/include -L/${PREFIX}/lib" AR=${AR} RANLIB=${RANLIB} PKG_CONFIG=${PKGCONFIG} $@
+}
+
+##############################################################################
+
+cxbuild() {
+	NAME=$1
+	shift
+	OPTS=$@
+
+	CONF="configure ${CROSSCFG} ${LINKCFG}"
+
+	# zlib's configure does not understand --build and --host
+	if [ "${SOURCE}" = "zlib" ];
+	then
+		CONF="configure"
+	fi
+
+	# OpenSSL has it's own Configure
+	if [ "${SOURCE}" = "openssl" ];
+	then
+		# Undo Debian patches and touch Makefile otherwise it is too old
+		quilt pop -a
+		touch Makefile
+		CONF="Configure"
+	fi
+
+	CXLog "Configuring and making ${NAME}..."
+
+	cxenv ./${CONF} --prefix=${PREFIX} ${OPTS} && cxenv make && cxenv make install
+
+	CXLog "done (${NAME})"
+}
+
+##############################################################################
+
+cxlib() {
+        CXLIB=$1
+        SOURCE=$2
+        OPTS=$3
+
+        if [ -f ${PREFIX}/lib/${CXLIB}.a ];
+        then
+                CXLog "Avoiding rebuild of ${CXLIB}, already exists"
+        else
+                CXLog "Retrieving ${CXLIB} (${SOURCE})"
+
+                mkdir -p ${DEBSRC}/${CXLIB}
+                cd ${DEBSRC}/${CXLIB}
+                        rm -rf ${SOURCE}-*
+                apt-get source ${SOURCE}
+                cd ${SOURCE}-*
+
+                cxbuild ${CXLIB} ${OPTS}
+        fi
+}
+
+##############################################################################
+
+cxlib libz zlib "--static"
+cxlib libevent libevent "${CROSSCFG} ${LINKCFG}"
+cxlib libcrypto openssl "--openssldir=${PREFIX} no-shared no-idea no-mdc2 no-rc5 zlib enable-tlsext no-ssl2 mingw"
+cxlib libjansson jansson "${CROSSCFG} ${LINKCFG}"
+
+#JEL:
+# jel needs some tlc before it will cross-compile
+#cd ${CXHOME}/../jel/
+#rm -rf build 2>/dev/null
+#mkdir build &&
+#cd build &&
+#cxenv cmake .. &&
+#cxenv make
+#cxenv make install
+
+##############################################################################
+
+cd ${CXHOME}
+
+# Do we have a configure script?
+if [ ! -f configure ];
+then
+	# Clean, thus generate configure etc
+	autoreconf -i
+fi
+
+# Do we have a Makefile?
+if [ ! -f Makefile ];
+then
+	automake
+else
+	# Not clean, thus clean it
+	make clean
+fi
+
+cxbuild stegotorus
+
+exit 0
+

@@ -1,0 +1,34 @@
+var cnnIsHomePage=true,
+cnnPageName="CNN Home Page",
+cnnSectionName="CNN Home Page",
+sectionName="homepage",
+cnn_edtnswtchver="www",
+cnnCurrTime=new Date(1380302052000),
+cnnCurrHour=13,
+cnnCurrMin=14,
+cnnCurrDay='Fri',
+weatherTitle='News';
+
+
+if ($('cnn_GallerySliderContainer')){cnn_SectionGallery=new cnn_GallerySlider();}
+if ($('cnn_GallerySliderContainer')){cnn_SectionGallery=new cnn_GallerySlider();}
+cnn_metadata.section=['cnn homepage','cnn:cnn homepage'];
+cnn_metadata.friendly_name='CNN Home Page';
+cnn_metadata.template_type='index';
+var selectedEdition=allCookies['SelectedEdition'],
+galleryAdDir="/cnn_adspaces/3.0/homepage/main/",
+CNN_gallery_0_ad_0="/cnn_adspaces/3.0/homepage/main/bot1.120x90.ad",
+CNN_gallery_0_ad_1="/cnn_adspaces/3.0/homepage/main/bot2.120x90.ad",
+CNN_gallery_0_ad_2="/cnn_adspaces/3.0/homepage/main/bot3.120x90.ad",
+CNN_gallery_0_ad_3="/cnn_adspaces/3.0/homepage/main/bot4.120x90.ad",
+CNN_gallery_0_ad_4="/cnn_adspaces/3.0/homepage/main/bot5.120x90.ad",
+CNN_gallery_0_ad_5="/cnn_adspaces/3.0/homepage/main/bot6.120x90.ad",
+CNN_gallery_0_ad_6="/cnn_adspaces/3.0/homepage/main/bot7.120x90.ad",
+CNN_gallery_0_ad_7="/cnn_adspaces/3.0/homepage/main/bot8.120x90.ad",
+CNN_gallery_0_ad_8="/cnn_adspaces/3.0/homepage/main/bot9.120x90.ad",
+CNN_gallery_1_ad_0="/cnn_adspaces/3.0/homepage/main/bot4.120x90.ad",
+CNN_gallery_1_ad_1="/cnn_adspaces/3.0/homepage/main/bot5.120x90.ad",
+CNN_gallery_1_ad_2="/cnn_adspaces/3.0/homepage/main/bot6.120x90.ad",
+CNN_gallery_2_ad_0="/cnn_adspaces/3.0/homepage/main/bot7.120x90.ad",
+CNN_gallery_2_ad_1="/cnn_adspaces/3.0/homepage/main/bot8.120x90.ad",
+CNN_gallery_2_ad_2="/cnn_adspaces/3.0/homepage/main/bot9.120x90.ad";

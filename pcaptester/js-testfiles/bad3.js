@@ -1,0 +1,2 @@
+// bad arith operator
+a+++;

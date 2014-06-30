@@ -1,0 +1,10 @@
+# Default settings for stegotorus. This file is sourced by /bin/sh from
+# /etc/init.d/stegotorus.
+
+# Per default we are in client mode and thus do not start from init.d
+# Options: client|server
+STEGOTORUS_MODE=client
+
+# Options to pass to stegotorus
+STEGOTORUS_OPTS=
+

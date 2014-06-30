@@ -1,0 +1,73 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:		stegotorus
+# Required-Start:	$remote_fs $syslog
+# Required-Stop:	$remote_fs $syslog
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description:	SAFER DEFIANCE StegoTorus
+### END INIT INFO
+
+set -e
+
+DAEMON_NAME="SAFER DEFIANCE StegoTorus"
+DAEMON_SHORT=stegotorus
+DAEMON_BIN=/usr/sbin/stegotorus
+
+# Just exit when the binary does not exist
+test -x ${DAEMON_BIN} || exit 0
+
+STEGOTORUS_MODE=client
+STEGOTORUS_OPTS=
+
+if [ -f /etc/default/ssh ]; then
+    . /etc/default/ssh
+fi
+
+if [ "${STEGOTORUS_MODE}" != "server" ]; then
+	exit 0
+fi
+
+. /lib/lsb/init-functions
+
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+
+case "$1" in
+  start)
+	log_daemon_msg "Starting ${DAEMON_NAME}" ${DAEMON_SHORT}
+	if start-stop-daemon --start --quiet --oknodo --pidfile /var/run/${DAEMON_SHORT}.pid --exec ${DAEMON_BIN} ${STEGOTORUS_OPTS}; then
+	    log_end_msg 0
+	else
+	    log_end_msg 1
+	fi
+	;;
+  stop)
+	log_daemon_msg "Stopping ${DAEMON_NAME}" "${DAEMON_SHORT}"
+	if start-stop-daemon --stop --quiet --oknodo --pidfile /var/run/${DAEMON_SHORT}.pid; then
+	    log_end_msg 0
+	else
+	    log_end_msg 1
+	fi
+	;;
+
+  restart)
+	log_daemon_msg "Restarting ${DAEMON_NAME}" "${DAEMON_SHORT}"
+	start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile /var/run/${DAEMON_SHORT}.pid
+	if start-stop-daemon --start --quiet --oknodo --pidfile /var/run/${DAEMON_SHORT}.pid --exec ${DAEMON_BIN} ${STEGOTORUS_OPTS}; then
+	    log_end_msg 0
+	else
+	    log_end_msg 1
+	fi
+	;;
+
+  status)
+	status_of_proc -p /var/run/${DAEMON_SHORT}.pid ${DAEMON_BIN} ${DAEMON_SHORT} && exit 0 || exit $?
+	;;
+
+  *)
+	log_action_msg "Usage: /etc/init.d/${DAEMON_SHORT} {start|stop|restart|status}"
+	exit 1
+esac
+
+exit 0
