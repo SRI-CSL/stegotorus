@@ -201,13 +201,16 @@ deconstruct_json_cookie_aux(char *cookie, size_t cookie_length, char * secret, s
   uchar* data = (uchar*)xmalloc(2*cookie_length);
   size_t ptext_length = 0;
   size_t data_length;
-  char* ptext;
+  char* ptext = NULL;
 
   if (decode_cookie(cookie, cookie_length, (char*)data, data_length) != RCODE_OK)
-    return NULL;
-
+    goto clean_up;
+  
+  
   ptext = (char *)defiant_pwd_decrypt(secret, data, data_length, &ptext_length);
   *flenp = ptext_length;
+  
+ clean_up:
   free(data);
   return ptext;
 }
