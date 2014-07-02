@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "util.h"
 #include "oshacks.h"
 #include "crypto.h"
 #include "strncasestr.h"
@@ -136,8 +137,7 @@ decrypt_aux (EVP_CIPHER_CTX *context, const uchar* input, size_t input_len, size
     return NULL;
   }
   if(EVP_DecryptFinal(context, &output[offset], &dangle) == 0){
-    fprintf(stderr, "Padding wrong :-(  input length = %" PriSize_t, input_len);
-    //fprint64(stdout, input, input_len);
+    log_warn("decrypt_aux: Padding wrong :-(  input length = %" PriSize_t, input_len);
     free(output);
     *output_len = 0;
     return NULL;

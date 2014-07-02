@@ -34,7 +34,7 @@ PROTOCOLS = \
 STEGANOGRAPHERS = \
 	src/steg/headers.cc \
 	src/steg/shared.cc \
-	src/steg/crypto.c \
+	src/steg/crypto.cc \
 	src/steg/b64cookies.cc \
 	src/steg/embed.cc \
 	src/steg/http.cc \
