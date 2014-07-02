@@ -219,8 +219,10 @@ get_header_value(char* headers, size_t headers_length, char** valuep, size_t& va
     char* field = (char *)xzalloc(field_count + 1);
 
     if(field != NULL){
-      if (memncpy(field, field_count+1, field_value, field_count) != RCODE_OK)
-	goto err;
+      if (memncpy(field, field_count+1, field_value, field_count) != RCODE_OK){
+        free(field);
+        goto err;
+      }
 
       field[field_count] = '\0';
       if(valuep != NULL){
