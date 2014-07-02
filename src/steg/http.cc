@@ -26,7 +26,9 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
     shared_secret(NULL)
 {
   zero_payloads(pl);
-  this->shared_secret = cfg->shared_secret;
+  if(cfg->shared_secret){
+    this->shared_secret = xstrdup(cfg->shared_secret);
+  }
   if(!this->shared_secret){
     this->shared_secret = xstrdup(STEGOTORUS_DEFAULT_SECRET);
   }
@@ -48,6 +50,7 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
 http_steg_config_t::~http_steg_config_t()
 {
   free_payloads(this->pl);
+  free(this->shared_secret);
 }
 
 steg_t *
