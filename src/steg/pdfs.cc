@@ -215,6 +215,8 @@ file2bytes(const char* path, unsigned char* bytes, size_t bytes_wanted)
   /* not very signal proof */
   bytes_read = fread(bytes, sizeof(unsigned char), bytes_wanted, f);
 
+  fclose(f);
+  
   if(bytes_read < bytes_wanted){
     log_warn("file2bytes: fread(%s) only read %" PriSize_t " of %" PriSize_t " bytes", path, bytes_read, bytes_wanted);
     return false;
