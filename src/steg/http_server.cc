@@ -227,7 +227,7 @@ http_server_receive_GET (http_steg_t * s, struct evbuffer *dest, struct evbuffer
   if (!validate_uri((char *) headers, headers_length)) {
     log_warn("invalid uri %s\n", headers);
     s->conn->expect_close();
-    return RECV_BAD;
+    goto clean_up;
   }
 
   type = find_uri_type(headers, headers_length);
