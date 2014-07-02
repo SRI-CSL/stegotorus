@@ -97,6 +97,8 @@ embed_steg_config_t::embed_steg_config_t(config_t *cfg)
                   (long)(p - traces.begin()), i);
   }
 
+  fclose(trace_file);
+  
   log_debug("read %d traces", num_traces);
 }
 
