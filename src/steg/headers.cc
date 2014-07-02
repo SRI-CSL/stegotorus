@@ -125,10 +125,9 @@ get_cookie (char *headers, size_t headers_length, char** cookiep, size_t& cookie
     return RCODE_OK;
   } 
 
-  if (cookie != NULL) 
-    free(cookie);  
 
  err:
+  free(cookie);  
   return RCODE_ERROR;;
 }
 
