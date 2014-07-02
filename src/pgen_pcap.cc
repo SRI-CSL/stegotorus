@@ -144,26 +144,28 @@ static int
 write_inflate_msg(flow *f, FILE *file, pentry_header *ph)
 {
   msg *m = f->msg_buf_chain;
-  uint8_t *buf;
   int pos = 0;
-  uint8_t *outbuf;
   int outlen;
-
-  uint8_t *hdr_end;
-  uint8_t *hdr;
   int hdrlen;
+  
+  int retcode =  MSG_INVALID;
+
+  uint8_t *outbuf = NULL;
+  uint8_t *buf = NULL;
+  uint8_t *hdr = NULL;
+
 
   if (!f->msg_buf_chain)
     return CHAIN_EMPTY;
 
   if (strnstr((char*) m->buf, "Transfer-Encoding: chunked",  m->len))
     // we don't handle this yet....need a loop to unzip chunks individually...
-    return MSG_INVALID;
+    return retcode;
 
-  hdr_end = (uint8_t*) strnstr((char*) m->buf, "\r\n\r\n",  m->len);
+  uint8_t *hdr_end = (uint8_t*) strnstr((char*) m->buf, "\r\n\r\n",  m->len);
   if (!hdr_end) {
     fprintf(stderr, "hdr too long?? \n");
-    return MSG_INVALID;
+    return retcode;
   }
 
   hdr_end += 4;
@@ -175,8 +177,10 @@ write_inflate_msg(flow *f, FILE *file, pentry_header *ph)
 
   pos = 0;
 
-  if (!m)
-    return  CHAIN_EMPTY;
+  if (!m) {
+    retcode = CHAIN_EMPTY;
+    goto clean_up;
+  }
 
   memcpy(buf, hdr_end, m->len - hdrlen);
   pos += m->len - hdrlen;
@@ -194,17 +198,20 @@ write_inflate_msg(flow *f, FILE *file, pentry_header *ph)
   if (outlen < 0) {
     fprintf(stderr, "unzip failed outlen = %d %d %d\n",
             outlen, pos, f->msg_len_so_far-hdrlen);
-    return MSG_INVALID;
+    goto clean_up;
   }
 
   ph->length = htonl(outlen+hdrlen);
   fwrite(ph, sizeof(pentry_header), 1, file);
   fwrite(hdr, hdrlen, 1, file);
   fwrite(outbuf, outlen, 1, file);
+  retcode = 1;
+  
+ clean_up:
   free(buf);
   free(outbuf);
   free(hdr);
-  return 1;
+  return retcode;
 }
 
 static int
