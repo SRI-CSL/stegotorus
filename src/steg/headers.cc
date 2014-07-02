@@ -434,6 +434,8 @@ encode_cookie (const char* data, size_t data_length, char** cookiep, size_t& coo
 
  err:
   log_warn("encode_cookie failed");
+  free(data64);
+  free(cookie);
   return RCODE_ERROR;
 }
 
