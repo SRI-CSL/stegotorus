@@ -55,9 +55,9 @@ void zero_payloads(payloads& pl){
 void 
 load_payloads(payloads& pl, const char* fname)
 {
-  FILE* f;
-  char* curr_payload;
-  char* temp_buf;
+  FILE* f = NULL;
+  char* curr_payload = NULL;
+  char* temp_buf = NULL;
   pentry_header pentry;
   int bytes_read;
 
