@@ -188,9 +188,13 @@ construct_json_cookie_aux(char *format, size_t format_length, char * secret, siz
   size_t data_length = 0;
   uchar* data  = defiant_pwd_encrypt(secret, (uchar *)format, format_length, &data_length);
   size_t cookie_length;
+  
   if (encode_cookie((char*)data, data_length, &cookie, cookie_length) != RCODE_OK)
-    return NULL;
+    goto clean_up;
+  
   *clenp = cookie_length;
+
+ clean_up:
   free(data);
   return cookie;
 }
