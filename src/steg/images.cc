@@ -71,9 +71,10 @@ static bool grow_the_images(image_pool_p pool){
 
 image_pool_p load_images(const char* path){
   image_pool_p pool = alloc_image_pool();
+  DIR *dirp = NULL;
+
   if(pool != NULL){
     struct dirent *direntp;
-    DIR *dirp;
 
     if((path == NULL) || ((dirp = opendir(path)) == NULL)){
       log_warn("load_images could not open %s", path);
@@ -107,7 +108,9 @@ image_pool_p load_images(const char* path){
   
  clean_up:
 
-  while((closedir(dirp) == -1) && (errno  == EINTR)){ };
+  if(dirp != NULL){
+    while((closedir(dirp) == -1) && (errno  == EINTR)){ };
+  }
 
   /* need to do something about multiple connections loading multiple images; does this happen with payloads too? */
   log_warn("load_images: count now %d", pool->the_images_offset);

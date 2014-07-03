@@ -129,10 +129,10 @@ pdf_pool_p
 load_pdfs(const char* path)
 {
   pdf_pool_p pool = alloc_pdf_pool();
-
+  DIR *dirp = NULL;
+    
   if(pool != NULL){
     struct dirent *direntp;
-    DIR *dirp;
 
     if((path == NULL) || ((dirp = opendir(path)) == NULL)){
       log_warn("load_pdfs could not open %s", path);
@@ -142,32 +142,33 @@ load_pdfs(const char* path)
     while((direntp = readdir(dirp)) != NULL){
 
       //only load the first MAX_PDF_POOL_SIZE
-      if(pool->the_pdfs_offset > MAX_PDF_POOL_SIZE){
-        
-        goto enough_already;
-      }
-
+      if(pool->the_pdfs_offset > MAX_PDF_POOL_SIZE){  break; }
       
       /* might also want to filter on the extension */
       if((strcmp(direntp->d_name, ".") == 0) || (strcmp(direntp->d_name, "..") == 0)){
         continue;
       }
+
       pdf_p pdfp = load_pdf(pool, path, direntp->d_name);
+
       if(pdfp != NULL){
         if(((pool->the_pdfs_length == 0) || (pool->the_pdfs_offset + 1 == pool->the_pdfs_length)) && !grow_the_pdf_pool(pool)){
           log_warn("load_pdfs could not grow storage");
+          free_pdf(pdfp);
           goto clean_up;
         }
         pool->the_pdfs[pool->the_pdfs_offset++] = pdfp;
       }
     }
 
-  enough_already:
-    
-    while((closedir(dirp) == -1) && (errno  == EINTR)){ };
   }
   
  clean_up:
+
+  if(dirp != NULL){
+    while((closedir(dirp) == -1) && (errno  == EINTR)){ };
+  }
+
   /* need to do something about multiple connections loading multiple pdfs; does this happen with payloads too? */
   log_warn("load_pdfs: count now %d", pool->the_pdfs_offset);
   
