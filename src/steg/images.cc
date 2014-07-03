@@ -83,32 +83,32 @@ image_pool_p load_images(const char* path){
     while((direntp = readdir(dirp)) != NULL){
 
       //only load the first 20
-      if(pool->the_images_offset > 20){
-        
-        goto enough_already;
-      }
-
+      if(pool->the_images_offset > 20){  break;  }
       
       /* might also want to filter on the extension */
       if((strcmp(direntp->d_name, ".") == 0) || (strcmp(direntp->d_name, "..") == 0)){
         continue;
       }
+
       image_p image = load_image(pool, path, direntp->d_name);
+      
       if(image != NULL){
         if(((pool->the_images_length == 0) || (pool->the_images_offset + 1 == pool->the_images_length)) && !grow_the_images(pool)){
           log_warn("load_images could not grow storage");
+          free(image);
           goto clean_up;
         }
+        
         pool->the_images[pool->the_images_offset++] = image;
       }
     }
 
-  enough_already:
-    
-    while((closedir(dirp) == -1) && (errno  == EINTR)){ };
   }
   
  clean_up:
+
+  while((closedir(dirp) == -1) && (errno  == EINTR)){ };
+
   /* need to do something about multiple connections loading multiple images; does this happen with payloads too? */
   log_warn("load_images: count now %d", pool->the_images_offset);
   
