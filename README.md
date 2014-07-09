@@ -8,6 +8,11 @@ What is this?
 
 Please see *"StegoTorus: A Camouflage Proxy for the Tor Anonymity System"*
 for a detailed explanation on what this tool does and how it does it.
+A copy can be found here: 
+```
+https://github.com/SRI-CSL/stegotorus/blob/master/doc/stegotorus.pdf?raw=true
+```
+
 
 General Compilation
 -------------------
