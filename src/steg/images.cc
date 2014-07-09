@@ -169,6 +169,7 @@ static int capacity(image_p image){
   } else {
     ret = jel_capacity(jel);
   }
+  jel_close_log(jel);
   jel_free(jel);
   return ret;
 }
