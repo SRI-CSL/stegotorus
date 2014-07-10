@@ -24,6 +24,7 @@
 
 #include <jel/jel.h>
 
+static bool jpeg_debug = false;
 
 static size_t construct_jpeg_headers(int method, const char* path, const char* host, const char* cookie, unsigned int body_length, char* headers);
 
@@ -115,7 +116,9 @@ http_server_JPEG_transmit (http_steg_t * s, struct evbuffer *source){
       goto clean_up;
     }
 
-    log_warn("http_server_JPEG_transmit: data_length = %d  body_length = %d", (int)data_length, (int)body_length);
+    if(jpeg_debug){
+      log_warn("http_server_JPEG_transmit: data_length = %d  body_length = %d", (int)data_length, (int)body_length);
+    }
       
       
     if (evbuffer_add(dest, headers, headers_length)  == -1) {
@@ -161,7 +164,9 @@ http_client_JPEG_receive(http_steg_t * s, struct evbuffer *dest, char* headers, 
   body_length = response_length - headers_length;
   data_length =  deconstruct_jpeg_body(body, body_length, &data);
   
-  log_warn("http_client_JPEG_receive: data_length = %d; body_length %d", (int)data_length,  (int)body_length);
+  if(jpeg_debug){
+    log_warn("http_client_JPEG_receive: data_length = %d; body_length %d", (int)data_length,  (int)body_length);
+  }
 
   
   retval = raw2dest(dest,  data_length, data);
