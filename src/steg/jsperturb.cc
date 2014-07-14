@@ -166,7 +166,9 @@ perturb_JS2 (char *js_start, int js_len, char *buf_start, int buf_len, size_t& n
 
   char *cp = js_start, *bp = buf_start, *js_end = NULL, *buf_end = NULL;
   size_t k = 0;
-  int is_num = 0, i = 0, j = 0;
+  int is_num = 0;
+  size_t i = 0, j = 0;
+  rcode_t rval;
 
   new_js_len = js_len;
   js_end = js_start + js_len;
@@ -175,10 +177,10 @@ perturb_JS2 (char *js_start, int js_len, char *buf_start, int buf_len, size_t& n
   while (cp < js_end) {
 
     // find the beginning of a word that starts with an alphanumeric or underscore
-    i = offset2Alnum_(cp, js_end-cp);
+    rval = offset2Alnum_(cp, js_end-cp, i);
 
     // no such word found
-    if (i == -1) {
+    if (rval == RCODE_NOT_FOUND) {
       if (buf_end-bp <= js_end-cp) {
 	log_debug ("output buffer too small");
 	goto err;
@@ -197,7 +199,7 @@ perturb_JS2 (char *js_start, int js_len, char *buf_start, int buf_len, size_t& n
 
     // starting from cp, copy the next i char from the input buf to the output buf
     if (i > 0) {
-      if ((buf_end - bp) < i) {
+      if ((size_t) (buf_end - bp) < i) {
         log_debug ("outbuf buffer too small");
         goto err;
       }
@@ -229,13 +231,13 @@ perturb_JS2 (char *js_start, int js_len, char *buf_start, int buf_len, size_t& n
       }
 
       is_num = 1;
-      j = offset2Non_num(cp, js_end-cp);
+      rval = offset2Non_num(cp, js_end-cp, j);
     } 
     else {
-      j = offset2Non_alnum_(cp, js_end-cp);
+      rval = offset2Non_alnum_(cp, js_end-cp, j);
     }
 
-    if (j < 1) {
+    if (rval == RCODE_NOT_FOUND) {
       if (memncpy (bp, buf_end-bp, cp, js_end-cp) != RCODE_OK) {
         log_debug("memncpy failed");
         goto err;

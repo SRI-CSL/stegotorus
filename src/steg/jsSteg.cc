@@ -22,11 +22,11 @@
 #include <event2/buffer.h>
 
 
-static size_t construct_js_headers(int method, const char* path, const char* host, const char* cookie, size_t body_length, char* headers, const char* content_type, int zipped);
+rcode_t construct_js_headers(int method, const char* path, const char* host, const char* cookie, size_t body_length, char* headers, const char* content_type, bool zipped, size_t& headers_length);
 
-rcode_t construct_js_body(payloads &pl, char* data, size_t data_length, unsigned char** bodyp, size_t& body_len, unsigned int content_type, int zipped); 
+rcode_t construct_js_body(payloads &pl, char* data, size_t data_length, unsigned char** bodyp, size_t& body_len, unsigned int content_type, bool zipped); 
 
-rcode_t deconstruct_js_body(unsigned char *body, size_t body_len, unsigned char** datap, size_t& data_len, int zipped, int content_type);
+rcode_t deconstruct_js_body(unsigned char *body, size_t body_len, unsigned char** datap, size_t& data_len, bool zipped, int content_type);
 
 
 rcode_t encode_HTTP_body (char *data, char *j_template, char *j_data, size_t dlen, size_t jtlen, size_t jdlen, int mode, size_t& enc_cnt);
@@ -80,7 +80,8 @@ encode(char *data, char *j_template, char *j_data, size_t dlen, size_t jtlen,
 {
   enc_cnt = 0;  /* num of data encoded in j_data */
   char *dp, *jtp, *jdp; /* current pointers for data, j_template, and j_data */
-  int i,j;
+  size_t i,j;
+  rcode_t rval;
 
   dp = data;
   jtp = j_template;
@@ -103,9 +104,9 @@ encode(char *data, char *j_template, char *j_data, size_t dlen, size_t jtlen,
     goto err;
   }
 
-  i = offset2Hex(jtp, (j_template+jtlen)-jtp, 0);
+  rval = offset2Hex(jtp, (j_template+jtlen)-jtp, 0, i);
 
-  while (enc_cnt < dlen && i != -1) {
+  while (enc_cnt < dlen && rval == RCODE_OK) {
     // copy next i char from jtp to jdp,
     // except that if *jtp==JS_DELIMITER, copy
     // JS_DELIMITER_REPLACEMENT to jdp instead
@@ -127,7 +128,7 @@ encode(char *data, char *j_template, char *j_data, size_t dlen, size_t jtlen,
     jtp = jtp + 1;
     jdp = jdp + 1;
 
-    i = offset2Hex(jtp, (j_template+jtlen)-jtp, 1);
+    rval = offset2Hex(jtp, (j_template+jtlen)-jtp, 1, i);
   }
 
 
@@ -139,9 +140,9 @@ encode(char *data, char *j_template, char *j_data, size_t dlen, size_t jtlen,
 
   if (enc_cnt == dlen) {
     // replace the next alnum char in j_template by JS_DELIMITER
-    i = offset2Alnum_(jtp, (j_template+jtlen)-jtp);
+    rval = offset2Alnum_(jtp, (j_template+jtlen)-jtp, i);
 
-    if (i == -1) {
+    if (rval == RCODE_NOT_FOUND) {
 
       if (memncpy (jdp, (j_data+jdlen)-jdp, jtp, (j_template+jtlen)-jtp) != RCODE_OK) {
         log_warn("ERROR 4: encode");
@@ -151,7 +152,8 @@ encode(char *data, char *j_template, char *j_data, size_t dlen, size_t jtlen,
       jtp = j_template+jtlen;
       log_debug("cannot find an alnum char to put JS_DELIMTER");
 
-    } else {
+    } 
+    else {
 
       if (i > 0) {
 
@@ -272,7 +274,6 @@ encode_HTTP_body(char *data, char *j_template, char *j_data, size_t dlen, size_t
       skip = strlen(JS_SCRIPT_END);
 
       if (memncpy (jdp, (j_data+jdlen)-jdp, jtp, skip) != RCODE_OK) {
-        //(size_t) cast is for the mac cross compile build in gitian.
         log_warn("ERROR 4: encode_HTTP_body: invalid data size dst len:%" PriSize_t "; src len %d", (size_t)((j_data+jdlen)-jdp), skip);
         goto err;
       }   
@@ -331,16 +332,17 @@ decode (char *j_data, char *data_buf, size_t jdlen, size_t data_buf_size, int *f
 {
   dec_cnt = 0;  /* num of data decoded */
   char *dp, *jdp; /* current pointers for data_buf and j_data */
-  int i,j;
+  size_t i = 0, j = 0;
   int cjdlen = jdlen;
+  rcode_t rval;
 
   *fin = 0;
   dp = data_buf; 
   jdp = j_data;
 
-  i = offset2Hex(jdp, cjdlen, 0);
+  rval = offset2Hex(jdp, cjdlen, 0, i);
 
-  while (i != -1) {
+  while (rval != RCODE_NOT_FOUND) {
     // return if JS_DELIMITER exists between jdp and jdp+i
 
     for (j=0; j<i; j++) {
@@ -365,7 +367,7 @@ decode (char *j_data, char *data_buf, size_t jdlen, size_t data_buf_size, int *f
     dec_cnt++;
 
     // find the next hex char
-    i = offset2Hex(jdp, cjdlen, 1);
+    rval = offset2Hex(jdp, cjdlen, 1, i);
   }
 
   // look for JS_DELIMITER between jdp to j_data+jdlen
@@ -461,71 +463,71 @@ http_server_JS_transmit (http_steg_t * s, struct evbuffer *source, unsigned int 
   payloads pl = s->config->pl;
   transmit_t retval = NOT_TRANSMITTED;
   conn_t *conn = s->conn;
-  char* headers = NULL;
-  char* data = NULL;
+  char* headers = NULL, *data = NULL;
   unsigned char *body = NULL;
+  size_t source_length = 0, body_length = 0, headers_length = 0, data_length = 0;
+  struct evbuffer *dest = NULL;
+  rcode_t rcode;
+
 
   if((source == NULL) || (conn == NULL)){
     log_warn("bad args");
     goto clean_up;
   } 
-  else {
-    size_t source_length = evbuffer_get_length(source);
-    size_t body_length = 0, headers_length = 0, data_length = 0;
-    struct evbuffer *dest = conn->outbound();
 
-    headers = (char *)xzalloc(MAX_HEADERS_SIZE);
-
-    if(headers == NULL){
-      log_warn("header allocation failed.");
-      goto clean_up;
-    }
-
-    log_debug("source_length = %d", (int) source_length);
-
-    if (source2hex(source, source_length, &data, data_length) != RCODE_OK) {
-      log_warn("extracting raw to send failed");
-      goto clean_up;
-    }
-
-    if (construct_js_body(pl, data, data_length, &body, body_length, content_type, s->accepts_gzip) != RCODE_OK) {
-      log_warn("construct_js_body failed.");
-      goto clean_up;
-    }
-
-    if (content_type == HTTP_CONTENT_JAVASCRIPT) {
-      headers_length = construct_js_headers(HTTP_GET, NULL, NULL, NULL, body_length, headers, JAVASCRIPT_CONTENT_TYPE, s->accepts_gzip);
-    } else if (content_type == HTTP_CONTENT_HTML) {
-      headers_length = construct_js_headers(HTTP_GET, NULL, NULL, NULL, body_length, headers, HTML_JAVASCRIPT_CONTENT_TYPE, s->accepts_gzip);
-    } else {
-      log_warn("unsupported content_type (%d)", content_type);
-      goto clean_up;
-    }
-
-    if(headers_length == 0){
-      log_warn("construct_js_headers failed.");
-      goto clean_up;
-    }
-
-    log_debug("http_server_JS_transmit: data_length = %d  body_length = %d", (int)data_length, (int)body_length);
-
-    if (evbuffer_add(dest, headers, headers_length)  == -1) {
-      log_warn("evbuffer_add() fails for headers");
-      goto clean_up;
-    }
-
-    if (evbuffer_add(dest, body, body_length)  == -1) {
-      log_warn("evbuffer_add() fails for body");
-      goto clean_up;
-    }
-
-    evbuffer_drain(source, source_length);
-
-    if (SCHEMES_PROFILING) {
-      profile_data("JS", headers_length, body_length, source_length);
-    }
-
+  source_length = evbuffer_get_length(source);
+  dest = conn->outbound();
+  headers = (char *)xzalloc(MAX_HEADERS_SIZE);
+  
+  if(headers == NULL){
+    log_warn("header allocation failed.");
+    goto clean_up;
   }
+  
+  log_debug("source_length = %d", (int) source_length);
+    
+  if (source2hex(source, source_length, &data, data_length) != RCODE_OK) {
+    log_warn("extracting raw to send failed");
+    goto clean_up;
+  }
+  
+  if (construct_js_body(pl, data, data_length, &body, body_length, content_type, s->accepts_gzip) != RCODE_OK) {
+    log_warn("construct_js_body failed.");
+    goto clean_up;
+  }
+
+  if (content_type == HTTP_CONTENT_JAVASCRIPT) {
+    rcode = construct_js_headers(HTTP_GET, NULL, NULL, NULL, body_length, headers, JAVASCRIPT_CONTENT_TYPE, s->accepts_gzip, headers_length);
+  } else if (content_type == HTTP_CONTENT_HTML) {
+    rcode = construct_js_headers(HTTP_GET, NULL, NULL, NULL, body_length, headers, HTML_JAVASCRIPT_CONTENT_TYPE, s->accepts_gzip, headers_length);
+  } else {
+    log_warn("unsupported content_type (%d)", content_type);
+    goto clean_up;
+  }
+  
+  if(rcode != RCODE_OK) {
+    log_warn("construct_js_headers failed.");
+    goto clean_up;
+  }
+
+  log_debug("http_server_JS_transmit: data_length = %d  body_length = %d", (int)data_length, (int)body_length);
+  
+  if (evbuffer_add(dest, headers, headers_length)  == -1) {
+    log_warn("evbuffer_add() fails for headers");
+    goto clean_up;
+  }
+
+  if (evbuffer_add(dest, body, body_length)  == -1) {
+    log_warn("evbuffer_add() fails for body");
+    goto clean_up;
+  }
+  
+  evbuffer_drain(source, source_length);
+  
+  if (SCHEMES_PROFILING) {
+    profile_data("JS", headers_length, body_length, source_length);
+  }
+  
 
   retval = TRANSMIT_GOOD;
 
@@ -571,30 +573,33 @@ http_client_JS_receive (http_steg_t * s, struct evbuffer *dest, char* headers, s
 
 
 
-size_t
-construct_js_headers(int method, const char* path, const char* host, const char* cookie, size_t body_length, char* headers, const char* content_type, int zipped) 
+rcode_t
+construct_js_headers(int method, const char* path, const char* host, const char* cookie, size_t body_length, char* headers, 
+		     const char* content_type, bool zipped, size_t& headers_length) 
 {
   /* use them or .. */
   log_debug("path = %s; host = %s", path, host);
 
-  size_t headers_length = MAX_HEADERS_SIZE;
-  if (method == HTTP_GET) {
-    if (gen_response_header(content_type, cookie, zipped, body_length, headers, headers_length, headers_length) != RCODE_OK)
-      goto err;
-  } else {
+  headers_length = MAX_HEADERS_SIZE;
+
+  if (method != HTTP_GET) {
     log_warn("Bad method %d to construct_js_headers (HTTP_GET = %d, HTTP_POST = %d)", method, HTTP_GET, HTTP_POST);
+    goto err;
   }
+  
+  if (gen_response_header(content_type, cookie, zipped, body_length, headers, headers_length, headers_length) != RCODE_OK)
+    goto err;
  
-  return headers_length;
+  return RCODE_OK;
   
  err:
-  return 0;
+  return RCODE_ERROR;
 }
 
 
 
 rcode_t
-construct_js_body(payloads &pl, char* data, size_t data_length, unsigned char** bodyp, size_t& body_len, unsigned int content_type, int zipped) 
+construct_js_body(payloads &pl, char* data, size_t data_length, unsigned char** bodyp, size_t& body_len, unsigned int content_type, bool zipped) 
 {
   char *js_template = NULL, *http_head_end;
   size_t js_template_size = 0;
@@ -670,7 +675,7 @@ construct_js_body(payloads &pl, char* data, size_t data_length, unsigned char** 
 
 
 rcode_t
-deconstruct_js_body(unsigned char *body, size_t body_len, unsigned char** datap, size_t& data_len, int zipped, int content_type) 
+deconstruct_js_body(unsigned char *body, size_t body_len, unsigned char** datap, size_t& data_len, bool zipped, int content_type) 
 {
 
   char *body2, *outbuf = NULL;

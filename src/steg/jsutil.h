@@ -64,17 +64,17 @@ rcode_t perturb_JS_in_HTML (char *msg_start, size_t msg_len, char *tmp_buf, size
 
 unsigned int capacity_JS (char* buf, int len, int mode);
 
-int isalnum_ (char c);
+bool isalnum_ (char c);
 
-int offset2Alnum_ (char *p, int range);
+rcode_t offset2Alnum_ (char *p, size_t range, size_t& offset);
 
-int offset2Hex (char *p, int range, int isLastCharHex);
+rcode_t offset2Hex (char *p, size_t range, bool isLastCharHex, size_t& offset);
 
-int count_GIM (char *word, int wlen);
+uint8_t count_GIM (char *word, int wlen);
 
-int  offset2Non_alnum_ (char *p, int range);
+rcode_t  offset2Non_alnum_ (char *p, size_t range, size_t& offset);
 
-int  offset2Non_num (char *p, int range);
+rcode_t  offset2Non_num (char *p, size_t range, size_t& offset);
 
 
 #endif

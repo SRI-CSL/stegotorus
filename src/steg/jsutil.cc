@@ -46,9 +46,8 @@ static short len_keywords[arraysize(js_keywords)];
 void 
 compute_keyword_len (const char * list[], short len[], int size)
 {
-  int i;
-  for (i=0; i<size; i++) {
-     len[i] = strlen(list[i]);
+  for (int i=0; i<size; i++) {
+    len[i] = strlen(list[i]);
   }
 }
 
@@ -79,89 +78,72 @@ skip_JS_pattern(char *cp, int len)
       continue;
 
     for (j=1; j < len_keywords[i]; j++) {
-
-      if (isxdigit(word[j])) {
-        if (!isxdigit(cp[j])) {
-          goto next_word;
-        } else {
+      if (isxdigit(word[j]) || cp[j] != word[j]) {
           continue;
-        }
-      }
-      
-      if (cp[j] != word[j]) {
-        goto next_word;
       }
     }
 
     if (!isalnum(cp[j]) && cp[j] != JS_DELIMITER && cp[j] != JS_DELIMITER_REPLACEMENT) {
       return len_keywords[i]+1;
     }
-      
-  next_word:
-    continue;
   }
 
   return 0;
 }
 
 
-int 
+bool 
 isalnum_ (char c) 
 {
-  if (isalnum(c) || c == '_') return 1;
-  else return 0;
+  if (isalnum(c) || c == '_') 
+    return true;
+  return false;
 }
 
 
-int 
-offset2Alnum_ (char *p, int range) 
+rcode_t
+offset2Alnum_ (char *p, size_t range, size_t& offset) 
 {
-  char *cp = p;
 
-  while ((cp < (p+range)) && !isalnum_(*cp)) {
-    cp++;
+  for (offset = 0; offset < range; offset++) {
+    if (isalnum_(p[offset]))  
+      return RCODE_OK;
   }
 
-  if (cp < (p+range)) {
-    return (cp-p);
-  } else {
-    return -1;
-  }
+  return RCODE_NOT_FOUND;
 }
 
 
-int 
-offset2Non_alnum_ (char *p, int range) 
+rcode_t
+offset2Non_alnum_ (char *p, size_t range, size_t& offset) 
 {
-  char *cp = p;
-
-  while ((cp < (p+range)) && isalnum_(*cp)) {
-    cp++;
+  
+  for (offset = 0; offset < range; offset++) {
+    if (!isalnum_(p[offset]))
+      return RCODE_OK;
   }
 
-  if (cp < (p+range)) {
-    return (cp-p);
-  } else {
-    return -1;
-  }
+  return RCODE_NOT_FOUND;
 }
 
 
-int 
-offset2Non_num (char *p, int range) 
+rcode_t
+offset2Non_num (char *p, size_t range, size_t& offset) 
 {
-  char *cp = p;
 
-  while ((cp < (p+range)) && (isdigit(*cp) || (*cp == '.') || (*cp == 'x') || (*cp == 'e'))) {
-    cp++;
+  for (offset = 0; offset < range; offset++) {
+    char cp = p[offset];
+    
+    if (!isdigit(cp) && (cp != '.') && (cp != 'x') && (cp != 'e'))
+      return RCODE_OK;
   }
 
-  if (cp < (p+range)) {
-    return (cp-p);
-  } else {
-    return -1;
-  }
+  return RCODE_NOT_FOUND;
 }
+
+
+
+
 
 
 /*
@@ -186,73 +168,85 @@ offset2Non_num (char *p, int range)
  * otherwise, it returns -1
  *
  */
-int 
-offset2Hex (char *p, int range, int is_last_char_hex) 
+
+
+rcode_t
+offset2Hex (char *p, size_t range, bool is_last_char_hex, size_t& offset) 
 {
   char *cp = p;
-  int i,j;
-  int is_first_word_char = 1;
+  size_t j = 0;
+  bool is_first_word_char = true;
+  rcode_t rval;
 
-  if (range < 1) return -1;
+  offset = 0;
+
+  if (range < 1) 
+    return RCODE_NOT_FOUND;
 
   // case 1: last char is hexadecimal
   if (is_last_char_hex) {
     if (isxdigit(*cp)) 
-      return 0; // base case
+      return RCODE_OK; // base case
 
     while (cp < (p+range) && isalnum_(*cp)) {
       cp++;
-      if (isxdigit(*cp)) 
-	return (cp-p);
+      if (isxdigit(*cp))  {
+	offset = cp - p;
+	return RCODE_OK;
+      }
     }
 
     if (cp >= (p+range)) {
-      return -1;
+      return RCODE_NOT_FOUND;
     }
-  // non-alnum_ found, fallthru and handle case 2
   }
 
- 
   // case 2: find the next word that starts with alnum or underscore,
   // which could be a variable, keyword, or literal inside a string
 
-  i = offset2Alnum_(cp, p+range-cp);
+  rval = offset2Alnum_(cp, p+range-cp, offset);
 
-  if (i == -1) 
-    return -1;
+  if (rval == RCODE_NOT_FOUND)
+    return RCODE_NOT_FOUND;
 
-  while (cp < (p+range) && i != -1) {
-    if (i == 0) { 
-      if (is_first_word_char) {
-        j = skip_JS_pattern(cp, p+range-cp); 
-        if (j > 0) {
-          cp = cp+j;
-        } 
-	else {
-          cp++; 
-	  is_first_word_char = 0; // skip the 1st char of a word
-        }
-      } 
-      else { // we are in the middle of a word; no need to invoke skip_JS_pattern
-        if (isxdigit(*cp)) 
-	  return (cp-p);
-        if (! isalnum_(*cp)) {
-          is_first_word_char = 1;
-        }
-        cp++;
-     }
-    } 
-    else {
-      cp += i; 
-      is_first_word_char = 1;
+
+  while (cp < (p+range) && rval != RCODE_NOT_FOUND) {
+    if (offset != 0) {
+      cp += offset; 
+      is_first_word_char = true;
+      rval = offset2Alnum_(cp, p+range-cp, offset);    
+      continue;
     }
-    i = offset2Alnum_(cp, p+range-cp);    
+
+    if (is_first_word_char) {
+      j = skip_JS_pattern(cp, p+range-cp); 
+      if (j > 0) {
+	cp = cp+j;
+      } 
+      else {
+	cp++; 
+	is_first_word_char = false; // skip the 1st char of a word
+      }
+    } 
+    else if (isxdigit(*cp))  {
+      offset = cp - p;
+      return RCODE_OK;
+    }
+    else {
+      if (! isalnum_(*cp)) {
+	is_first_word_char = true;
+      }
+      cp++;
+    }
+ 
+    rval = offset2Alnum_(cp, p+range-cp, offset);    
   } // while
 
   // cannot find next usable hex char 
-  return -1;
+  return RCODE_NOT_FOUND;
  
 }
+
 
 
 /*
@@ -262,16 +256,19 @@ offset2Hex (char *p, int range, int is_last_char_hex)
 unsigned int 
 capacity_JS (char* buf, int len, int mode) 
 {
-  char *h_end, *bp, *js_start, *js_end;
-  int cnt=0;
-  int j;
+  char *h_end = NULL, *bp = NULL, *js_start = NULL, *js_end = NULL;
+  int cnt = 0;
+  size_t j = 0;
+  rcode_t rval;
 
   // jump to the beginning of the body of the HTTP message
   h_end = strnstr(buf, "\r\n\r\n", len);
+
   if (h_end == NULL) {
     // cannot find the separator between HTTP header and HTTP body
     return 0;
   }
+
   bp = h_end + 4;
 
   if (mode != CONTENT_JAVASCRIPT && mode != CONTENT_HTML_JAVASCRIPT) {
@@ -280,9 +277,9 @@ capacity_JS (char* buf, int len, int mode)
   }
 
   if (mode == CONTENT_JAVASCRIPT) {
-    j = offset2Hex(bp, (buf+len)-bp, 0);
+    rval = offset2Hex(bp, (buf+len)-bp, 0, j);
 
-    while (j != -1) {
+    while (rval == RCODE_OK) {
       cnt++;
       if (j == 0) {
         bp = bp+1;
@@ -290,38 +287,41 @@ capacity_JS (char* buf, int len, int mode)
         bp = bp+j+1;
       }
 
-      j = offset2Hex(bp, (buf+len)-bp, 1);
+      rval = offset2Hex(bp, (buf+len)-bp, 1, j);
     } // while
     return cnt;
   }
 
-  if (mode == CONTENT_HTML_JAVASCRIPT) {
+  // mode == CONTENT_HTML_JAVASCRIPT 
 
-    while (bp < (buf+len)) {
-      js_start = strnstr(bp, JS_SCRIPT_START, len-(bp-buf));
-      if (js_start == NULL) break;
-      bp = js_start+31;
-      js_end = strnstr(bp, JS_SCRIPT_END, len-(bp-buf));
-      if (js_end == NULL) break;
-      // count the number of usable hex char between js_start+31 and js_end
+  while (bp < (buf+len)) {
+    js_start = strnstr(bp, JS_SCRIPT_START, len-(bp-buf));
 
-      j = offset2Hex(bp, js_end-bp, 0);
-      while (j != -1) {
-        cnt++;
-        if (j == 0) {
-          bp = bp+1;
-        } else {
-          bp = bp+j+1;
-        }
-        j = offset2Hex(bp, js_end-bp, 1);
-      } // while (j != -1)
+    if (js_start == NULL) 
+      break;
+
+    bp = js_start+31;
+    js_end = strnstr(bp, JS_SCRIPT_END, len-(bp-buf));
+
+    if (js_end == NULL) 
+      break;
+
+    // count the number of usable hex char between js_start+31 and js_end
+    rval = offset2Hex(bp, js_end-bp, 0, j);
+
+    while (rval == RCODE_OK) {
+      cnt++;
+      bp = bp+j+1;
+      rval = offset2Hex(bp, js_end-bp, 1, j);
+    } 
 
       bp += 9;
-    } // while (bp < (buf+len))
-    return cnt;
-  }
+  } // while (bp < (buf+len))
+  
+  return cnt;
 
  err:
+  log_warn("error in capacity_JS");
   return 0;
 }
 
@@ -342,7 +342,7 @@ char*
 str_in_binary (const char *pattern, size_t pattern_len, const char *blob, size_t blob_len) 
 {
   int found = 0;
-  char *cp = (char *)blob;
+  char *cp = (char *) blob;
   const char *blob_end = blob + blob_len;
 
   while ((size_t)(blob_end - cp) >= pattern_len) {
@@ -355,6 +355,7 @@ str_in_binary (const char *pattern, size_t pattern_len, const char *blob, size_t
 
   if (found)
     return cp;
+
   return NULL;
 }
 
@@ -364,14 +365,17 @@ str_in_binary (const char *pattern, size_t pattern_len, const char *blob, size_t
  * find the number of char in {i, g, m} 
  * appearing in the input word of length wlen
  */
-int 
+uint8_t 
 count_GIM (char *word, int wlen) 
 {
-   int i_flag = 0, g_flag = 0, m_flag = 0;
-   char *cp;
+   bool i_flag = 0, g_flag = 0, m_flag = 0;
+   char *cp = NULL;
 
    cp = word;
-   if (wlen < 1) return 0;
+
+   if (wlen < 1) 
+     return 0;
+
    while (cp < word+wlen) {
      if (*cp == 'i') {
        i_flag = 1;

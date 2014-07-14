@@ -120,11 +120,11 @@ load_payloads(payloads& pl, const char* fname)
       log_warn("pentry body read failed (%d)", bytes_read);
       goto err;
     }
-    else if (bytes_read < (int) pentry.length) {
+    if (bytes_read < (int) pentry.length) {
       log_warn("short pentry body read %d < %u", bytes_read,  pentry.length);
       goto err;
     }
-    else if (bytes_read  > (int) pentry.length) {
+    if (bytes_read  > (int) pentry.length) {
       log_warn("long pentry body read %d > %u", bytes_read, pentry.length);
       goto err;
     }
@@ -182,12 +182,11 @@ load_payloads(payloads& pl, const char* fname)
     curr_payload = NULL;
     continue;
   err:
-    if (curr_payload != NULL) free(curr_payload);
+    free(curr_payload);
     curr_payload = NULL;
     break;
   } // while
 
-  assert (curr_payload == NULL);
   log_debug("loaded %d payloads from %s", pl.payload_count, fname);
 
   // Clean up temporary buffer */
@@ -748,8 +747,8 @@ find_client_payload(payloads& pl, char* buf, size_t buflen, uint16_t type, size_
 	log_debug("BUFFER TOO SMALL: %d %" PriSize_t, p->length, buflen);
 	goto next;
       }
-      else
-	len = p->length;
+
+      len = p->length;
       break;
     }
   next:

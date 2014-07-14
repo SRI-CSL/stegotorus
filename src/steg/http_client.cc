@@ -314,7 +314,7 @@ http_client_uri_transmit (http_steg_t *s, struct evbuffer *source, conn_t *conn)
   size_t datalen = 0;
   size_t outbufsz = 3*1024;
   size_t bufsz = 10*1024;
-  size_t offset;
+  size_t offset = 0;
 
   if (source2hex(source, source_length, &data, datalen) != RCODE_OK) {
     log_warn("source2hex called returned negative value");
