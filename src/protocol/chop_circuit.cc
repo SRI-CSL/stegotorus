@@ -2,7 +2,6 @@
  * See LICENSE for other credits and copying information
  */
 
-
 #include <vector>
 #include <sstream>
 
@@ -10,7 +9,6 @@
 #include "chop_blk.h"
 #include "chop_conn.h"
 #include "chop_circuit.h"
-
 
 
 
@@ -80,7 +78,7 @@ chop_circuit_t::close()
   chop_circuit_table::iterator out;
   out = config->circuits.find(circuit_id);
   log_assert(out != config->circuits.end());
-  //  log_assert(out->second == this);
+  log_assert(out->second == this);
   out->second = NULL;
   circuit_t::close();
 }
@@ -194,7 +192,8 @@ chop_circuit_t::send()
     int rval = find_best_to_retransmit(NULL, block);
 
     if (rval == 0) {
-      return check_for_eof();
+      check_for_eof();
+      return 0;
     }
     
     if (rval > 0)
@@ -222,8 +221,10 @@ chop_circuit_t::send()
     avail = evbuffer_get_length(xmit_pending);
   } while (avail > 0);
 
-  if (avail0 != avail)
-    return check_for_eof();
+  if (avail0 != avail) {
+    check_for_eof();
+    return 0;
+  }
 
 
  no_forward_progress:
@@ -232,7 +233,8 @@ chop_circuit_t::send()
 
   if (no_target_connection == false) {
     circuit_arm_axe_timer(this, axe_interval());
-    return check_for_eof();
+    check_for_eof();
+    return 0;
   }
 
   // If we're the client and we had no target connection, try
@@ -244,7 +246,8 @@ chop_circuit_t::send()
     }
   }
 
-  return check_for_eof();
+  check_for_eof();
+  return 0;
 }
 
 
@@ -547,18 +550,12 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
     return -1;
   }
 
-  struct evbuffer *block = evbuffer_new();
-  if (!block) {
-    log_warn(conn, "memory allocation failure");
-    return -1;
-  }
-
-
   if (evbuffer_remove_buffer(payload, data, d) != (int)d) {
     log_warn(conn, "failed to extract payload");
     evbuffer_free(data);
     return -1;
   }
+
 
   //careful on windows things like ostream and sstream can pull in a 64 bit time_t
   //while mingw-w64-gcc's time.h seems to pull in a 32 bit time_t
@@ -569,6 +566,11 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
   uint32_t seqno = tx_queue.enqueue(f, data, p);
 
 
+  struct evbuffer *block = evbuffer_new();
+  if (!block) {
+    log_warn(conn, "memory allocation failure");
+    return -1;
+  }
   if (tx_queue.transmit(seqno, block, *send_hdr_crypt, *send_crypt)) {
     log_warn(conn, "encryption failure for block %u", seqno);
     evbuffer_free(block);
@@ -746,7 +748,6 @@ chop_circuit_t::maybe_send_ack()
     debug_ack_contents(ackp, ackdump);
     log_debug(this, "sending ACK: %s", ackdump.str().c_str());
   }
-
   return send_special(op_ACK, ackp);
 }
 
@@ -783,7 +784,7 @@ chop_circuit_t::recv_block(uint32_t seqno, opcode_t op, evbuffer *data)
 	       (unsigned long)evbuffer_get_length(bufferevent_get_input(up_buffer)),
 	       ackdump.str().c_str());       
     }
-    
+
     if (tx_queue.process_ack(data))
       log_warn(this, "protocol error: invalid ACK payload");
     goto zap;
@@ -825,7 +826,6 @@ chop_circuit_t::process_queue()
   bool pending_fin = false;
   bool pending_error = false;
   bool sent_error = false;
-
 
   while ((blk = recv_queue.remove_next()).data) {
     switch (blk.op) {
@@ -892,13 +892,14 @@ chop_circuit_t::process_queue()
     return send();
   */
 
-  return check_for_eof();
+  check_for_eof();
+  return 0;
 }
 
 
 
 
-int
+void 
 chop_circuit_t::check_for_eof()
 {
   // If we're at EOF both ways, close all connections, sending first
@@ -924,5 +925,4 @@ chop_circuit_t::check_for_eof()
     circuit_arm_flush_timer(this, flush_interval());
   }
 
-  return 0;
 }

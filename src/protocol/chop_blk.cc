@@ -9,6 +9,7 @@
 
 #include <event2/buffer.h>
 #include <iomanip>
+#include <limits>
 
 
 /* The chopper is the core StegoTorus protocol implementation.

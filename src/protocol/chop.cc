@@ -133,31 +133,29 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
       down_address_t da;
       da.parse(addresses[i]);
 
-      if(da.ok){
+      if (da.ok) {
+	struct evutil_addrinfo *addr =
+	  resolve_address_port(da.ip.c_str(), 1, !listen_up, NULL);
+	if (!addr) {
+	  log_warn("chop: invalid down address: %s", da.ip.c_str());
+	  goto usage;
+	}
 
-      struct evutil_addrinfo *addr =
-        resolve_address_port(da.ip.c_str(), 1, !listen_up, NULL);
-      if (!addr) {
-        log_warn("chop: invalid down address: %s", da.ip.c_str());
-        goto usage;
-      }
+	down_addresses.push_back(addr);
+      	
+	if (!steg_is_supported(da.steg.c_str())) {
+	  log_warn("chop: steganographer '%s' not supported", da.steg.c_str());
+	  goto usage;
+	}
 
-      down_addresses.push_back(addr);
+	steg_targets.push_back(steg_new(da.steg.c_str(), this));
       
-      
-      if (!steg_is_supported(da.steg.c_str())) {
-        log_warn("chop: steganographer '%s' not supported", da.steg.c_str());
-        goto usage;
-      }
-
-      steg_targets.push_back(steg_new(da.steg.c_str(), this));
-
       } else {
         log_warn("chop: invalid down address: %s", addresses[i].c_str());
         goto usage;
       }
     }
-
+    
     if(mo.trace_packets()){
       trace_packets = true;
       log_enable_timestamps();
@@ -257,10 +255,10 @@ chop_config_t::get_listen_addrs(size_t n) const
   if (mode == LSN_SIMPLE_SERVER) {
     if (n < down_addresses.size())
       return down_addresses[n];
-  } else {
-    if (n == 0)
-      return up_address;
+  } else if (n == 0) {
+    return up_address;
   }
+
   return 0;
 }
 
@@ -272,10 +270,10 @@ chop_config_t::get_target_addrs(size_t n) const
   if (mode == LSN_SIMPLE_SERVER) {
     if (n == 0)
       return up_address;
-  } else {
-    if (n < down_addresses.size())
-      return down_addresses[n];
+  } else if (n < down_addresses.size()) {
+    return down_addresses[n];
   }
+  
   return NULL;
 }
 

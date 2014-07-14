@@ -53,7 +53,7 @@ public:
 
   int recv_block(uint32_t seqno, opcode_t op, evbuffer *payload);
   int process_queue();
-  int check_for_eof();
+  void check_for_eof();
 
   uint32_t axe_interval() {
     // This function must always return a number which is larger than
