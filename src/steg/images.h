@@ -29,13 +29,13 @@ typedef struct image_pool {
 
 void free_image(image_p im);
 
-int extract_message(unsigned char** messagep, unsigned char* jpeg_data, unsigned int jpeg_data_length);
+int extract_message(unsigned char** messagep, int message_length, unsigned char* jpeg_data, unsigned int jpeg_data_length);
 
 image_pool_p load_images(const char* path);
 
 int free_image_pool(image_pool_p pool);
 
-image_p embed_message(image_pool_p pool, unsigned char* message, int message_length);
+image_p embed_message(image_pool_p pool, unsigned char* message, int message_length, bool embed_length);
 
 
 #endif

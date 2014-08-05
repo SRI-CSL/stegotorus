@@ -41,6 +41,7 @@ STEGANOGRAPHERS = \
 	src/steg/http_server.cc \
 	src/steg/http_client.cc \
 	src/steg/rawSteg.cc \
+	src/steg/jel_knobs.cc \
 	src/steg/jpegSteg.cc \
 	src/steg/images.cc \
 	src/steg/pdfs.cc \
@@ -161,6 +162,7 @@ noinst_HEADERS = \
 	src/steg/b64cookies.h \
 	src/steg/crypto.h \
 	src/steg/jsSteg.h \
+	src/steg/jel_knobs.h \
 	src/steg/jpegSteg.h \
 	src/steg/images.h \
 	src/steg/pdfs.h \

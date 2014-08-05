@@ -22,7 +22,9 @@
  * be true.
  *
  */
-const bool post_reflection = false;
+static bool post_reflection = true;
+
+void set_post_reflection(bool val);
 
 //a secret for those that don't set their secret
 #define STEGOTORUS_DEFAULT_SECRET "yadayadablahblah"

@@ -7,12 +7,15 @@
 
 #include <stdint.h>
 #include <errno.h>
-
+#include <string.h>
 
 #include "util.h"
 #include "protocol.h"
 #include "modus_operandi.h"
 #include "steg/schemes.h"
+#include "steg/jel_knobs.h"
+#include "steg/http.h"
+#include "steg/jpegSteg.h"
 
 using std::ifstream;
 
@@ -50,7 +53,9 @@ modus_operandi_t::modus_operandi_t()
   :  _is_ok(false),
      _protocol(), _mode(), _up_address(), _down_addresses(),
      _trace_packets(false), _persist_mode(false), _shared_secret(), _disable_encryption(false), _disable_retransmit(false),
-     _managed(false), _managed_method("stegotorus"), _daemon(false), _logmethod_set(false), _pid_file() { }
+     _managed(false), _managed_method("stegotorus"), _daemon(false), _logmethod_set(false), _pid_file(), _post_reflection(false) {
+  init_jel_knobs(_jel_knobs);
+}
 
 
 bool modus_operandi_t::process_line(string &line, int32_t lineno){
@@ -165,6 +170,21 @@ bool modus_operandi_t::process_line(string &line, int32_t lineno){
       return true;
     }
   }
+  else if(line_is(line, "jel-embed-length", rest)){
+    return set_bool(this->_jel_knobs.embed_length, rest, lineno);
+  }
+  else if(line_is(line, "jel-ecc-blocklen", rest)){
+    return set_int(this->_jel_knobs.ecc_blocklen, rest, lineno);
+  }
+  else if(line_is(line, "jel-freq-pool", rest)){
+    return set_int(this->_jel_knobs.freq_pool, rest, lineno);
+  }
+  else if(line_is(line, "jel-quality-out", rest)){
+    return set_int(this->_jel_knobs.quality_out, rest, lineno);
+  }
+  else if(line_is(line, "jel-random-seed", rest)){
+    return set_int(this->_jel_knobs.random_seed, rest, lineno);
+  }
   else if(line_is(line, "cookie-transmit", rest)){
     return set_scheme("cookie-transmit", rest, lineno);
   }
@@ -221,6 +241,11 @@ bool modus_operandi_t::process_line(string &line, int32_t lineno){
   }
   else if(line_is(line, "disable-retransmit", rest)){
     return set_bool(this->_disable_retransmit, rest, lineno);
+  }
+  else if(line_is(line, "post-reflection", rest)){
+    bool val = set_bool(this->_post_reflection, rest, lineno);
+    set_post_reflection(this->_post_reflection);
+    return val;
   }
 
   fprintf(stderr, "Did not understand line[%" PRId32"] = %s\n", lineno, line.c_str());
@@ -279,6 +304,7 @@ bool modus_operandi_t::load_file(const char* path){
     
     if (errors == 0){
       /* the bare minimum for both chop and null */
+      set_jel_preferences(this->_jel_knobs);
       _is_ok = true;
     }
     infile.close();
@@ -323,7 +349,17 @@ bool modus_operandi_t::set_bool(bool& boolref, string& rest, int32_t lineno){
   }
 
   return false;
+}
 
-
-
+bool modus_operandi_t::set_int(int& intref, string& rest, int32_t lineno){
+  rest = trim(rest);
+  if(!rest.empty()){
+    int val = atoi(rest.c_str());
+    intref = val;
+    return true;
+  } else {
+    fprintf(stderr, "Missing value on line %" PRId32"\n", lineno);
+  }
+  
+  return false;
 }

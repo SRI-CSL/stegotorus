@@ -13,13 +13,15 @@
 
 #include <jel/jel.h>
 
-#define EMBED_LENGTH 1
 #define IMAGES_LOG   "/tmp/stegojello.log"
 
 #define IMAGES_DEBUG 0
 
-static image_p load_image(image_pool_p pool, const char* path, char* basename);
-static image_p embed_message_aux(image_p cover, unsigned char* message, int message_length, unsigned char* destination, int destination_length);
+static image_p
+load_image(image_pool_p pool, const char* path, char* basename);
+
+static image_p
+embed_message_aux(image_p cover, unsigned char* message, int message_length, unsigned char* destination, int destination_length, bool embed_length);
 
 static image_pool_p alloc_image_pool();
 static image_pool_p alloc_image_pool(){
@@ -242,8 +244,8 @@ static image_p get_cover_image(image_pool_p pool, int size){
   return NULL;
 }
 
-image_p embed_message(image_pool_p pool, unsigned char* message, int message_length);
-image_p embed_message(image_pool_p pool, unsigned char* message, int message_length){
+image_p embed_message(image_pool_p pool, unsigned char* message, int message_length, bool embed_length);
+image_p embed_message(image_pool_p pool, unsigned char* message, int message_length, bool embed_length){
   image_p retval = NULL;
   if(message != NULL){
     image_p cover = get_cover_image(pool, message_length);
@@ -257,7 +259,7 @@ image_p embed_message(image_pool_p pool, unsigned char* message, int message_len
         free(destination);
         destination = (unsigned char*)xmalloc(destination_length);
         if(destination == NULL){ break; }
-        retval = embed_message_aux(cover, message, message_length, destination, destination_length);
+        retval = embed_message_aux(cover, message, message_length, destination, destination_length, embed_length);
         if(IMAGES_DEBUG){ log_warn("embed_message_aux:  %d  %p",  destination_length, retval); }
       } while((failures++ < 10) && (retval == NULL));
 
@@ -270,27 +272,28 @@ image_p embed_message(image_pool_p pool, unsigned char* message, int message_len
 }
 
 /* since we have to guess the size of the destination */
-static image_p embed_message_aux(image_p cover, unsigned char* message, int message_length, unsigned char* destination, int destination_length){
+static image_p
+embed_message_aux(image_p cover, unsigned char* message, int message_length, unsigned char* destination, int destination_length, bool embed_length){
   image_p retval = NULL;
   if(destination != NULL){
     jel_config *jel = jel_init(JEL_NLEVELS);
     int ret = jel_open_log(jel, (char *)IMAGES_LOG);
     int bytes_embedded = 0;
     if (ret == JEL_ERR_CANTOPENLOG) {
-      log_warn("extract_message: can't open %s!", IMAGES_LOG);
+      log_warn("embed_message_aux: can't open %s!", IMAGES_LOG);
       jel->logger = stderr;
     }
     ret = jel_set_mem_source(jel, cover->bytes, cover->size);
     if (ret != 0) {
-      log_warn("jel: error - setting source memory!");
+      log_warn("embed_message_aux: jel error - setting source memory!");
       return NULL;
     } 
     ret = jel_set_mem_dest(jel, destination, destination_length);
     if (ret != 0) {
-      log_warn("jel: error - setting dest memory!");
+      log_warn("embed_message_aux: jel error - setting dest memory!");
       return NULL;
     } 
-   jel_setprop(jel, JEL_PROP_EMBED_LENGTH, EMBED_LENGTH);
+   jel_setprop(jel, JEL_PROP_EMBED_LENGTH, embed_length);
 
    /* insert the message */
    bytes_embedded = jel_embed(jel, message, message_length);
@@ -314,7 +317,11 @@ static image_p embed_message_aux(image_p cover, unsigned char* message, int mess
 }
 
 
-int extract_message(unsigned char** messagep, unsigned char* jpeg_data, unsigned int jpeg_data_length){
+/* if the message_length is not zero, then the message has been embedded without its length, and this is the length to use */
+/* if the message_length is zero, then the message has been embedded with its length                                       */
+int extract_message(unsigned char** messagep, int message_length, unsigned char* jpeg_data, unsigned int jpeg_data_length){
+  bool embedded_length = (message_length == 0);
+  int msglen;
   if((messagep != NULL) && (jpeg_data != NULL)){
     if(IMAGES_DEBUG){ log_warn("extract_message:  %u", jpeg_data_length); }
     jel_config *jel = jel_init(JEL_NLEVELS);
@@ -328,10 +335,18 @@ int extract_message(unsigned char** messagep, unsigned char* jpeg_data, unsigned
       log_warn("extract_message: jel_set_mem_source failed: %d", ret);
       return 0;
     }
-    int msglen = jel_capacity(jel);
+
+    if(embedded_length){
+      msglen = jel_capacity(jel);
+    } else {
+      msglen = message_length;
+    }
+
+
     if(IMAGES_DEBUG){ log_warn("extract_message: capacity = %d", msglen); }
-    unsigned char* message = (unsigned char*)xzalloc(msglen+1);
-    jel_setprop(jel, JEL_PROP_EMBED_LENGTH, EMBED_LENGTH);
+    unsigned char* message = (unsigned char*) jel_alloc_buffer( jel );
+    //unsigned char* message = (unsigned char*)xzalloc(msglen+1);
+    jel_setprop(jel, JEL_PROP_EMBED_LENGTH, embedded_length);
     msglen = jel_extract(jel, message, msglen);
     if(IMAGES_DEBUG){ log_warn("extract_message: %d bytes extracted", msglen); }
     jel_close_log(jel);

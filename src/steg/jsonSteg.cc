@@ -14,7 +14,6 @@
 #include "strncasestr.h"
 #include "protocol.h"
 #include "crypto.h"
-
 #include "oshacks.h"
 
 
@@ -43,12 +42,6 @@
    %k   the payload
 
 */
-
-/* v says:
-
-   decode_cookie needs buffer_length  or  ...
-
- */
 
 /*
  * a payload will be a homogeneous array of these kinds of objects (homogeneous == one format per array), the

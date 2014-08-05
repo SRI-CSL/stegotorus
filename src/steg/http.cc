@@ -11,11 +11,18 @@
 #include "http_server.h"
 #include "http_client.h"
 
+#include "jpegSteg.h"
 #include "oshacks.h"
 
 
 /* define to show URI's */
 #undef ST_SHOWURI
+
+
+void set_post_reflection(bool val){
+  post_reflection = val;
+}
+
 
 STEG_DEFINE_MODULE(http);
 
@@ -67,6 +74,8 @@ http_steg_t::http_steg_t(http_steg_config_t *cf, conn_t *cn)
   memset(peer_dnsname, 0, sizeof peer_dnsname);
   persist_mode = cf->cfg->persist_mode;
   schemes_init();
+  //this is a no-op is they have been set in the config file
+  set_jel_preferences_to_default();
 }
 
 http_steg_t::~http_steg_t()
@@ -158,7 +167,7 @@ http_steg_t::transmit(struct evbuffer *source)
     retval = http_client_transmit(this, source);
   }
   else {
-    retval = http_server_transmit (this, source);
+    retval = http_server_transmit(this, source);
   }
 
   transmit_lock = false;

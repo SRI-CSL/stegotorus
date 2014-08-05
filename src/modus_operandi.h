@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "cpp.h"
+#include "steg/jel_knobs.h"
 
 
 using std::vector;
@@ -32,7 +33,6 @@ class down_address_t {
 
 
 class modus_operandi_t {
-
 
 
  public:
@@ -77,6 +77,12 @@ class modus_operandi_t {
 
   string pid_file(void){ return _pid_file; }
 
+  /* steganographic options */
+  bool post_reflection(void){ return _post_reflection; }
+  void post_reflection(bool val){  _post_reflection = val; }
+  
+
+  
   DISALLOW_COPY_AND_ASSIGN(modus_operandi_t);
  
  private: bool _is_ok;
@@ -102,6 +108,12 @@ class modus_operandi_t {
  private: string _pid_file;
 
 
+  /* steganographic options */
+ private: bool _post_reflection;
+
+ private: jel_knobs_t _jel_knobs;
+
+
   /* helper routines */
  private: bool process_line(string&, int32_t);
 
@@ -112,6 +124,8 @@ class modus_operandi_t {
  private: bool set_scheme(const char *, string&, int32_t);
   
  private: bool set_bool(bool&, string&, int32_t);
+
+ private: bool set_int(int&, string&, int32_t);
 
 };
 
