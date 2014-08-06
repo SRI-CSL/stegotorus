@@ -54,7 +54,62 @@ void set_jel_preferences(jel_knobs_t &knobs_in){
   knobs.quality_out   = knobs_in.quality_out;
   knobs.random_seed   = knobs_in.random_seed;
 }
-
+/*
+==26208== Invalid read of size 1
+==26208==    at 0x4C2E730: __memcpy_chk (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26208==    by 0x440A07: ijel_encode_ecc_nolength (string3.h:52)
+==26208==    by 0x44121F: ijel_stuff_message (ijel.c:187)
+==26208==    by 0x4391F8: jel_embed (jel.c:652)
+==26208==    by 0x41A956: embed_message(image_pool*, unsigned char*, int, bool) (images.cc:299)
+==26208==    by 0x4198A5: construct_jpeg_body(image_pool*, unsigned char*, unsigned int, unsigned char**, int*) (jpegSteg.cc:190)
+==26208==    by 0x419F5A: http_client_JPEG_post_transmit(http_steg_t*, evbuffer*, conn_t*) (jpegSteg.cc:372)
+==26208==    by 0x41823E: http_client_transmit(http_steg_t*, evbuffer*) (http_client.cc:56)
+==26208==    by 0x417674: http_steg_t::transmit(evbuffer*) (http.cc:181)
+==26208==    by 0x429BD4: chop_conn_t::send_block(evbuffer*, chop_circuit_t*) (chop_conn.cc:128)
+==26208==    by 0x429DA1: chop_circuit_t::send_targeted(chop_conn_t*, unsigned long, unsigned long, chop_blk::opcode_t, evbuffer*) (chop_circuit.cc:580)
+==26208==    by 0x42B46D: chop_conn_t::send(int) (chop_conn.cc:550)
+==26208==  Address 0x779c18f is 13 bytes after a block of size 258 alloc'd
+==26208==    at 0x4C2B6CD: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26208==    by 0x416973: xmalloc(unsigned long) (util.cc:63)
+==26208==    by 0x416C35: xzalloc(unsigned long) (util.cc:93)
+==26208==    by 0x433112: source2raw(evbuffer*, unsigned long, unsigned char**, unsigned long&) (shared.cc:175)
+==26208==    by 0x419E6F: http_client_JPEG_post_transmit(http_steg_t*, evbuffer*, conn_t*) (jpegSteg.cc:358)
+==26208==    by 0x41823E: http_client_transmit(http_steg_t*, evbuffer*) (http_client.cc:56)
+==26208==    by 0x417674: http_steg_t::transmit(evbuffer*) (http.cc:181)
+==26208==    by 0x429BD4: chop_conn_t::send_block(evbuffer*, chop_circuit_t*) (chop_conn.cc:128)
+==26208==    by 0x429DA1: chop_circuit_t::send_targeted(chop_conn_t*, unsigned long, unsigned long, chop_blk::opcode_t, evbuffer*) (chop_circuit.cc:580)
+==26208==    by 0x42B46D: chop_conn_t::send(int) (chop_conn.cc:550)
+==26208==    by 0x42B749: chop_conn_t::handshake() (chop_conn.cc:161)
+==26208==    by 0x412F20: downstream_connect_cb(bufferevent*, short, void*) (network.cc:599)
+==26208==
+==26208== Invalid read of size 1
+==26208==    at 0x4C2E73D: __memcpy_chk (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26208==    by 0x440A07: ijel_encode_ecc_nolength (string3.h:52)
+==26208==    by 0x44121F: ijel_stuff_message (ijel.c:187)
+==26208==    by 0x4391F8: jel_embed (jel.c:652)
+==26208==    by 0x41A956: embed_message(image_pool*, unsigned char*, int, bool) (images.cc:299)
+==26208==    by 0x4198A5: construct_jpeg_body(image_pool*, unsigned char*, unsigned int, unsigned char**, int*) (jpegSteg.cc:190)
+==26208==    by 0x419F5A: http_client_JPEG_post_transmit(http_steg_t*, evbuffer*, conn_t*) (jpegSteg.cc:372)
+==26208==    by 0x41823E: http_client_transmit(http_steg_t*, evbuffer*) (http_client.cc:56)
+==26208==    by 0x417674: http_steg_t::transmit(evbuffer*) (http.cc:181)
+==26208==    by 0x429BD4: chop_conn_t::send_block(evbuffer*, chop_circuit_t*) (chop_conn.cc:128)
+==26208==    by 0x429DA1: chop_circuit_t::send_targeted(chop_conn_t*, unsigned long, unsigned long, chop_blk::opcode_t, evbuffer*) (chop_circuit.cc:580)
+==26208==    by 0x42B46D: chop_conn_t::send(int) (chop_conn.cc:550)
+==26208==  Address 0x779c18d is 11 bytes after a block of size 258 alloc'd
+==26208==    at 0x4C2B6CD: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26208==    by 0x416973: xmalloc(unsigned long) (util.cc:63)
+==26208==    by 0x416C35: xzalloc(unsigned long) (util.cc:93)
+==26208==    by 0x433112: source2raw(evbuffer*, unsigned long, unsigned char**, unsigned long&) (shared.cc:175)
+==26208==    by 0x419E6F: http_client_JPEG_post_transmit(http_steg_t*, evbuffer*, conn_t*) (jpegSteg.cc:358)
+==26208==    by 0x41823E: http_client_transmit(http_steg_t*, evbuffer*) (http_client.cc:56)
+==26208==    by 0x417674: http_steg_t::transmit(evbuffer*) (http.cc:181)
+==26208==    by 0x429BD4: chop_conn_t::send_block(evbuffer*, chop_circuit_t*) (chop_conn.cc:128)
+==26208==    by 0x429DA1: chop_circuit_t::send_targeted(chop_conn_t*, unsigned long, unsigned long, chop_blk::opcode_t, evbuffer*) (chop_circuit.cc:580)
+==26208==    by 0x42B46D: chop_conn_t::send(int) (chop_conn.cc:550)
+==26208==    by 0x42B749: chop_conn_t::handshake() (chop_conn.cc:161)
+==26208==    by 0x412F20: downstream_connect_cb(bufferevent*, short, void*) (network.cc:599)
+==26208==
+ */
 static size_t
 construct_jpeg_headers(int method, const char* path, const char* host, const char* cookie, unsigned int body_length, char* headers);
 
@@ -256,7 +311,7 @@ http_server_JPEG_transmit (http_steg_t * s, struct evbuffer *source){
       log_warn("extracting raw to send failed");
       goto clean_up;
     }
-
+    
     body_length = construct_jpeg_body(pool, data, data_length, &body, &emessage_length);
 
     cookie = construct_jpeg_cookie(emessage_length, secret);
@@ -337,6 +392,7 @@ http_client_JPEG_receive(http_steg_t * s, struct evbuffer *dest, char* headers, 
   
   retval = raw2dest(dest,  data_length, data);
 
+  if(cookie != NULL){ free(cookie); }
   if(data != NULL){ free(data); }
   return retval;
 }
@@ -414,6 +470,7 @@ http_client_JPEG_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t 
 
  clean_up:
   if(headers != NULL) free(headers);
+  if(cookie != NULL) free(cookie);
   if(data != NULL) free(data);
   if(body != NULL) free(body);
   if(path != NULL) free(path); 
@@ -449,6 +506,7 @@ http_server_JPEG_post_receive(http_steg_t * s, struct evbuffer *dest, char* head
   }
 
   retval = raw2dest(dest, data_length, data);
+  if(cookie != NULL)free(cookie);
   if(data != NULL)free(data);
   return retval;
 }
