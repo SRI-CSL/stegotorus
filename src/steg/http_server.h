@@ -8,9 +8,7 @@
 #include "http.h"
 
 
-
 transmit_t http_server_transmit (http_steg_t * s, struct evbuffer *source);
-
 
 recv_t http_server_receive(http_steg_t *s, struct evbuffer *dest, struct evbuffer* source, char *headers, size_t headers_length);
 

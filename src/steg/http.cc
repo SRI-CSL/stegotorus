@@ -14,14 +14,28 @@
 #include "jpegSteg.h"
 #include "oshacks.h"
 
+/*
+ * A useful switch for debugging a scheme. If it is true, then
+ * a POST of X  will get a response of X. In other words one
+ * could just do JPEG steg between the client and server by
+ * turning off all the other schemes, and having post_reflection
+ * be true.
+ *
+ */
 
-/* define to show URI's */
-#undef ST_SHOWURI
-
+static bool post_reflection = true;
 
 void set_post_reflection(bool val){
   post_reflection = val;
 }
+
+bool get_post_reflection(){
+  return post_reflection;
+}
+
+
+/* define to show URI's */
+#undef ST_SHOWURI
 
 
 STEG_DEFINE_MODULE(http);

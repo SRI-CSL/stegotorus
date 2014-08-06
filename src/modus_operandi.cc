@@ -53,7 +53,7 @@ modus_operandi_t::modus_operandi_t()
   :  _is_ok(false),
      _protocol(), _mode(), _up_address(), _down_addresses(),
      _trace_packets(false), _persist_mode(false), _shared_secret(), _disable_encryption(false), _disable_retransmit(false),
-     _managed(false), _managed_method("stegotorus"), _daemon(false), _logmethod_set(false), _pid_file(), _post_reflection(false) {
+     _managed(false), _managed_method("stegotorus"), _daemon(false), _logmethod_set(false), _pid_file(), _post_reflection(false), _jel_knobs() {
   init_jel_knobs(_jel_knobs);
 }
 

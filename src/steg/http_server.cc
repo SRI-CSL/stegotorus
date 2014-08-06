@@ -12,6 +12,7 @@
 #include "schemes.h"
 
 
+
 static recv_t
 http_server_receive_POST (http_steg_t * s, struct evbuffer *dest, struct evbuffer* source, char* headers, size_t headers_length);
 
@@ -92,7 +93,7 @@ http_server_receive (http_steg_t *s, struct evbuffer *dest, struct evbuffer* sou
   case HTTP_POST: {
     /* http_server_receive_POST sets s->type */
     retval = http_server_receive_POST(s, dest, source, headers, headers_length);
-    if(!post_reflection && retval == RECV_GOOD){
+    if(!get_post_reflection() && retval == RECV_GOOD){
       s->type = HTTP_CONTENT_HTML;
     }
     break;
