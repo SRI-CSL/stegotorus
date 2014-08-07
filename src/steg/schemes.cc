@@ -350,7 +350,7 @@ schemes_serverside_transmit_room (payloads&  payloads, int content_type, size_t 
 void
 schemes_clientside_init (payloads& payloads, const char* imagedir, const char* pdfdir)
 {
-  if(enabled_schemes[JS_GET]){ init_js_keywords(); }
+  if(enabled_schemes[JS_GET] || enabled_schemes[HTML_GET]){ init_js_keywords(); }
     
   if(enabled_schemes[PDF_POST]){
     init_PDF_payload_pool(payloads, HTTP_MSG_BUF_SIZE, TYPE_HTTP_RESPONSE, PDF_MIN_AVAIL_SIZE);
@@ -374,6 +374,7 @@ schemes_serverside_init (payloads& payloads, const char* imagedir, const char* p
     init_JS_payload_pool(payloads, HTTP_MSG_BUF_SIZE, TYPE_HTTP_RESPONSE, JS_MIN_AVAIL_SIZE);
   }
   if(enabled_schemes[HTML_GET]){
+    init_js_keywords();
     init_HTML_payload_pool(payloads, HTTP_MSG_BUF_SIZE, TYPE_HTTP_RESPONSE, HTML_MIN_AVAIL_SIZE);
   }
   if(enabled_schemes[PDF_GET]){
