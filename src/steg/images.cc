@@ -13,10 +13,10 @@
 
 #include <jel/jel.h>
 
-#define IMAGES_LOG   "/tmp/stegojello.log"
 
-#define IMAGES_DEBUG 0
-
+static const bool images_debug = 0;
+static const char images_log[] = "/tmp/stegojello.log";
+  
 static image_p
 load_image(image_pool_p pool, const char* path, char* basename);
 
@@ -120,9 +120,11 @@ image_pool_p load_images(const char* path, int maxcount){
   }
 
   /* need to do something about multiple connections loading multiple images; does this happen with payloads too? */
-  log_warn("load_images: count now %d", pool->the_images_offset);
-  log_warn("load_images: min capacity: %d", pool->the_images_min_payload);
-  log_warn("load_images: max capacity: %d", pool->the_images_max_payload);
+  if(images_debug){
+    log_warn("load_images: count now %d", pool->the_images_offset);
+    log_warn("load_images: min capacity: %d", pool->the_images_min_payload);
+    log_warn("load_images: max capacity: %d", pool->the_images_max_payload);
+  }
   
   if(pool->the_images_offset == 0){
     free_image_pool(pool);
@@ -167,9 +169,9 @@ static bool file2bytes(const char* path, unsigned char* bytes, size_t bytes_want
 /* a playground at present */
 static int capacity(image_p image){
   jel_config *jel = jel_init(JEL_NLEVELS);
-  int ret = jel_open_log(jel, (char *)IMAGES_LOG);
+  int ret = jel_open_log(jel, (char *)images_log);
   if (ret == JEL_ERR_CANTOPENLOG) {
-    log_warn("Can't open %s!", IMAGES_LOG);
+    log_warn("Can't open %s!", images_log);
     jel->logger = stderr;
   }
   ret = jel_set_mem_source(jel, image->bytes, image->size);
@@ -219,7 +221,7 @@ static image_p load_image(image_pool_p pool, const char* path, char* basename){
               pool->the_images_min_payload = image->capacity;
             }
             
-            if(IMAGES_DEBUG){
+            if(images_debug){
               log_warn("load_image loaded %s of size %" PriSize_t " with capacity %d", image->path, image->size, image->capacity);
             }
 
@@ -310,7 +312,7 @@ image_p embed_message(image_pool_p pool, unsigned char* message, int message_len
 image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length);
 image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length){
   image_p retval = NULL;
-  if(IMAGES_DEBUG){ log_warn("embed_message_in_image:  %d %s",  message_length, cover->path); }
+  if(images_debug){ log_warn("embed_message_in_image:  %d %s",  message_length, cover->path); }
   int failures = 0, destination_length = cover->size;
   unsigned char* destination = NULL;
   
@@ -320,10 +322,10 @@ image_p embed_message_in_image(image_p cover, unsigned char* message, int messag
     destination = (unsigned char*)xmalloc(destination_length);
     if(destination == NULL){ break; }
     retval = embed_message_aux(cover, message, message_length, destination, destination_length, embed_length);
-    if(IMAGES_DEBUG){ log_warn("embed_message_aux:  %d  %p",  destination_length, retval); }
+    if(images_debug){ log_warn("embed_message_aux:  %d  %p",  destination_length, retval); }
   } while((failures++ < 10) && (retval == NULL));
   
-  if(IMAGES_DEBUG && retval != NULL){
+  if(images_debug && retval != NULL){
     log_warn("embed_message_in_image:  stegged image size = %" PriSize_t,  retval->size);
   }
 
@@ -336,10 +338,10 @@ embed_message_aux(image_p cover, unsigned char* message, int message_length, uns
   image_p retval = NULL;
   if(destination != NULL){
     jel_config *jel = jel_init(JEL_NLEVELS);
-    int ret = jel_open_log(jel, (char *)IMAGES_LOG);
+    int ret = jel_open_log(jel, (char *)images_log);
     int bytes_embedded = 0;
     if (ret == JEL_ERR_CANTOPENLOG) {
-      log_warn("embed_message_aux: can't open %s!", IMAGES_LOG);
+      log_warn("embed_message_aux: can't open %s!", images_log);
       jel->logger = stderr;
     }
     ret = jel_set_mem_source(jel, cover->bytes, cover->size);
@@ -381,11 +383,11 @@ int extract_message(unsigned char** messagep, int message_length, unsigned char*
   bool embedded_length = (message_length == 0);
   int msglen;
   if((messagep != NULL) && (jpeg_data != NULL)){
-    if(IMAGES_DEBUG){ log_warn("extract_message:  %u", jpeg_data_length); }
+    if(images_debug){ log_warn("extract_message:  %u", jpeg_data_length); }
     jel_config *jel = jel_init(JEL_NLEVELS);
-    int ret = jel_open_log(jel, (char *)IMAGES_LOG);
+    int ret = jel_open_log(jel, (char *)images_log);
     if (ret == JEL_ERR_CANTOPENLOG) {
-      log_warn("extract_message: can't open %s!", IMAGES_LOG);
+      log_warn("extract_message: can't open %s!", images_log);
       jel->logger = stderr;
     }
     ret = jel_set_mem_source(jel, jpeg_data, jpeg_data_length);
@@ -401,12 +403,12 @@ int extract_message(unsigned char** messagep, int message_length, unsigned char*
     }
 
 
-    if(IMAGES_DEBUG){ log_warn("extract_message: capacity = %d", msglen); }
+    if(images_debug){ log_warn("extract_message: capacity = %d", msglen); }
     unsigned char* message = (unsigned char*) jel_alloc_buffer( jel );
     //unsigned char* message = (unsigned char*)xzalloc(msglen+1);
     jel_setprop(jel, JEL_PROP_EMBED_LENGTH, embedded_length);
     msglen = jel_extract(jel, message, msglen);
-    if(IMAGES_DEBUG){ log_warn("extract_message: %d bytes extracted", msglen); }
+    if(images_debug){ log_warn("extract_message: %d bytes extracted", msglen); }
     jel_close_log(jel);
    jel_free(jel);
     *messagep = message;
