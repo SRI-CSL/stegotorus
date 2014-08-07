@@ -249,6 +249,27 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
 }
 
 
+
+
+void chop_config_t::socks_force_addr(const char* host, int port) {
+  char port_buf[8];
+  sprintf(port_buf, "%d", port);
+
+  struct evutil_addrinfo* addr =  resolve_address_port(host, 1, 0, port_buf);
+  
+  for (vector<struct evutil_addrinfo *>::iterator i = down_addresses.begin();
+       i != down_addresses.end(); i++) {
+    // just change the addresses, keep the ports the same
+    struct sockaddr_in* daddr = (struct sockaddr_in*) ((*i)->ai_addr);
+    daddr->sin_addr.s_addr = ((struct sockaddr_in*) addr->ai_addr)->sin_addr.s_addr;
+  }
+
+  evutil_freeaddrinfo(addr);
+
+}
+
+
+
 struct evutil_addrinfo *
 chop_config_t::get_listen_addrs(size_t n) const
 {

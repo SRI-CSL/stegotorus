@@ -120,6 +120,7 @@ hex2dest(struct evbuffer *dest,  size_t data_length, char *data)
   /* get a scratch buffer */
   scratch = evbuffer_new();
   if (!scratch){
+    log_warn("scratch evbuffer_new() failed \n");
     goto clean_up;
   }
   
@@ -238,7 +239,7 @@ raw2dest(struct evbuffer *dest, size_t data_length, uchar *data)
     goto clean_up;
   }
   
-  /* make room for the hex data */
+  /* make room for the raw data */
   if (evbuffer_expand(scratch, data_length)) {
     log_warn("evbuffer expand failed \n");
     goto clean_up;

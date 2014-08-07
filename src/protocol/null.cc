@@ -161,6 +161,20 @@ null_config_t::init(int n_options, const char *const *options, modus_operandi_t 
   return false;
 }
 
+
+
+void null_config_t::socks_force_addr(const char* host, int port) {
+  char port_buf[8];
+  sprintf(port_buf, "%d", port);
+
+  evutil_freeaddrinfo(this->target_addr);
+  // this may not be right...
+  this->target_addr =  resolve_address_port(host, 1, 0, port_buf);
+  
+
+}
+
+
 /** Retrieve the 'n'th set of listen addresses for this configuration. */
 struct evutil_addrinfo *
 null_config_t::get_listen_addrs(size_t n) const

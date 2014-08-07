@@ -762,10 +762,11 @@ chop_circuit_t::recv_block(uint32_t seqno, opcode_t op, evbuffer *data)
 
   switch (op) {
   case op_DAT:
-  case op_FIN:
+    //case op_FIN:
     // No special handling required.
     goto insert;
 
+  case op_FIN:
   case op_RST:
     // Remote signaled a protocol error.  Disconnect.
     log_info(this, "received RST; disconnecting circuit");

@@ -98,6 +98,10 @@ class config_t
       the address to which the socket is bound.  */
 
   virtual conn_t *conn_create(size_t index) = 0;
+
+  virtual void socks_force_addr(const char* host, int port) = 0;
+
+
 };
 
 int config_is_supported(const char *name);
@@ -148,7 +152,8 @@ extern const proto_module *const supported_protos[];
   virtual evutil_addrinfo *get_target_addrs(size_t n) const;                          \
   virtual const steg_config_t *get_steg(size_t n) const;                              \
   virtual circuit_t *circuit_create(size_t index);                                    \
-  virtual conn_t *conn_create(size_t index)                                           \
+  virtual conn_t *conn_create(size_t index);				              \
+  virtual void socks_force_addr(const char* host, int port)                           \
   /* deliberate absence of semicolon */
 
 #define CONFIG_STEG_STUBS(mod)                                  \

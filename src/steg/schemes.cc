@@ -357,7 +357,7 @@ schemes_clientside_init (payloads& payloads, const char* imagedir, const char* p
   }
 
   if(enabled_schemes[JPEG_POST]){
-    payloads.pool = load_images(imagedir);
+    payloads.pool = load_images(imagedir, 20);
   }
 
   if(enabled_schemes[PDF_POST]){
@@ -385,7 +385,7 @@ schemes_serverside_init (payloads& payloads, const char* imagedir, const char* p
   }
 
   if(enabled_schemes[JPEG_POST] || enabled_schemes[JPEG_GET]){
-    payloads.pool = load_images(imagedir);  
+    payloads.pool = load_images(imagedir, 20);  
   }
 
   if(enabled_schemes[PDF_POST]){

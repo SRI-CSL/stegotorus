@@ -852,12 +852,26 @@ create_outbound_connections_socks(circuit_t *ckt)
     goto failure;
   }
 
+
+
   /* XXXX Feed socks state through the protocol and get a connection set.
      This is a stopgap. */
+
   if (ckt->cfg()->ignore_socks_destination) {
+    // if in managed_mode then use the IP address received from socks
+    // the port gets ignored, because the config file could specify 
+    // multiple services.  The right way to fix this is to change the
+    // Tor pluggable transports API to allow client side options
+ 
+    if (_managed_mode) {
+       cfg->socks_force_addr(host, port);
+    }
+
     create_outbound_connections(ckt, true);
     return;
   }
+
+  
 
   buf = bufferevent_socket_new(cfg->base, -1, BEV_OPT_CLOSE_ON_FREE);
   if (!buf) {
