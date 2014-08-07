@@ -41,7 +41,7 @@ image_pool_p load_images(const char* path, int maxcount);
 
 int free_image_pool(image_pool_p pool);
 
-image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length);
+image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length);
 
 image_p embed_message(image_pool_p pool, unsigned char* message, int message_length, bool embed_length);
 

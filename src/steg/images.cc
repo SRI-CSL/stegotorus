@@ -319,7 +319,7 @@ image_p embed_message_in_image(image_p cover, unsigned char* message, int messag
     free(destination);
     destination = (unsigned char*)xmalloc(destination_length);
     if(destination == NULL){ break; }
-    retval = embed_message_aux(cover, message, message_length, destination, destination_length);
+    retval = embed_message_aux(cover, message, message_length, destination, destination_length, embed_length);
     if(IMAGES_DEBUG){ log_warn("embed_message_aux:  %d  %p",  destination_length, retval); }
   } while((failures++ < 10) && (retval == NULL));
   
