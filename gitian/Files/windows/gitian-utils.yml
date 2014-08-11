@@ -1,0 +1,155 @@
+---
+name: "utils-windows"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "autoconf"
+- "autoconf2.13"
+- "automake"
+- "mingw-w64"
+- "faketime"
+- "libtool"
+# XXX: Only needed to dump the spec.
+- "g++-mingw-w64-i686"
+# Needed for compiling gcc.
+- "libmpc-dev"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://github.com/libevent/libevent.git"
+  "dir": "libevent"
+- "url": "https://github.com/madler/zlib.git"
+  "dir": "zlib"
+files:
+# XXX: we need to make this input tarball deterministic :/
+- "mingw-w64-svn-snapshot.zip"
+- "binutils.tar.bz2"
+- "gcc.tar.bz2"
+- "openssl.tar.gz"
+- "gmp.tar.bz2"
+- "versions"
+- "dzip.sh"
+script: |
+  INSTDIR="$HOME/install"
+  source versions
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  umask 0022
+
+  # Building binutils
+  tar xjf binutils.tar.bz2
+  cd binutils*
+  # XXX: This is needed due to bug 10102.
+  sed 's/= extern_rt_rel_d;/= extern_rt_rel_d;\n  memset (extern_rt_rel_d, 0, PE_IDATA5_SIZE);/' -i ld/pe-dll.c
+  ./configure --prefix=$INSTDIR/mingw-w64 --target=i686-w64-mingw32 --disable-multilib
+  make $MAKEOPTS
+  make install
+  # XXX: We currently do this as we are not using our own compiler but only our
+  # own binutils for compiling tor. See bug 10077. Nevertheless, we need both
+  # for cross-compiling Tor Browser.
+  cd $INSTDIR
+  ~/build/dzip.sh binutils-$BINUTILS_VER-win32-utils.zip mingw-w64
+  # Make sure our ld etc. is found and used.
+  export PATH=$INSTDIR/mingw-w64/bin:$PATH
+  cd ~/build
+
+  # Building mingw-w64
+  mkdir -p mingw-w64/mingw-w64-headers32
+  cd mingw-w64
+  unzip ../mingw-w64-svn-snapshot.zip
+  cd mingw-w64-headers32
+  ../mingw-w64-svn/mingw-w64-headers/configure --host=i686-w64-mingw32 --prefix=$INSTDIR/mingw-w64/i686-w64-mingw32 --enable-sdk=all --enable-secure-api --enable-idl
+  make install
+  cd ..
+  cd ..
+  # First stage of gcc compilation
+  mkdir gcc
+  cd gcc
+  tar -xjvf ../gcc.tar.bz2
+  # We don't want to link against msvcrt.dll due to bug 9084.
+  i686-w64-mingw32-g++ -dumpspecs > ~/build/msvcr100.spec
+  sed 's/msvcrt/msvcr100/' -i ~/build/msvcr100.spec
+  # Linking libgcc against msvcrt is hard-coded...
+  sed 's/msvcrt/msvcr100/' -i gcc-*/gcc/config/i386/t-mingw-w32
+  # LDFLAGS_FOR_TARGET does not work for some reason. Thus, we take
+  # CFLAGS_FOR_TARGET.
+  export CFLAGS_FOR_TARGET="-specs=/home/ubuntu/build/msvcr100.spec"
+  gcc-*/configure --prefix=$INSTDIR/mingw-w64 --target=i686-w64-mingw32 --disable-multilib --enable-languages=c,c++
+  # XXX: Using $MAKEOPTS (tested with -j4) breaks the build which does not
+  # happen in a non-gitian environment. This is probably related to bug 11459.
+  make all-gcc
+  make install-gcc
+  cd ..
+  #
+  cd mingw-w64
+  mkdir mingw-w64-crt32 && cd mingw-w64-crt32
+  ../mingw-w64-svn/mingw-w64-crt/configure --host=i686-w64-mingw32 --prefix=$INSTDIR/mingw-w64/i686-w64-mingw32
+  make $MAKEOPTS
+  make install
+  cd ..
+  #
+  mkdir widl32 && cd widl32
+  ../mingw-w64-svn/mingw-w64-tools/widl/configure --prefix=$INSTDIR/mingw-w64 --target=i686-w64-mingw32
+  make $MAKEOPTS
+  make install
+  cd ..
+  cd ..
+  # Second stage of gcc compilation
+  cd gcc
+  make $MAKEOPTS
+  make install
+  cd ..
+
+  # Building zlib
+  export CFLAGS="-mwindows"
+  export LDFLAGS="-mwindows"
+  cd zlib
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  make BINARY_PATH=$INSTDIR/zlib/lib INCLUDE_PATH=$INSTDIR/zlib/include LIBRARY_PATH=$INSTDIR/zlib/lib -f win32/Makefile.gcc PREFIX=i686-w64-mingw32- $MAKEOPTS SHARED_MODE=1
+  make BINARY_PATH=$INSTDIR/zlib/lib INCLUDE_PATH=$INSTDIR/zlib/include LIBRARY_PATH=$INSTDIR/zlib/lib -f win32/Makefile.gcc PREFIX=i686-w64-mingw32- $MAKEOPTS SHARED_MODE=1 install
+  cd ..
+
+  # Building Libevent
+  cd libevent
+  ./autogen.sh
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --disable-static --host=i686-w64-mingw32 --prefix=$INSTDIR/libevent
+  make $MAKEOPTS
+  make install
+  cd ..
+
+  # Building OpenSSL
+  tar xzf openssl.tar.gz
+  cd openssl-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # TODO: Add enable-ec_nistp_64_gcc_128 for 64bit Windows.
+  ./Configure -shared --cross-compile-prefix=i686-w64-mingw32- mingw --prefix=$INSTDIR/openssl
+  # Using $MAKEOPTS breaks the build. Might be the issue mentioned on
+  # http://cblfs.cross-lfs.org/index.php/OpenSSL.
+  make
+  make install
+  cd ..
+
+  # Building GMP
+  tar xjf gmp.tar.bz2
+  cd gmp-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --prefix=$INSTDIR/gmp --host=i686-w64-mingw32 --enable-cxx --disable-static --enable-shared
+  make
+  make install
+  cd ..
+
+  # Grabbing the remaining results
+  cd $INSTDIR
+  ~/build/dzip.sh mingw-w64-$GCC_VER-win32-utils.zip mingw-w64
+  ~/build/dzip.sh zlib-${ZLIB_TAG#v}-win32-utils.zip zlib
+  ~/build/dzip.sh libevent-${LIBEVENT_TAG#release-}-win32-utils.zip libevent
+  ~/build/dzip.sh openssl-$OPENSSL_VER-win32-utils.zip openssl
+  ~/build/dzip.sh gmp-$GMP_VER-win32-utils.zip gmp
+  cp *-utils.zip $OUTDIR/

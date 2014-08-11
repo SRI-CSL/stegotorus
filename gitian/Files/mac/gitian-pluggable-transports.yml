@@ -1,0 +1,312 @@
+---
+name: "pluggable-transports-mac"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "swig"
+- "m4"
+- "python-setuptools"
+- "python-dev"
+- "faketime"
+- "libtool"
+#<stegotorus>	
+- "libtool"
+- "autoconf"
+- "automake"
+- "pkg-config"
+#</stegotorus>
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://git.torproject.org/pluggable-transports/pyptlib.git"
+  "dir": "pyptlib"
+- "url": "https://git.torproject.org/pluggable-transports/obfsproxy.git"
+  "dir": "obfsproxy"
+- "url": "https://git.torproject.org/flashproxy.git"
+  "dir": "flashproxy"
+- "url": "https://github.com/kpdyer/libfte.git"
+  "dir": "libfte"
+- "url": "https://github.com/kpdyer/fteproxy.git"
+  "dir": "fteproxy"
+- "url": "https://github.com/habnabit/txsocksx.git"
+  "dir": "txsocksx"
+#<stegotorus>	
+- "url": "https://github.com/SRI-CSL/jel.git"
+  "dir": "jel"
+- "url": "https://github.com/SRI-CSL/stegotorus.git"
+  "dir": "stegotorus"
+- "url": "https://github.com/akheron/jansson.git"
+  "dir": "jansson"
+- "url": "https://github.com/madler/zlib.git"
+  "dir": "zlib"
+#</stegotorus>
+files:
+- "pycrypto.tar.gz"
+- "argparse.tar.gz"
+- "pyyaml.tar.gz"
+- "zope.interface.zip"
+- "twisted.tar.bz2"
+- "m2crypto.tar.gz"
+- "parsley.tar.gz"
+- "apple-uni-sdk-10.6_20110407-0.flosoft1_i386.deb"
+- "multiarch-darwin11-cctools127.2-gcc42-5666.3-llvmgcc42-2336.1-Linux-120724.tar.xz"
+- "dzip.sh"
+- "gmp-mac32-utils.zip"
+- "openssl-mac32-utils.zip"
+#<stegotorus>	
+- "libevent-mac32-utils.zip"
+- "sribundle.tar.gz"
+#</stegotorus>
+script: |
+  INSTDIR="$HOME/install"
+  TBDIR="$INSTDIR/TorBrowserBundle.app/TorBrowser"
+  PTDIR="$TBDIR/Tor/PluggableTransports"
+  export LIBRARY_PATH="$INSTDIR/lib"
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  umask 0022
+  #
+  mkdir -p $PTDIR/
+  mkdir -p $OUTDIR/
+  #
+  sudo dpkg -i *.deb
+  tar xaf multiarch-darwin*tar.xz
+  export PATH="$PATH:$HOME/build/apple-osx/bin/"
+
+  unzip -d $INSTDIR openssl-mac32-utils.zip
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/openssl/lib/pkgconfig"
+
+  unzip -d $INSTDIR libevent-mac32-utils.zip
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/libevent/lib/pkgconfig"
+  cp $INSTDIR/libevent/lib/libevent-*.dylib $TBDIR/Tor/
+  LIBEVENT_FILE=`basename $INSTDIR/libevent/lib/libevent-*.dylib`
+
+  unzip -d $INSTDIR gmp-mac32-utils.zip
+  cp $INSTDIR/gmp/lib/*dylib* $TBDIR/Tor/
+
+
+  #
+  export AR=$HOME/build/apple-osx/bin/i686-apple-darwin11-ar
+  export CC=$HOME/build/apple-osx/bin/i686-apple-darwin11-gcc
+  export CXX=$HOME/build/apple-osx/bin/i686-apple-darwin11-g++
+  #<stegotorus>	
+  export RANLIB=$HOME/build/apple-osx/bin/i686-apple-darwin11-ranlib
+  #</stegotorus>
+  # http://bugs.python.org/issue9437
+  export LDSHARED="$CC -pthread -shared"
+  # XXX Clean up these flags?
+  export CFLAGS="-I/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/include/ -I/usr/lib/gcc/i686-apple-darwin10/4.2.1/include/ -I.  -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/system/ -F/usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks -mmacosx-version-min=10.5 -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/i686-apple-darwin10/4.2.1 -I$INSTDIR/gmp/include -L$INSTDIR/gmp/lib"
+  export CXXFLAGS="-I/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/include/ -I/usr/lib/gcc/i686-apple-darwin10/4.2.1/include/ -I.  -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/system/ -F/usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks -mmacosx-version-min=10.5 -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/i686-apple-darwin10/4.2.1 -I$INSTDIR/gmp/include -L$INSTDIR/gmp/lib"
+  export LDFLAGS="-L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/system/ -F/usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks -mmacosx-version-min=10.5"
+
+
+  #<stegotorus> 
+
+  mkdir -p $INSTDIR/zlib
+  mkdir -p $INSTDIR/jansson
+  mkdir -p $INSTDIR/include
+  mkdir -p $INSTDIR/lib
+  mkdir -p $INSTDIR/jel
+
+  #zlib
+  cd zlib	
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --prefix=$INSTDIR/zlib --static  
+   export CFLAGS=" -I. $CFLAGS";  export CXXFLAGS=" -I. $CXXFLAGS" make
+  make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/zlib/lib/pkgconfig"	
+  cd ..
+
+
+  cd jel
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure   --host=i686-apple-darwin11 --build=amd64-pc-linux-gnu --prefix=$INSTDIR/jel
+  make
+  make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jel/lib/pkgconfig"	
+  cd ..
+
+  cd jansson
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure  --host=i686-apple-darwin11 --prefix=$INSTDIR/jansson --disable-shared --enable-static
+  make
+  sudo make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jansson/lib/pkgconfig"	
+  echo $PKG_CONFIG_PATH
+  cd .. 
+
+  cd stegotorus
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # Because of this (from below):
+  # "We have to put $INSTDIR/openssl at the beginning of the header and library
+  #  search paths (build_ext otherwise puts it at the end, after CFLAGS and
+  #  LDFLAGS). The reason for this is that /usr/lib/apple/SDKs/MacOSX10.6.sdk/usr
+  #  (part of CFLAGS and LDFLAGS) has its own openssl headers and library files.
+  #  It also has necessary headers like stdio.h, so we can't remove it
+  #  completely, but our locally built openssl must take precedence."
+  # 
+  # We do a similar but uglier hack:
+  CXX="${CXX} -I$INSTDIR/openssl/include -L$INSTDIR/openssl/lib" ./configure --host=i686-apple-darwin11 --build=amd64-pc-linux-gnu --disable-integration-tests -with-stegtracesdir=./PluggableTransports/traces/
+  make
+  cp -a stegotorus $PTDIR/
+
+  cd ..
+
+  tar xvfz sribundle.tar.gz
+
+  cd sribundle
+  
+  cp -r modus_operandi $PTDIR/
+  cp -r traces $PTDIR/
+
+  cd ..
+
+  cd $PTDIR/
+  i686-apple-darwin11-install_name_tool -change $INSTDIR/libevent/lib/$LIBEVENT_FILE @executable_path/../$LIBEVENT_FILE stegotorus
+  #i686-apple-darwin11-install_name_tool -change $INSTDIR/libjansson/lib/$LIBJANSSON_FILE @executable_path/$LIBJANSSON_FILE stegotorus
+
+  cd $HOME/build
+  #</stegotorus> 
+
+
+  # Building pyptlib
+  cd pyptlib
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  python setup.py build --build-lib build
+  cp -a build/pyptlib $PTDIR/
+  cd ..
+
+  # Building PyCrypto
+  tar xzf pycrypto.tar.gz
+  cd pycrypto-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # https://bugs.launchpad.net/pycrypto/+bug/1096207 for ac_cv_func_malloc_0_nonnull.
+  ac_cv_func_malloc_0_nonnull=yes sh configure --host=i686-apple-darwin11
+  LDSHARED="$LDSHARED -framework Python" python setup.py build_ext --build-lib build -I/usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/Python.framework/Headers
+  python setup.py build --build-lib build
+  cp -a build/Crypto $PTDIR/
+  cd ..
+
+  # Building argparse
+  tar xzf argparse.tar.gz
+  cd argparse-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  python setup.py build --build-lib build
+  cp -a build/argparse.py $PTDIR/
+  cd ..
+
+  # Building Zope interfaces
+  unzip zope.interface.zip
+  cd zope.interface-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  python setup.py build --build-lib build
+  cp -a build/zope $PTDIR/
+  cd ..
+
+  # Building PyYAML
+  tar xzf pyyaml.tar.gz
+  cd PyYAML-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  python setup.py build --build-lib build
+  cp -a build/yaml $PTDIR/
+  cd ..
+
+  # Building Twisted
+  tar xjf twisted.tar.bz2
+  cd Twisted-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LDSHARED="$LDSHARED -framework Python" python setup.py build_ext --build-lib build -I/usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/Python.framework/Headers
+  python setup.py build --build-lib build
+  cp -a build/twisted $PTDIR/
+  cd ..
+
+  # Building Parsley
+  tar xzf parsley.tar.gz
+  cd Parsley-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  python setup.py build --build-lib build
+  cp -a build/parsley.py $PTDIR/
+  cp -a build/ometa $PTDIR/
+  cp -a build/terml $PTDIR/
+  cd ..
+
+  # Building txsocksx
+  cd txsocksx
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # Let's pretend we have the setup dependency already as we don't want to get
+  # it downloaded during building. Just pretending and thus avoiding another
+  # dependency should be fine here as txsocksx catches the exception due to
+  # missing __version__ and __sha__ .
+  mkdir vcversioner-1.14.1.1-py2.7.egg
+  python setup.py build --build-lib build
+  cp -a build/txsocksx $PTDIR/
+  cd ..
+
+  # Building obfsproxy
+  cd obfsproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  python setup.py build --build-lib build
+  cp -a build/obfsproxy $PTDIR/
+  cp -a bin/obfsproxy $PTDIR/obfsproxy.bin
+  mkdir -p $TBDIR/Docs/Obfsproxy
+  cp -a {LICENSE,README} $TBDIR/Docs/Obfsproxy
+  # XXX: Workaround for bug 11190
+  sed 's/python2/python/' -i $PTDIR/obfsproxy.bin
+  cd ..
+
+  # Building M2Crypto
+  tar xzf m2crypto.tar.gz
+  cd M2Crypto-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # We have to put $INSTDIR/openssl at the beginning of the header and library
+  # search paths (build_ext otherwise puts it at the end, after CFLAGS and
+  # LDFLAGS). The reason for this is that /usr/lib/apple/SDKs/MacOSX10.6.sdk/usr
+  # (part of CFLAGS and LDFLAGS) has its own openssl headers and library files.
+  # It also has necessary headers like stdio.h, so we can't remove it
+  # completely, but our locally built openssl must take precedence.
+  CFLAGS="-I$INSTDIR/openssl/include $CFLAGS" LDFLAGS="-L$INSTDIR/openssl/lib $LDFLAGS" LDSHARED="$LDSHARED -framework Python" python setup.py build_ext --build-lib build --openssl $INSTDIR/openssl -I/usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/Python.framework/Headers $SDK_INCLUDES
+  python setup.py build --build-lib build
+  cp -a build/M2Crypto $PTDIR/
+  cd ..
+
+  # Building flashproxy
+  cd flashproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  make dist DISTNAME=flashproxy-client
+  cp -a dist/flashproxy-client/{flashproxy,flashproxy-client,flashproxy-reg-appspot,flashproxy-reg-email,flashproxy-reg-http,flashproxy-reg-url} $PTDIR/
+  mkdir -p $TBDIR/Docs/FlashProxy
+  cp -a {doc/*,README,LICENSE,ChangeLog} $TBDIR/Docs/FlashProxy
+  cd ..
+
+  # Building libfte
+  cd libfte
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  CFLAGS="-L$INSTDIR/Tor -I$INSTDIR/gmp/include $CFLAGS" CXXFLAGS="-L$INSTDIR/Tor -I$INSTDIR/gmp/include $CXXFLAGS" make
+  cp -ra fte $PTDIR/
+  mkdir -p $TBDIR/Docs/libfte
+  cp -a {LICENSE,README.md} $TBDIR/Docs/libfte
+  cp -an thirdparty/re2/LICENSE $TBDIR/Docs/libfte/LICENSE.re2
+  cd ..
+
+  # Building fteproxy
+  cd fteproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  cp -a bin/fteproxy $PTDIR/fteproxy.bin
+  cp -ra fteproxy $PTDIR/
+  mkdir -p $TBDIR/Docs/fteproxy
+  cp -a {COPYING,README.md} $TBDIR/Docs/fteproxy
+  cd ..
+
+  # Grabbing the result
+  cd $INSTDIR
+  ~/build/dzip.sh pluggable-transports-mac$GBUILD_BITS-gbuilt.zip TorBrowserBundle.app
+  cp pluggable-transports-mac$GBUILD_BITS-gbuilt.zip $OUTDIR/

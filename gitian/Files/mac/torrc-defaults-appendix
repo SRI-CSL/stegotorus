@@ -1,0 +1,16 @@
+## fteproxy configuration
+ClientTransportPlugin fte exec PluggableTransports/fteproxy.bin --managed
+
+## stegotorus configuration(s)
+
+ClientTransportPlugin stegotorus exec PluggableTransports/stegotorus --config-file=PluggableTransports/modus_operandi/tbb-client-config-mac.conf
+
+## obfsproxy configuration
+ClientTransportPlugin obfs2,obfs3,scramblesuit exec PluggableTransports/obfsproxy.bin managed
+
+## flash proxy configuration
+#
+# Change the second number here (9000) to the number of a port that can
+# receive connections from the Internet (the port for which you
+# configured port forwarding).
+ClientTransportPlugin flashproxy exec PluggableTransports/flashproxy-client --register :0 :9000

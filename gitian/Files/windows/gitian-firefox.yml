@@ -1,0 +1,109 @@
+---
+name: "torbrowser-windows"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "autoconf"
+- "autoconf2.13"
+- "faketime"
+- "yasm"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://git.torproject.org/tor-browser.git"
+  "dir": "tor-browser"
+files:
+- "mingw-w64-win32-utils.zip"
+- "re-dzip.sh"
+- "dzip.sh"
+# TODO: Hardening.
+#- "i686-w64-mingw32-gcc"
+#- "i686-w64-mingw32-g++"
+#- "i686-w64-mingw32-ld"
+- "msvcr100.dll"
+- "versions"
+script: |
+  INSTDIR="$HOME/install"
+  source versions
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  umask 0022
+  #
+  mkdir -p $INSTDIR/Browser/
+  mkdir -p $OUTDIR/
+  unzip -d $INSTDIR mingw-w64-win32-utils.zip
+  # Make sure our custom mingw gets used.
+  export PATH=$INSTDIR/mingw-w64/bin:$PATH
+  # We don't want to link against msvcrt.dll due to bug 9084.
+  i686-w64-mingw32-g++ -dumpspecs > msvcr100.spec
+  sed 's/msvcrt/msvcr100/' -i msvcr100.spec
+
+  # Building the browser
+  cd tor-browser
+  mv .mozconfig-mingw .mozconfig
+  # FIXME
+  # Ideally, using LDFLAGS (and e.g. DLLFLAGS for NSS) would be enough to get
+  # all Firefox libraries linked against msvcr100. Alas, this does not hold for
+  # NSPR. Without patching it we get a "missing entry points for _strcmpi in
+  # msvcr100.dll". Now, this should be fixed in rev>=6179 as the def file there
+  # contains a proper patch according to the mingw-w64 developers.
+  # However, even with this patch the _strcmpi issue is still popping up,
+  # probably due to a bug in our current linking setup. The small patch below
+  # is therefore just a workaround which should get fixed but is at least
+  # justified as the signature of _strcmpi and _stricmp is the same, see:
+  # http://msdn.microsoft.com/en-us/library/k59z8dwe.aspx.
+  sed 's/strcmpi/stricmp/' -i nsprpub/pr/src/linking/prlink.c
+  export HOST_LDFLAGS=" "
+  export LDFLAGS="-specs=/home/ubuntu/build/msvcr100.spec"
+  # Our flags don't get passed to NSS. We need to do that manually using an
+  # obscure one.
+  export DLLFLAGS="-specs=/home/ubuntu/build/msvcr100.spec"
+  # .git and the src takes up a lot of useless space, and we need the space to build
+  #git archive HEAD | tar -x -C $OUTDIR/src
+  rm -rf .git
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  rm -f configure
+  rm -f js/src/configure
+  make -f client.mk configure
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  #
+  # FIXME: MinGW doens't like being built with hardening, and Firefox doesn't
+  # like being configured with it
+  # XXX: These changes cause the exes to crash on launch.
+  #mkdir -p ~/build/bin/
+  #cp ~/build/i686* ~/build/bin/
+  #export PATH=~/build/bin:$PATH
+  # XXX: the path to ld is hardcoded in mingw.. This forces gcc's linking to
+  # use our flags:
+  #sudo mv /usr/bin/i686-w64-mingw32-ld /usr/bin/i686-w64-mingw32-ld.orig
+  #sudo cp ~/build/bin/i686-w64-mingw32-ld /usr/bin/
+  #
+  make $MAKEOPTS -f client.mk build
+  #
+  make -C obj-* package INNER_MAKE_PACKAGE=true
+  cp -a obj-*/dist/firefox/* $INSTDIR/Browser/
+  cp -a ~/build/msvcr100.dll $INSTDIR/Browser/
+  #
+  # What the hell are these three bytes anyways?
+  # FIXME: This was probably fixed by patching binutils. If we get matching
+  # builds without it, remove these two:
+  #sed 's/\x94\x0C\xE7\x6A\xB8\x0C\xE7\x6A\x08...\x04\xBA\xCB\x7E/\x94\x0c\xe7\x6a\xb8\x0c\xe7\x6a\x08\x23\x23\x23\x04\xba\xcb\x7e/M' -i $INSTDIR/Browser/xul.dll
+  #sed 's/\x94\xb1\x24\x65\xb8\xb1\x24\x65\xf8...\x04\xba\xcb\x7e/\x94\xb1\x24\x65\xb8\xb1\x24\x65\xf8\x23\x23\x23\x04\xba\xcb\x7e/M' -i $INSTDIR/Browser/gkmedias.dll
+  # Stripping again updates the PE header checksums to be correct
+  i686-w64-mingw32-strip $INSTDIR/Browser/gkmedias.dll
+  i686-w64-mingw32-strip $INSTDIR/Browser/xul.dll
+
+  # Making the .ja files deterministic and grabbing the results
+  cd $INSTDIR
+  ~/build/re-dzip.sh Browser/omni.ja
+  ~/build/re-dzip.sh Browser/webapprt/omni.ja
+  ~/build/re-dzip.sh Browser/browser/omni.ja
+  ~/build/dzip.sh tor-browser-win32-gbuilt.zip Browser
+
+  cp tor-browser-win32-gbuilt.zip $OUTDIR

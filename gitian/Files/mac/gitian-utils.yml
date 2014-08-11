@@ -1,0 +1,83 @@
+---
+name: "utils-mac"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "autoconf"
+- "autoconf2.13"
+- "automake"
+- "faketime"
+- "libtool"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://github.com/libevent/libevent.git"
+  "dir": "libevent"
+files:
+- "apple-uni-sdk-10.6_20110407-0.flosoft1_i386.deb"
+- "multiarch-darwin11-cctools127.2-gcc42-5666.3-llvmgcc42-2336.1-Linux-120724.tar.xz"
+- "openssl.tar.gz"
+- "gmp.tar.bz2"
+- "versions"
+- "dzip.sh"
+script: |
+  INSTDIR="$HOME/install"
+  source versions
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  umask 0022
+
+  sudo dpkg -i *.deb
+  tar xaf multiarch-darwin*tar.xz
+  export PATH="$PATH:$HOME/build/apple-osx/bin/"
+  # For OpenSSL
+  ln -s ~/build/apple-osx/bin/apple-osx-gcc ~/build/apple-osx/bin/i686-apple-darwin11-cc
+
+  # XXX Clean up these flags?
+  export CFLAGS="-I/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/include/ -I/usr/lib/gcc/i686-apple-darwin10/4.2.1/include/ -I.  -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/system/ -mmacosx-version-min=10.5"
+  export CXXFLAGS="-I/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/include/ -I/usr/lib/gcc/i686-apple-darwin10/4.2.1/include/ -I.  -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/system/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/i686-apple-darwin10/4.2.1 -mmacosx-version-min=10.5"
+  export LDFLAGS="-L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/system/ -mmacosx-version-min=10.5"
+
+  # Building Libevent
+  cd libevent
+  ./autogen.sh
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --disable-static --host=i686-apple-darwin11 --prefix=$INSTDIR/libevent
+  make $MAKEOPTS
+  make install
+  cd ..
+
+  # Building OpenSSL
+  tar xzf openssl.tar.gz
+  cd openssl-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # TODO: Add enable-ec_nistp_64_gcc_128 for 64bit OS X.
+  ./Configure --cross-compile-prefix=i686-apple-darwin11- $CFLAGS darwin-i386-cc --prefix=$INSTDIR/openssl
+  # Using $MAKEOPTS breaks the build. Might be the issue mentioned on
+  # http://cblfs.cross-lfs.org/index.php/OpenSSL.
+  make
+  make install
+  cd ..
+
+  # Building GMP
+  tar xjf gmp.tar.bz2
+  cd gmp-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --host=i686-apple-darwin11 --prefix=$INSTDIR/gmp --disable-static --enable-shared --enable-cxx
+  make
+  make install
+  cd ..
+
+  # Grabbing the results
+  cd $INSTDIR
+  ~/build/dzip.sh openssl-$OPENSSL_VER-mac32-utils.zip openssl
+  ~/build/dzip.sh libevent-${LIBEVENT_TAG#release-}-mac32-utils.zip libevent
+  ~/build/dzip.sh gmp-$GMP_VER-mac32-utils.zip gmp
+
+  cp *utils.zip $OUTDIR/

@@ -1,0 +1,722 @@
+diff --git a/Bundle-Data/PTConfigs/bridge_prefs.js b/Bundle-Data/PTConfigs/bridge_prefs.js
+index 8d2afed..344b111 100644
+--- a/Bundle-Data/PTConfigs/bridge_prefs.js
++++ b/Bundle-Data/PTConfigs/bridge_prefs.js
+@@ -1,7 +1,15 @@
+ # Tor Launcher preferences (default bridges):
+-pref("extensions.torlauncher.default_bridge_recommended_type", "obfs3");
++pref("extensions.torlauncher.default_bridge_recommended_type", "stegotorus");
++
++
++
++// Default bridges
++pref("extensions.torlauncher.default_bridge.stegotorus.1", "stegotorus 127.0.0.1:8081 77BBB57CF3C48EBC621CE3DC96CA7C5B07F64F75");
++
++#pref("extensions.torlauncher.default_bridge.stegotorus.1", "stegotorus 127.0.0.1:8081 667537A848DF6FAB3056B4A48D39D5C11E2692B5");
++#pref("extensions.torlauncher.default_bridge.stegotorus.2", "stegotorus 127.0.0.1:8081 77BBB57CF3C48EBC621CE3DC96CA7C5B07F64F75");
++#pref("extensions.torlauncher.default_bridge.stegotorus.3", "stegotorus 127.0.0.1:8081 667537A848DF6FAB3056B4A48D39D5C11E2692B5");
+ 
+-// Default bridges.
+ pref("extensions.torlauncher.default_bridge.obfs3.1", "obfs3 83.212.101.3:80 A09D536DD1752D542E1FBB3C9CE4449D51298239");
+ pref("extensions.torlauncher.default_bridge.obfs3.2", "obfs3 169.229.59.74:31493 AF9F66B7B04F8FF6F32D455F05135250A16543C9");
+ pref("extensions.torlauncher.default_bridge.obfs3.3", "obfs3 169.229.59.75:46328 AF9F66B7B04F8FF6F32D455F05135250A16543C9");
+diff --git a/Bundle-Data/PTConfigs/linux/torrc-defaults-appendix b/Bundle-Data/PTConfigs/linux/torrc-defaults-appendix
+index ec45f9c..48337fa 100644
+--- a/Bundle-Data/PTConfigs/linux/torrc-defaults-appendix
++++ b/Bundle-Data/PTConfigs/linux/torrc-defaults-appendix
+@@ -1,6 +1,9 @@
+ ## fteproxy configuration
+ ClientTransportPlugin fte exec ./TorBrowser/Tor/PluggableTransports/fteproxy.bin --managed
+ 
++## stegotorus configuration(s)
++ClientTransportPlugin stegotorus exec ./TorBrowser/Tor/PluggableTransports/stegotorus --config-file=./TorBrowser/Tor/PluggableTransports/modus_operandi/tbb-client-config-linux.conf
++
+ ## obfsproxy configuration
+ ClientTransportPlugin obfs2,obfs3,scramblesuit exec ./TorBrowser/Tor/PluggableTransports/obfsproxy.bin managed
+ ## flash proxy configuration
+diff --git a/Bundle-Data/PTConfigs/mac/torrc-defaults-appendix b/Bundle-Data/PTConfigs/mac/torrc-defaults-appendix
+index 19fc8e0..adc4076 100644
+--- a/Bundle-Data/PTConfigs/mac/torrc-defaults-appendix
++++ b/Bundle-Data/PTConfigs/mac/torrc-defaults-appendix
+@@ -1,6 +1,10 @@
+ ## fteproxy configuration
+ ClientTransportPlugin fte exec PluggableTransports/fteproxy.bin --managed
+ 
++## stegotorus configuration(s)
++
++ClientTransportPlugin stegotorus exec PluggableTransports/stegotorus --config-file=PluggableTransports/modus_operandi/tbb-client-config-mac.conf
++
+ ## obfsproxy configuration
+ ClientTransportPlugin obfs2,obfs3,scramblesuit exec PluggableTransports/obfsproxy.bin managed
+ 
+diff --git a/Bundle-Data/PTConfigs/windows/torrc-defaults-appendix b/Bundle-Data/PTConfigs/windows/torrc-defaults-appendix
+index e97d3b7..0ebc6f3 100644
+--- a/Bundle-Data/PTConfigs/windows/torrc-defaults-appendix
++++ b/Bundle-Data/PTConfigs/windows/torrc-defaults-appendix
+@@ -1,6 +1,9 @@
+ ## fteproxy configuration
+ ClientTransportPlugin fte exec TorBrowser\Tor\PluggableTransports\fteproxy --managed
+ 
++## stegotorus configurations
++ClientTransportPlugin stegotorus exec TorBrowser\Tor\PluggableTransports\stegotorus --config-file=TorBrowser\Tor\PluggableTransports\modus_operandi\tbb-client-config-windows.conf
++
+ ## obfsproxy configuration
+ ClientTransportPlugin obfs2,obfs3,scramblesuit exec TorBrowser\Tor\PluggableTransports\obfsproxy managed
+ 
+diff --git a/gitian/Makefile b/gitian/Makefile
+index c81e32c..cb6e014 100644
+--- a/gitian/Makefile
++++ b/gitian/Makefile
+@@ -1,4 +1,4 @@
+-TORSOCKS = torsocks
++TORSOCKS =
+ 
+ all: clean prep build
+ 
+diff --git a/gitian/descriptors/linux/gitian-pluggable-transports.yml b/gitian/descriptors/linux/gitian-pluggable-transports.yml
+index 826b3b7..d0c823f 100644
+--- a/gitian/descriptors/linux/gitian-pluggable-transports.yml
++++ b/gitian/descriptors/linux/gitian-pluggable-transports.yml
+@@ -15,6 +15,12 @@ packages:
+ - "python-dev"
+ - "faketime"
+ - "hardening-wrapper"
++#<stegotorus>	
++- "libtool"
++- "autoconf"
++- "automake"
++- "pkg-config"
++#</stegotorus>
+ reference_datetime: "2000-01-01 00:00:00"
+ remotes:
+ - "url": "https://git.torproject.org/pluggable-transports/pyptlib.git"
+@@ -29,6 +35,16 @@ remotes:
+   "dir": "fteproxy"
+ - "url": "https://github.com/habnabit/txsocksx.git"
+   "dir": "txsocksx"
++#<stegotorus>	
++- "url": "https://github.com/SRI-CSL/jel.git"
++  "dir": "jel"
++- "url": "https://github.com/SRI-CSL/stegotorus.git"
++  "dir": "stegotorus"
++- "url": "https://github.com/akheron/jansson.git"
++  "dir": "jansson"
++- "url": "https://github.com/madler/zlib.git"
++  "dir": "zlib"
++#</stegotorus>
+ files:
+ - "pycrypto.tar.gz"
+ - "argparse.tar.gz"
+@@ -42,6 +58,11 @@ files:
+ - "gmp-linux64-utils.zip"
+ - "openssl-linux32-utils.zip"
+ - "openssl-linux64-utils.zip"
++#<stegotorus>	
++- "libevent-linux32-utils.zip"
++- "libevent-linux64-utils.zip"
++- "sribundle.tar.gz"
++#</stegotorus>
+ script: |
+   INSTDIR="$HOME/install"
+   PTDIR="$INSTDIR/Tor/PluggableTransports"
+@@ -61,9 +82,69 @@ script: |
+   export DEB_BUILD_HARDENING_PIE=1
+ 
+   unzip -d $INSTDIR gmp-linux$GBUILD_BITS-utils.zip
++
+   unzip -d $INSTDIR openssl-linux$GBUILD_BITS-utils.zip
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/openssl/lib/pkgconfig"	
++
++  unzip -d $INSTDIR libevent-linux$GBUILD_BITS-utils.zip
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/libevent/lib/pkgconfig"	
++
++
+   cp $INSTDIR/gmp/lib/*.so* $INSTDIR/Tor
+ 
++  #<stegotorus>	
++
++  mkdir -p $INSTDIR/zlib
++  mkdir -p $INSTDIR/jansson
++  mkdir -p $INSTDIR/include
++  mkdir -p $INSTDIR/lib
++  mkdir -p $INSTDIR/jel
++
++  cd zlib
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure --prefix=$INSTDIR/zlib --static 
++  make
++  make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/zlib/lib/pkgconfig"	
++  cd ..
++
++  cd jel
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure   --prefix=$INSTDIR/jel
++  make
++  make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jel/lib/pkgconfig"	
++  cd ..
++
++  cd jansson
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure --prefix=$INSTDIR/jansson --disable-static --enable-shared
++  make
++  sudo make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jansson/lib/pkgconfig"	
++  cd ..
++
++  cd stegotorus
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure --disable-integration-tests --enable-silent-rules -with-stegtracesdir=./TorBrowser/Tor/PluggableTransports/traces/
++  make
++  cp -a stegotorus $PTDIR/
++  cd ..
++
++  #grab the remaining stuff needed for a working stegotorus
++  tar xvfz sribundle.tar.gz
++  cd sribundle
++
++  cp -r modus_operandi $PTDIR/
++  cp -r traces $PTDIR/
++
++  cd ..
++
++  #</stegotorus>
++
+   # Building pyptlib
+   cd pyptlib
+   find -type f | xargs touch --date="$REFERENCE_DATETIME"
+diff --git a/gitian/descriptors/mac/gitian-bundle.yml b/gitian/descriptors/mac/gitian-bundle.yml
+index d959d82..a0269b6 100644
+--- a/gitian/descriptors/mac/gitian-bundle.yml
++++ b/gitian/descriptors/mac/gitian-bundle.yml
+@@ -81,7 +81,7 @@ script: |
+   # FIXME: Switch to re-dzip.sh here?
+   mkdir pkg/tmp
+   cd pkg/tmp
+-  unzip ../*.xpi
++  unzip -o ../*.xpi
+   ~/build/dzip.sh ../../../$TORBROWSER_NAME.app/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi .
+   cd ../../../
+   #
+@@ -91,7 +91,7 @@ script: |
+   # FIXME: Switch to re-dzip.sh here?
+   mkdir pkg/tmp
+   cd pkg/tmp
+-  unzip ../*.xpi
++  unzip -o ../*.xpi
+   ~/build/dzip.sh ../../../$TORBROWSER_NAME.app/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi .
+   cd ../../../
+   #
+@@ -107,18 +107,18 @@ script: |
+   cd $TORBROWSER_NAME.app/TorBrowser/Data/Browser/profile.default/extensions/
+   mv noscript@noscript.net.xpi {73a6fe31-595d-460b-a920-fcc0f8843232}.xpi
+   cd https-everywhere@eff.org
+-  unzip ../https-everywhere@eff.org.xpi
++  unzip -o ../https-everywhere@eff.org.xpi
+   rm ../https-everywhere@eff.org.xpi
+   cd ~/build/
+   #
+-  unzip tor-mac$GBUILD_BITS-gbuilt.zip
++  unzip -o tor-mac$GBUILD_BITS-gbuilt.zip
+   if [ $BUILD_PT_BUNDLES ]; then
+-    unzip pluggable-transports-mac$GBUILD_BITS-gbuilt.zip
++    unzip -o pluggable-transports-mac$GBUILD_BITS-gbuilt.zip
+   fi
+   cd $TORBROWSER_NAME.app
+-  unzip ~/build/mac-skeleton.zip
++  unzip -o ~/build/mac-skeleton.zip
+   cd TorBrowser
+-  unzip ~/build/tbb-docs.zip
++  unzip -o ~/build/tbb-docs.zip
+   if [ $BUILD_PT_BUNDLES ]; then
+     cat ~/build/torrc-defaults-appendix-mac >> Data/Tor/torrc-defaults
+     cat ~/build/bridge_prefs.js >> Data/Browser/profile.default/preferences/extension-overrides.js
+@@ -127,7 +127,7 @@ script: |
+   mv Tor/tor Tor/tor.real
+   cp ~/build/mac-tor.sh Tor/tor
+   cd ..
+-  unzip ~/build/tor-browser-mac$GBUILD_BITS-gbuilt.zip
++  unzip -o ~/build/tor-browser-mac$GBUILD_BITS-gbuilt.zip
+   cd ..
+   #
+   # Copy reproducibility info
+@@ -146,7 +146,7 @@ script: |
+   cd ..
+   #
+   pushd $TORBROWSER_NAME.app/Contents/MacOS/browser/
+-  unzip omni.ja defaults/preferences/000-tor-browser.js
++  unzip -o omni.ja defaults/preferences/000-tor-browser.js
+   # Set the version of the bundle.
+   grep -v '^pref(\"torbrowser.version\",' defaults/preferences/000-tor-browser.js > defaults/preferences/000-tor-browser.js.fixed
+   cat ~/build/torbrowser.version >> defaults/preferences/000-tor-browser.js.fixed
+@@ -172,7 +172,7 @@ script: |
+   fi
+   mv $TORBROWSER_NAME.app ${TORBROWSER_NAME}_plain.app
+   #
+-  unzip mac-langpacks.zip
++  unzip -o mac-langpacks.zip
+   cd mac-langpacks
+   for LANG in $BUNDLE_LOCALES
+   do
+diff --git a/gitian/descriptors/mac/gitian-pluggable-transports.yml b/gitian/descriptors/mac/gitian-pluggable-transports.yml
+index c206d06..4d0b1ee 100644
+--- a/gitian/descriptors/mac/gitian-pluggable-transports.yml
++++ b/gitian/descriptors/mac/gitian-pluggable-transports.yml
+@@ -14,6 +14,12 @@ packages:
+ - "python-dev"
+ - "faketime"
+ - "libtool"
++#<stegotorus>	
++- "libtool"
++- "autoconf"
++- "automake"
++- "pkg-config"
++#</stegotorus>
+ reference_datetime: "2000-01-01 00:00:00"
+ remotes:
+ - "url": "https://git.torproject.org/pluggable-transports/pyptlib.git"
+@@ -28,6 +34,16 @@ remotes:
+   "dir": "fteproxy"
+ - "url": "https://github.com/habnabit/txsocksx.git"
+   "dir": "txsocksx"
++#<stegotorus>	
++- "url": "https://github.com/SRI-CSL/jel.git"
++  "dir": "jel"
++- "url": "https://github.com/SRI-CSL/stegotorus.git"
++  "dir": "stegotorus"
++- "url": "https://github.com/akheron/jansson.git"
++  "dir": "jansson"
++- "url": "https://github.com/madler/zlib.git"
++  "dir": "zlib"
++#</stegotorus>
+ files:
+ - "pycrypto.tar.gz"
+ - "argparse.tar.gz"
+@@ -41,6 +57,10 @@ files:
+ - "dzip.sh"
+ - "gmp-mac32-utils.zip"
+ - "openssl-mac32-utils.zip"
++#<stegotorus>	
++- "libevent-mac32-utils.zip"
++- "sribundle.tar.gz"
++#</stegotorus>
+ script: |
+   INSTDIR="$HOME/install"
+   TBDIR="$INSTDIR/TorBrowserBundle.app/TorBrowser"
+@@ -58,14 +78,26 @@ script: |
+   sudo dpkg -i *.deb
+   tar xaf multiarch-darwin*tar.xz
+   export PATH="$PATH:$HOME/build/apple-osx/bin/"
+-  unzip -d $INSTDIR gmp-mac32-utils.zip
++
+   unzip -d $INSTDIR openssl-mac32-utils.zip
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/openssl/lib/pkgconfig"
++
++  unzip -d $INSTDIR libevent-mac32-utils.zip
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/libevent/lib/pkgconfig"
++  cp $INSTDIR/libevent/lib/libevent-*.dylib $TBDIR/Tor/
++  LIBEVENT_FILE=`basename $INSTDIR/libevent/lib/libevent-*.dylib`
++
++  unzip -d $INSTDIR gmp-mac32-utils.zip
+   cp $INSTDIR/gmp/lib/*dylib* $TBDIR/Tor/
+ 
++
+   #
+   export AR=$HOME/build/apple-osx/bin/i686-apple-darwin11-ar
+   export CC=$HOME/build/apple-osx/bin/i686-apple-darwin11-gcc
+   export CXX=$HOME/build/apple-osx/bin/i686-apple-darwin11-g++
++  #<stegotorus>	
++  export RANLIB=$HOME/build/apple-osx/bin/i686-apple-darwin11-ranlib
++  #</stegotorus>
+   # http://bugs.python.org/issue9437
+   export LDSHARED="$CC -pthread -shared"
+   # XXX Clean up these flags?
+@@ -73,6 +105,79 @@ script: |
+   export CXXFLAGS="-I/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/include/ -I/usr/lib/gcc/i686-apple-darwin10/4.2.1/include/ -I.  -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/system/ -F/usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks -mmacosx-version-min=10.5 -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/i686-apple-darwin10/4.2.1 -I$INSTDIR/gmp/include -L$INSTDIR/gmp/lib"
+   export LDFLAGS="-L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/ -L/usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/system/ -F/usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks -mmacosx-version-min=10.5"
+ 
++
++  #<stegotorus> 
++
++  mkdir -p $INSTDIR/zlib
++  mkdir -p $INSTDIR/jansson
++  mkdir -p $INSTDIR/include
++  mkdir -p $INSTDIR/lib
++  mkdir -p $INSTDIR/jel
++
++  #zlib
++  cd zlib	
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure --prefix=$INSTDIR/zlib --static  
++   export CFLAGS=" -I. $CFLAGS";  export CXXFLAGS=" -I. $CXXFLAGS" make
++  make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/zlib/lib/pkgconfig"	
++  cd ..
++
++
++  cd jel
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure   --host=i686-apple-darwin11 --build=amd64-pc-linux-gnu --prefix=$INSTDIR/jel
++  make
++  make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jel/lib/pkgconfig"	
++  cd ..
++
++  cd jansson
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure  --host=i686-apple-darwin11 --prefix=$INSTDIR/jansson --disable-shared --enable-static
++  make
++  sudo make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jansson/lib/pkgconfig"	
++  echo $PKG_CONFIG_PATH
++  cd .. 
++
++  cd stegotorus
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  # Because of this (from below):
++  # "We have to put $INSTDIR/openssl at the beginning of the header and library
++  #  search paths (build_ext otherwise puts it at the end, after CFLAGS and
++  #  LDFLAGS). The reason for this is that /usr/lib/apple/SDKs/MacOSX10.6.sdk/usr
++  #  (part of CFLAGS and LDFLAGS) has its own openssl headers and library files.
++  #  It also has necessary headers like stdio.h, so we can't remove it
++  #  completely, but our locally built openssl must take precedence."
++  # 
++  # We do a similar but uglier hack:
++  CXX="${CXX} -I$INSTDIR/openssl/include -L$INSTDIR/openssl/lib" ./configure --host=i686-apple-darwin11 --build=amd64-pc-linux-gnu --disable-integration-tests -with-stegtracesdir=./PluggableTransports/traces/
++  make
++  cp -a stegotorus $PTDIR/
++
++  cd ..
++
++  tar xvfz sribundle.tar.gz
++
++  cd sribundle
++  
++  cp -r modus_operandi $PTDIR/
++  cp -r traces $PTDIR/
++
++  cd ..
++
++  cd $PTDIR/
++  i686-apple-darwin11-install_name_tool -change $INSTDIR/libevent/lib/$LIBEVENT_FILE @executable_path/../$LIBEVENT_FILE stegotorus
++  #i686-apple-darwin11-install_name_tool -change $INSTDIR/libjansson/lib/$LIBJANSSON_FILE @executable_path/$LIBJANSSON_FILE stegotorus
++
++  cd $HOME/build
++  #</stegotorus> 
++
++
+   # Building pyptlib
+   cd pyptlib
+   find -type f | xargs touch --date="$REFERENCE_DATETIME"
+diff --git a/gitian/descriptors/windows/gitian-pluggable-transports.yml b/gitian/descriptors/windows/gitian-pluggable-transports.yml
+index 6af344c..2261891 100644
+--- a/gitian/descriptors/windows/gitian-pluggable-transports.yml
++++ b/gitian/descriptors/windows/gitian-pluggable-transports.yml
+@@ -16,6 +16,12 @@ packages:
+ - "python-dev"
+ - "faketime"
+ - "libtool"
++#<stegotorus>	
++- "libtool"
++- "autoconf"
++- "automake"
++- "pkg-config"
++#</stegotorus>
+ reference_datetime: "2000-01-01 00:00:00"
+ remotes:
+ - "url": "https://git.torproject.org/pluggable-transports/pyptlib.git"
+@@ -30,6 +36,16 @@ remotes:
+   "dir": "fteproxy"
+ - "url": "https://github.com/habnabit/txsocksx.git"
+   "dir": "txsocksx"
++#<stegotorus>	
++- "url": "https://github.com/SRI-CSL/jel.git"
++  "dir": "jel"
++- "url": "https://github.com/SRI-CSL/stegotorus.git"
++  "dir": "stegotorus"
++- "url": "https://github.com/akheron/jansson.git"
++  "dir": "jansson"
++- "url": "https://github.com/madler/zlib.git"
++  "dir": "zlib"
++#</stegotorus>
+ files:
+ - "setuptools.tar.gz"
+ - "pycrypto.tar.gz"
+@@ -47,6 +63,11 @@ files:
+ - "pyc-timestamp.sh"
+ - "openssl-win32-utils.zip"
+ - "gmp-win32-utils.zip"
++#<stegotorus>	
++- "binutils-win32-utils.zip"
++- "libevent-win32-utils.zip"
++- "sribundle.tar.gz"
++#</stegotorus>
+ script: |
+   # Set the timestamp on every .pyc file in a zip file, and re-dzip the zip file.
+   function py2exe_zip_timestomp {
+@@ -70,14 +91,94 @@ script: |
+   export FAKETIME=$REFERENCE_DATETIME
+   export TZ=UTC
+   export LC_ALL=C
+-  export CFLAGS="-mwindows"
+-  export LDFLAGS="-mwindows"
++
++  unzip -d $INSTDIR binutils-win32-utils.zip
++
++  # Make sure our custom ld gets used.
++  # See the we-need-only-the-binutils-comment in gitian-utils.yml for the
++  # reasoning behind the "mingw-w64" dir instead of an expected "binutils" one.
++  export PATH=$INSTDIR/mingw-w64/bin:$PATH
++
++  export PKG_CONFIG_PATH=/usr/lib/pkgconfig/	
++
+   umask 0022
+ 
++
+   unzip -d $INSTDIR gmp-win32-utils.zip
+-  unzip -d $INSTDIR openssl-win32-utils.zip
+   cp $INSTDIR/gmp/bin/*dll* $INSTDIR/Tor
+ 
++  unzip -d $INSTDIR libevent-win32-utils.zip
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/libevent/lib/pkgconfig"	
++
++
++  unzip -d $INSTDIR openssl-win32-utils.zip
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/openssl/lib/pkgconfig"	
++
++  #<stegotorus>	
++  export XPREFIX=i686-w64-mingw32
++  export SRI_AR=${XPREFIX}-ar
++  export SRI_CC=${XPREFIX}-gcc
++  export SRI_RANLIB=${XPREFIX}-ranlib
++  export SRI_CROSSCFG="--build=amd64-pc-linux-gnu --host=${XPREFIX}"
++  export SRI_LINKCFG=" --disable-static --enable-shared"
++  #can't find i686-w64-mingw32-pkg-config
++  export SRI_PKGCONFIG=/usr/bin/pkg-config
++
++  cd zlib
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  CC=${SRI_CC} AR=${SRI_AR} RANLIB=${SRI_RANLIB} ./configure --prefix=$INSTDIR/zlib --static 
++  make
++  make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/zlib/lib/pkgconfig"	
++  cd ..
++
++  cd jansson
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  CC=${SRI_CC} AR=${SRI_AR} RANLIB=${SRI_RANLIB} ./configure  ${SRI_CROSSCFG} --prefix=$INSTDIR/jansson 
++  #patch src/jansson.h -i ../stegotorus/jansson-2.2.1.patch
++  make
++  sudo make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jansson/lib/pkgconfig"	
++  cd .. 
++
++  cd jel
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure  --host=i686-w64-mingw32 --prefix=$INSTDIR/jel
++  make
++  make install
++  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jel/lib/pkgconfig"	
++  cd ..
++
++  cd stegotorus
++  autoreconf -i
++  find -type f | xargs touch --date="$REFERENCE_DATETIME"
++  ./configure --disable-integration-tests --host=i686-w64-mingw32 -with-stegtracesdir=./TorBrowser/Tor/PluggableTransports/traces/ LIBS=-lcrypt32
++  make
++  cp -a stegotorus.exe $PTDIR/
++
++  #prereq
++  cp -a /usr/lib/gcc/i686-w64-mingw32/4.6/libstdc++*.dll $PTDIR/
++  cp -a /usr/lib/gcc/i686-w64-mingw32/4.6/libgcc_s_sjlj-1.dll $PTDIR/
++  cp -a $INSTDIR/libevent/bin/*.dll $PTDIR/
++  cp -a $INSTDIR/openssl/bin/*.dll  $PTDIR/
++
++  cd ..
++
++  tar xvfz sribundle.tar.gz
++  cd sribundle
++
++  cp -r modus_operandi $PTDIR/
++  cp -r traces $PTDIR/
++  cd ..
++  #</stegotorus>
++
++  #we don't want these for stegotorus
++  export CFLAGS="-mwindows"
++  export CXXFLAGS="-mwindows"
++  export LDFLAGS="-mwindows"
++
+   # We need at least Wine 1.5.29 which is not in Ubuntu's main repository (see
+   # below). Thus, we resort to a PPA and need therefore to determine the correct
+   # network interface depending on the virtualization we use.
+diff --git a/gitian/fetch-inputs.sh b/gitian/fetch-inputs.sh
+index 34e8727..16b70cc 100755
+--- a/gitian/fetch-inputs.sh
++++ b/gitian/fetch-inputs.sh
+@@ -178,7 +178,7 @@ do
+   get "${!PACKAGE}" "${MIRROR_URL_ASN}${!PACKAGE}"
+ done
+ 
+-for i in ZOPEINTERFACE TWISTED PY2EXE SETUPTOOLS PARSLEY
++for i in ZOPEINTERFACE TWISTED PY2EXE SETUPTOOLS PARSLEY SRIBUNDLE
+ do
+   URL="${i}_URL"
+   PACKAGE="${i}_PACKAGE"
+@@ -294,6 +294,7 @@ git merge origin/tor-browser-builder-3
+ cd inputs
+ 
+ while read dir url tag; do
++  echo "updating ${dir} ${url} ${tag}"  
+   update_git "$dir" "$url" "$tag"
+ done << EOF
+ tbb-windows-installer https://github.com/MarkCSmith/tbb-windows-installer.git $NSIS_TAG
+@@ -311,6 +312,10 @@ libfte                https://github.com/kpdyer/libfte.git $LIBFTE_TAG
+ fteproxy              https://github.com/kpdyer/fteproxy.git $FTEPROXY_TAG
+ libdmg-hfsplus        https://github.com/vasi/libdmg-hfsplus.git $LIBDMG_TAG
+ txsocksx              https://github.com/habnabit/txsocksx.git $TXSOCKSX_TAG
++jel                   https://github.com/SRI-CSL/jel.git $JEL_TAG
++stegotorus            https://github.com/SRI-CSL/stegotorus.git $STEGOTORUS_TAG
++jansson               https://github.com/akheron/jansson.git $JANSSON_TAG
++zlib                  https://github.com/madler/zlib.git $ZLIB_TAG
+ EOF
+ 
+ exit 0
+diff --git a/gitian/mkbundle-linux.sh b/gitian/mkbundle-linux.sh
+index 0d07364..9105688 100755
+--- a/gitian/mkbundle-linux.sh
++++ b/gitian/mkbundle-linux.sh
+@@ -63,6 +63,18 @@ cd linux
+ rm -f $GITIAN_DIR/inputs/linux-skeleton.zip
+ $WRAPPER_DIR/build-helpers/dzip.sh $GITIAN_DIR/inputs/linux-skeleton.zip .
+ 
++#current stegotorus hack; till the real thing comes along
++
++echo "Prepping stegotorus files"
++
++if [ ! -f $GITIAN_DIR/inputs/sribundle.tar.gz ];
++then
++    cp -v $WRAPPER_DIR/sribundle.tar.gz  $GITIAN_DIR/inputs/
++else
++    rm -rf $GITIAN_DIR/inputs/sribundle
++    echo "Stegotorus already prepped"
++fi
++
+ cd $WRAPPER_DIR
+ 
+ # FIXME: Library function?
+@@ -208,7 +220,7 @@ then
+   echo "****** Starting Pluggable Transports Component of Linux Bundle (4/5 for Linux) ******"
+   echo
+ 
+-  ./bin/gbuild -j $NUM_PROCS -m $VM_MEMORY --commit pyptlib=$PYPTLIB_TAG,obfsproxy=$OBFSPROXY_TAG,flashproxy=$FLASHPROXY_TAG,libfte=$LIBFTE_TAG,fteproxy=$FTEPROXY_TAG,txsocksx=$TXSOCKSX_TAG $DESCRIPTOR_DIR/linux/gitian-pluggable-transports.yml
++  ./bin/gbuild -j $NUM_PROCS -m $VM_MEMORY --commit  zlib=$ZLIB_TAG,jansson=$JANSSON_TAG,stegotorus=$STEGOTORUS_TAG,jel=$JEL_TAG,pyptlib=$PYPTLIB_TAG,obfsproxy=$OBFSPROXY_TAG,flashproxy=$FLASHPROXY_TAG,libfte=$LIBFTE_TAG,fteproxy=$FTEPROXY_TAG,txsocksx=$TXSOCKSX_TAG $DESCRIPTOR_DIR/linux/gitian-pluggable-transports.yml
+   if [ $? -ne 0 ];
+   then
+     #mv var/build.log ./pluggable-transports-fail-linux.log.`date +%Y%m%d%H%M%S`
+diff --git a/gitian/mkbundle-mac.sh b/gitian/mkbundle-mac.sh
+index 00073e9..8caa2e8 100755
+--- a/gitian/mkbundle-mac.sh
++++ b/gitian/mkbundle-mac.sh
+@@ -66,6 +66,16 @@ cd ../mac-applications.dmg
+ rm -f $GITIAN_DIR/inputs/dmg-applications.tar-gz
+ $WRAPPER_DIR/build-helpers/dtar.sh $GITIAN_DIR/inputs/dmg-applications.tar.xz .
+ 
++echo "Prepping stegotorus files"
++
++if [ ! -f $GITIAN_DIR/inputs/sribundle.tar.gz ];
++then
++    cp -v $WRAPPER_DIR/sribundle.tar.gz  $GITIAN_DIR/inputs/
++else
++    rm -rf $GITIAN_DIR/inputs/sribundle
++    echo "Stegotorus already prepped"
++fi
++
+ cd $WRAPPER_DIR
+ 
+ # FIXME: Library function?
+@@ -184,7 +194,7 @@ then
+   echo "****** Starting Pluggable Transports Component of Mac Bundle (4/5 for Mac) ******"
+   echo
+ 
+-  ./bin/gbuild -j $NUM_PROCS -m $VM_MEMORY --commit pyptlib=$PYPTLIB_TAG,obfsproxy=$OBFSPROXY_TAG,flashproxy=$FLASHPROXY_TAG,libfte=$LIBFTE_TAG,fteproxy=$FTEPROXY_TAG,txsocksx=$TXSOCKSX_TAG $DESCRIPTOR_DIR/mac/gitian-pluggable-transports.yml
++  ./bin/gbuild -j $NUM_PROCS -m $VM_MEMORY --commit zlib=$ZLIB_TAG,jansson=$JANSSON_TAG,stegotorus=$STEGOTORUS_TAG,jel=$JEL_TAG,libevent=$LIBEVENT_TAG,pyptlib=$PYPTLIB_TAG,obfsproxy=$OBFSPROXY_TAG,flashproxy=$FLASHPROXY_TAG,libfte=$LIBFTE_TAG,fteproxy=$FTEPROXY_TAG,txsocksx=$TXSOCKSX_TAG $DESCRIPTOR_DIR/mac/gitian-pluggable-transports.yml
+   if [ $? -ne 0 ];
+   then
+     #mv var/build.log ./firefox-fail-mac.log.`date +%Y%m%d%H%M%S`
+diff --git a/gitian/mkbundle-windows.sh b/gitian/mkbundle-windows.sh
+index 019ddec..4c3a8e8 100755
+--- a/gitian/mkbundle-windows.sh
++++ b/gitian/mkbundle-windows.sh
+@@ -60,6 +60,17 @@ cd windows
+ rm -f $GITIAN_DIR/inputs/windows-skeleton.zip
+ $WRAPPER_DIR/build-helpers/dzip.sh $GITIAN_DIR/inputs/windows-skeleton.zip .
+ 
++echo "Prepping stegotorus files"
++
++if [ ! -f $GITIAN_DIR/inputs/sribundle.tar.gz ];
++then
++    cp -v $WRAPPER_DIR/sribundle.tar.gz  $GITIAN_DIR/inputs/
++else
++    rm -rf $GITIAN_DIR/inputs/sribundle
++    echo "Stegotorus already prepped"
++fi
++
++
+ cd $WRAPPER_DIR
+ 
+ # FIXME: Library function?
+@@ -188,7 +199,7 @@ then
+   echo "****** Starting Pluggable Transports Component of Windows Bundle (4/5 for Windows) ******"
+   echo
+ 
+-  ./bin/gbuild -j $NUM_PROCS -m $VM_MEMORY --commit pyptlib=$PYPTLIB_TAG,obfsproxy=$OBFSPROXY_TAG,flashproxy=$FLASHPROXY_TAG,libfte=$LIBFTE_TAG,fteproxy=$FTEPROXY_TAG,txsocksx=$TXSOCKSX_TAG $DESCRIPTOR_DIR/windows/gitian-pluggable-transports.yml
++  ./bin/gbuild -j $NUM_PROCS -m $VM_MEMORY --commit zlib=$ZLIB_TAG,jansson=$JANSSON_TAG,stegotorus=$STEGOTORUS_TAG,jel=$JEL_TAG,pyptlib=$PYPTLIB_TAG,obfsproxy=$OBFSPROXY_TAG,flashproxy=$FLASHPROXY_TAG,libfte=$LIBFTE_TAG,fteproxy=$FTEPROXY_TAG,txsocksx=$TXSOCKSX_TAG $DESCRIPTOR_DIR/windows/gitian-pluggable-transports.yml
+   if [ $? -ne 0 ];
+   then
+     #mv var/build.log ./pluggable-transports-fail-win32.log.`date +%Y%m%d%H%M%S`
+diff --git a/gitian/versions.alpha b/gitian/versions.alpha
+index ce3520c..abaea72 100755
+--- a/gitian/versions.alpha
++++ b/gitian/versions.alpha
+@@ -1,5 +1,6 @@
+ TORBROWSER_VERSION=4.0-alpha1-pre
+-BUNDLE_LOCALES="ar de es-ES fa fr it ko nl pl pt-PT ru tr vi zh-CN"
++#BUNDLE_LOCALES="ar de es-ES fa fr it ko nl pl pt-PT ru tr vi zh-CN"
++BUNDLE_LOCALES="ar de"
+ BUILD_PT_BUNDLES=1
+ 
+ VERIFY_TAGS=0
+@@ -22,6 +23,10 @@ LIBFTE_TAG=ee9e9ddf5c86e6940559a313d2bd22cc33b654c9 # tag 0.0.3
+ FTEPROXY_TAG=5e7a9fd498a948d17b0996275ef1b6f743251317 # tag 0.2.15
+ LIBDMG_TAG=dfd5e5cc3dc1191e37d3c3a6118975afdd1d7014
+ TXSOCKSX_TAG=216eb0894a1755872f4789f9458aa6cf543b8433 # unsigned habnabit/1.13.0.2
++JEL_TAG=gitian-alpha-0.2
++STEGOTORUS_TAG=gitian-alpha-0.2
++JANSSON_TAG=v2.6
++
+ 
+ GITIAN_TAG=tor-browser-builder-3.x-5
+ 
+@@ -67,6 +72,7 @@ PY2EXE_PACKAGE=py2exe-${PY2EXE_VER}.win32-py2.7.exe
+ SETUPTOOLS_PACKAGE=setuptools-${SETUPTOOLS_VER}.tar.gz
+ LXML_PACKAGE=lxml-${LXML_VER}.tar.gz
+ PARSLEY_PACKAGE=Parsley-${PARSLEY_VER}.tar.gz
++SRIBUNDLE_PACKAGE=sribundle.tar.gz
+ 
+ # Hashes for packages with weak sigs or no sigs
+ OPENSSL_HASH=53cb818c3b90e507a8348f4f5eaedb05d8bfe5358aabb508b7263cc670c3e028
+@@ -111,3 +117,4 @@ PY2EXE_URL=http://softlayer-dal.dl.sourceforge.net/project/py2exe/py2exe/${PY2EX
+ SETUPTOOLS_URL=https://pypi.python.org/packages/source/s/setuptools/${SETUPTOOLS_PACKAGE}
+ LXML_URL=https://pypi.python.org/packages/source/l/lxml/${LXML_PACKAGE}
+ PARSLEY_URL=https://pypi.python.org/packages/source/P/Parsley/${PARSLEY_PACKAGE}
++SRIBUNDLE_URL=http://www.csl.sri.com/~iam/${SRIBUNDLE_PACKAGE}
