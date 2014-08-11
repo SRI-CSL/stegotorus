@@ -1,0 +1,15 @@
+This directory contains a record of the build process for our experimental TBB build.
+
+    ========= The Repo we are building in =============
+
+We are working relative to:
+
+commit 5b4c3fe36ce264f7547d7713073876ecedb51e58
+
+of
+
+https://git.torproject.org/builders/tor-browser-bundle.git
+
+Fri Jun 13 16:13:31 2014 +0000
+
+
