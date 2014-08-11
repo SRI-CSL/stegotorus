@@ -259,9 +259,10 @@ void chop_config_t::socks_force_addr(const char* host, int port) {
   
   for (vector<struct evutil_addrinfo *>::iterator i = down_addresses.begin();
        i != down_addresses.end(); i++) {
-    // just change the addresses, keep the ports the same
+  
     struct sockaddr_in* daddr = (struct sockaddr_in*) ((*i)->ai_addr);
     daddr->sin_addr.s_addr = ((struct sockaddr_in*) addr->ai_addr)->sin_addr.s_addr;
+    daddr->sin_port = ((struct sockaddr_in*) addr->ai_addr)->sin_port;
   }
 
   evutil_freeaddrinfo(addr);
