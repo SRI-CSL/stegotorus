@@ -120,7 +120,7 @@ script: |
   cd jansson
   autoreconf -i
   find -type f | xargs touch --date="$REFERENCE_DATETIME"
-  ./configure --prefix=$INSTDIR/jansson --disable-static --enable-shared
+  ./configure --prefix=$INSTDIR/jansson --disable-shared --enable-static
   make
   sudo make install
   export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jansson/lib/pkgconfig"	
