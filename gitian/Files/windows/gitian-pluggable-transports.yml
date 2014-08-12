@@ -163,7 +163,7 @@ script: |
   cp -a /usr/lib/gcc/i686-w64-mingw32/4.6/libgcc_s_sjlj-1.dll $PTDIR/
   cp -a $INSTDIR/libevent/bin/*.dll $PTDIR/
   cp -a $INSTDIR/openssl/bin/*.dll  $PTDIR/
-
+  cp -a $INSTDIR/jansson/bin/libjansson-4.dll  $PTDIR/
   cd ..
 
   tar xvfz sribundle.tar.gz
