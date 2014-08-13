@@ -1,0 +1,381 @@
+---
+name: "pluggable-transports-windows"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "swig"
+- "p7zip-full"
+- "m4"
+- "mingw-w64"
+- "g++-mingw-w64"
+- "python-dev"
+- "faketime"
+- "libtool"
+#<stegotorus>	
+- "libtool"
+- "autoconf"
+- "automake"
+- "pkg-config"
+#</stegotorus>
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://git.torproject.org/pluggable-transports/pyptlib.git"
+  "dir": "pyptlib"
+- "url": "https://git.torproject.org/pluggable-transports/obfsproxy.git"
+  "dir": "obfsproxy"
+- "url": "https://git.torproject.org/flashproxy.git"
+  "dir": "flashproxy"
+- "url": "https://github.com/kpdyer/libfte.git"
+  "dir": "libfte"
+- "url": "https://github.com/kpdyer/fteproxy.git"
+  "dir": "fteproxy"
+- "url": "https://github.com/habnabit/txsocksx.git"
+  "dir": "txsocksx"
+#<stegotorus>	
+- "url": "https://github.com/SRI-CSL/jel.git"
+  "dir": "jel"
+- "url": "https://github.com/SRI-CSL/stegotorus.git"
+  "dir": "stegotorus"
+- "url": "https://github.com/akheron/jansson.git"
+  "dir": "jansson"
+- "url": "https://github.com/madler/zlib.git"
+  "dir": "zlib"
+#</stegotorus>
+files:
+- "setuptools.tar.gz"
+- "pycrypto.tar.gz"
+- "argparse.tar.gz"
+- "pyyaml.tar.gz"
+- "zope.interface.zip"
+- "twisted.tar.bz2"
+- "m2crypto.tar.gz"
+- "parsley.tar.gz"
+- "ubuntu-wine.gpg"
+- "wine-wrappers"
+- "python.msi"
+- "py2exe.exe"
+- "dzip.sh"
+- "pyc-timestamp.sh"
+- "openssl-win32-utils.zip"
+- "gmp-win32-utils.zip"
+#<stegotorus>	
+- "binutils-win32-utils.zip"
+- "libevent-win32-utils.zip"
+- "sribundle.tar.gz"
+#</stegotorus>
+script: |
+  # Set the timestamp on every .pyc file in a zip file, and re-dzip the zip file.
+  function py2exe_zip_timestomp {
+    ZIPFILE="$1"
+    local tmpdir="$(mktemp -d)"
+    local tmpzip="$(mktemp -u)"
+    unzip -d "$tmpdir" "$ZIPFILE"
+    cd "$tmpdir"
+    find . -name '*.pyc' -print0 | xargs -0 ~/build/pyc-timestamp.sh "$REFERENCE_DATETIME"
+    ~/build/dzip.sh "$tmpzip" .
+    cd -
+    mv -f "$tmpzip" "$ZIPFILE"
+    rm -rf "$tmpdir"
+  }
+
+  INSTDIR="$HOME/install"
+  PTDIR="$INSTDIR/Tor/PluggableTransports"
+  mkdir -p $INSTDIR/bin/
+  mkdir -p $PTDIR/
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+
+  unzip -d $INSTDIR binutils-win32-utils.zip
+
+  # Make sure our custom ld gets used.
+  # See the we-need-only-the-binutils-comment in gitian-utils.yml for the
+  # reasoning behind the "mingw-w64" dir instead of an expected "binutils" one.
+  export PATH=$INSTDIR/mingw-w64/bin:$PATH
+
+  export PKG_CONFIG_PATH=/usr/lib/pkgconfig/	
+
+  umask 0022
+
+
+  unzip -d $INSTDIR gmp-win32-utils.zip
+  cp $INSTDIR/gmp/bin/*dll* $INSTDIR/Tor
+
+  unzip -d $INSTDIR libevent-win32-utils.zip
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/libevent/lib/pkgconfig"	
+
+
+  unzip -d $INSTDIR openssl-win32-utils.zip
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/openssl/lib/pkgconfig"	
+
+  #<stegotorus>	
+  export XPREFIX=i686-w64-mingw32
+  export SRI_AR=${XPREFIX}-ar
+  export SRI_CC=${XPREFIX}-gcc
+  export SRI_RANLIB=${XPREFIX}-ranlib
+  export SRI_CROSSCFG="--build=amd64-pc-linux-gnu --host=${XPREFIX}"
+  export SRI_LINKCFG=" --disable-static --enable-shared"
+  #can't find i686-w64-mingw32-pkg-config
+  export SRI_PKGCONFIG=/usr/bin/pkg-config
+
+  cd zlib
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  CC=${SRI_CC} AR=${SRI_AR} RANLIB=${SRI_RANLIB} ./configure --prefix=$INSTDIR/zlib --static 
+  make
+  make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/zlib/lib/pkgconfig"	
+  cd ..
+
+  cd jansson
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  CC=${SRI_CC} AR=${SRI_AR} RANLIB=${SRI_RANLIB} ./configure  ${SRI_CROSSCFG} --prefix=$INSTDIR/jansson 
+  #patch src/jansson.h -i ../stegotorus/jansson-2.2.1.patch
+  make
+  sudo make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jansson/lib/pkgconfig"	
+  cd .. 
+
+  cd jel
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure  --host=i686-w64-mingw32 --prefix=$INSTDIR/jel
+  make
+  make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jel/lib/pkgconfig"	
+  cd ..
+
+  cd stegotorus
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --disable-integration-tests --host=i686-w64-mingw32 -with-stegtracesdir=./TorBrowser/Tor/PluggableTransports/traces/ LIBS=-lcrypt32
+  make
+  cp -a stegotorus.exe $PTDIR/
+
+  #prereq
+  cp -a /usr/lib/gcc/i686-w64-mingw32/4.6/libstdc++*.dll $PTDIR/
+  cp -a /usr/lib/gcc/i686-w64-mingw32/4.6/libgcc_s_sjlj-1.dll $PTDIR/
+  cp -a $INSTDIR/libevent/bin/*.dll $PTDIR/
+  cp -a $INSTDIR/openssl/bin/*.dll  $PTDIR/
+  cp -a $INSTDIR/jansson/bin/libjansson-4.dll  $PTDIR/
+  cd ..
+
+  tar xvfz sribundle.tar.gz
+  cd sribundle
+
+  cp -r modus_operandi $PTDIR/
+  cp -r traces $PTDIR/
+  cd ..
+  #</stegotorus>
+
+  #we don't want these for stegotorus
+  export CFLAGS="-mwindows"
+  export CXXFLAGS="-mwindows"
+  export LDFLAGS="-mwindows"
+
+  # We need at least Wine 1.5.29 which is not in Ubuntu's main repository (see
+  # below). Thus, we resort to a PPA and need therefore to determine the correct
+  # network interface depending on the virtualization we use.
+  ip=`hostname --all-ip-addresses | cut -d ' ' -f1 | cut -d. -f1-3`
+  if [ $ip = "10.0.3" ]; then
+    # LXC
+    MIRROR_HOST=10.0.3.1
+  else
+    # KVM
+    MIRROR_HOST=10.0.2.2
+  fi
+  # Install a Wine new enough to have a fix for
+  # http://bugs.winehq.org/show_bug.cgi?id=29764; otherwise Python run under
+  # Wine constantly crashes in _PyVerify_fd, which is called by such common
+  # operations as io.open and os.fstat (anything involving a file descriptor
+  # number). Ubuntu's main repository only has wine1.4, and the issue was fixed
+  # in 1.5.29.
+  WINEROOT=$HOME/.wine/drive_c
+  sudo -s sh -c "echo deb http://$MIRROR_HOST:3142/ppa.launchpad.net/ubuntu-wine/ppa/ubuntu precise main >> /etc/apt/sources.list"
+  # This key is from https://launchpad.net/~ubuntu-wine/+archive/ppa and
+  # http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0x5A9A06AEF9CB8DB0.
+  sudo apt-key add ubuntu-wine.gpg
+  sudo apt-get update
+  sudo apt-get --no-install-recommends -y install wine
+  # libfaketime causes all Wine commands to crash; remove it from LD_PRELOAD.
+  # http://bugs.winehq.org/show_bug.cgi?id=31237
+  LD_PRELOAD= wineboot -i
+  #
+  # http://wiki.winehq.org/msiexec
+  # /qn disables user interface; /i installs.
+  LD_PRELOAD= msiexec /qn /i python.msi TARGETDIR=$INSTDIR/python
+  sed -i 's/self.dll_libraries = get_msvcr()/pass#self.dll_libraries = get_msvcr()/g' $INSTDIR/python/Lib/distutils/cygwinccompiler.py
+  INSTPYTHON="wine $INSTDIR/python/python.exe"
+  #
+  7z x py2exe.exe
+  cp -a PLATLIB/* $INSTDIR/python/Lib/site-packages/
+  #
+  cd wine-wrappers
+  # Push our config into wine-wrappers.
+  > settings.py
+  echo "LD_PRELOAD = \"$LD_PRELOAD\"" >> settings.py
+  echo "FAKETIME = \"$FAKETIME\"" >> settings.py
+  # Must pre-copy python27.dll into the build directory, or else py2exe can't find it.
+  mkdir -p build/bdist.win32/winexe/bundle-2.7/
+  cp -a $INSTDIR/python/python27.dll build/bdist.win32/winexe/bundle-2.7/
+  LD_PRELOAD= $INSTPYTHON setup.py py2exe
+  cp -a dist/gcc.exe dist/g++.exe dist/dllwrap.exe dist/swig.exe $WINEROOT/windows/
+  cd ..
+
+  # Building setuptools
+  tar xzf setuptools.tar.gz
+  cd setuptools-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup.py install
+  cd ..
+
+  # Bulding pyptlib
+  cd pyptlib
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup.py install --single-version-externally-managed --record /dev/null
+  cd ..
+
+  # Building PyCrypto
+  tar xzf pycrypto.tar.gz
+  cd pycrypto-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # This is bogus, that we run the configure script in the build environment,
+  # but it seems to work. https://bugs.launchpad.net/pycrypto/+bug/1096207 for
+  # ac_cv_func_malloc_0_nonnull.
+  ac_cv_func_malloc_0_nonnull=yes sh configure --host=i686-w64-mingw32
+  LD_PRELOAD= $INSTPYTHON setup.py build_ext -c mingw32
+  LD_PRELOAD= $INSTPYTHON setup.py install
+  cd ..
+
+  # Building argparse
+  tar xzf argparse.tar.gz
+  cd argparse-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup.py install
+  cd ..
+
+  # Building Zope interfaces
+  unzip zope.interface.zip
+  cd zope.interface-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup.py build_ext -c mingw32
+  LD_PRELOAD= $INSTPYTHON setup.py install --single-version-externally-managed --record /dev/null
+  # Must create this file in order for py2exe to find the package.
+  touch $INSTDIR/python/Lib/site-packages/zope/__init__.py
+  cd ..
+
+  # Building PyYAML
+  tar xzf pyyaml.tar.gz
+  cd PyYAML-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup.py install
+  cd ..
+
+  # Building Twisted
+  tar xjf twisted.tar.bz2
+  cd Twisted-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # twisted/internet/iocpreactor/iocpsupport/iocpsupport.c includes "python.h"
+  # rather than "Python.h".
+  ln -sf Python.h $INSTDIR/python/include/python.h
+  # We need to set the "mingw32" compiler to avoid an error in build_ext, but
+  # Twisted's "install" command calls build_ext unconditionally, whether the
+  # extensions have been built already or not, so we can't just call build_ext
+  # separately as with other packages. The "install" command doesn't recognize
+  # the -c option, so we set the compiler in a configuration file.
+  echo $'[build_ext]\ncompiler=mingw32' > setup.cfg
+  LD_PRELOAD= $INSTPYTHON setup.py install --single-version-externally-managed --record /dev/null
+  cd ..
+  # py2exe byte-compiles to .pyc files, which embed the mtime of the parent .py
+  # file.
+  find $INSTDIR/python -type f | xargs touch --date="$REFERENCE_DATETIME"
+
+  # Building Parsley
+  tar xzf parsley.tar.gz
+  cd Parsley-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup.py install
+  cd ..
+
+  # Building txsocksx
+  cd txsocksx
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # Let's pretend we have the setup dependency already as we don't want to get
+  # it downloaded during building. Just pretending and thus avoiding another
+  # dependency should be fine here as txsocksx catches the exception due to
+  # missing __version__ and __sha__ .
+  mkdir vcversioner-1.14.1.1-py2.7.egg
+  LD_PRELOAD= $INSTPYTHON setup.py install
+  cd ..
+
+  # Building obfsproxy
+  cd obfsproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup_py2exe.py py2exe
+  LD_PRELOAD= $INSTPYTHON setup.py install
+  py2exe_zip_timestomp py2exe_bundle/dist/obfsproxy.zip
+  cp -an py2exe_bundle/dist/{*.pyd,*.exe,*.zip} $PTDIR/
+  mkdir -p $INSTDIR/Docs/Obfsproxy
+  cp {LICENSE,README} $INSTDIR/Docs/Obfsproxy
+  cd ..
+
+  # Building M2Crypto
+  tar xzf m2crypto.tar.gz
+  cd M2Crypto-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup.py build_ext -c mingw32 --openssl $INSTDIR/openssl/ -lssl.dll,crypto.dll
+  LD_PRELOAD= $INSTPYTHON setup.py install --single-version-externally-managed --record /dev/null
+  cd ..
+  # py2exe byte-compiles to .pyc files, which embed the mtime of the parent .py
+  # file.
+  find $INSTDIR/python -type f | xargs touch --date="$REFERENCE_DATETIME"
+
+  # Building flashproxy
+  cd flashproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  make dist-exe DISTNAME=flashproxy-client PYTHON="LD_PRELOAD= $INSTPYTHON"
+  py2exe_zip_timestomp dist/flashproxy-client-win32/py2exe-flashproxy.zip
+  cp -an dist/flashproxy-client-win32/{*.pyd,*.exe,*.zip} $PTDIR/
+  mkdir -p $INSTDIR/Docs/FlashProxy
+  cp dist/flashproxy-client-win32/{doc/*,README,LICENSE,ChangeLog} $INSTDIR/Docs/FlashProxy
+  cd ..
+
+  # Building libfte
+  cd libfte
+  ln -s $INSTDIR/gmp thirdparty/gmp
+  cp -a $INSTDIR/gmp/bin/libgmp-*.dll .
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= WINDOWS_BUILD=1 CROSS_COMPILE=1 PYTHON=$INSTPYTHON make
+  LD_PRELOAD= $INSTPYTHON setup.py install
+  mkdir -p $INSTDIR/Docs/libfte
+  cp -an {LICENSE,README.md} $INSTDIR/Docs/libfte
+  cp -an thirdparty/re2/LICENSE $INSTDIR/Docs/libfte/LICENSE.re2
+  cd ..
+
+  # Building fteproxy
+  cd fteproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  LD_PRELOAD= $INSTPYTHON setup_tbb.py py2exe
+  py2exe_zip_timestomp dist/fteproxy.zip
+  cp -an dist/{*.pyd,*.exe,*.zip} $PTDIR/
+  mkdir -p $PTDIR/fteproxy
+  cp -a fteproxy/VERSION $PTDIR/fteproxy
+  mkdir -p $PTDIR/fteproxy/defs
+  cp -a fteproxy/defs/*.json $PTDIR/fteproxy/defs
+  mkdir -p $INSTDIR/Docs/fteproxy
+  cp -an {COPYING,README.md} $INSTDIR/Docs/fteproxy
+  cd ..
+
+  # http://bugs.winehq.org/show_bug.cgi?id=3591
+  cp -a $INSTDIR/python/python27.dll $PTDIR/
+
+  # Grabbing the result
+  cd $INSTDIR
+  ~/build/dzip.sh pluggable-transports-win32-gbuilt.zip Tor/ Docs/
+  cp pluggable-transports-win32-gbuilt.zip $OUTDIR/

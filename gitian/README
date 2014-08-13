@@ -1,0 +1,59 @@
+This directory contains a record of the build process for our experimental TBB build.
+
+We built on an ubuntu 12.04 using LXC
+
+
+    ========= The Repo we are building in =============
+
+We are working relative to:
+
+commit 5b4c3fe36ce264f7547d7713073876ecedb51e58
+
+of
+
+https://git.torproject.org/builders/tor-browser-bundle.git
+
+Fri Jun 13 16:13:31 2014 +0000
+
+
+  =====  The Changes:  Overview =============
+
+
+root@v009:/space/TBB/tor-browser-bundle# git status
+# On branch master
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#	modified:   Bundle-Data/PTConfigs/bridge_prefs.js
+#	modified:   Bundle-Data/PTConfigs/linux/torrc-defaults-appendix
+#	modified:   Bundle-Data/PTConfigs/mac/torrc-defaults-appendix
+#	modified:   Bundle-Data/PTConfigs/windows/torrc-defaults-appendix
+#	modified:   gitian/Makefile
+#	modified:   gitian/descriptors/linux/gitian-pluggable-transports.yml
+#	modified:   gitian/descriptors/mac/gitian-bundle.yml
+#	modified:   gitian/descriptors/mac/gitian-pluggable-transports.yml
+#	modified:   gitian/descriptors/windows/gitian-pluggable-transports.yml
+#	modified:   gitian/fetch-inputs.sh
+#	modified:   gitian/mkbundle-linux.sh
+#	modified:   gitian/mkbundle-mac.sh
+#	modified:   gitian/mkbundle-windows.sh
+#	modified:   gitian/versions.alpha
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	gitian/4.0-alpha1-pre/
+#	gitian/sribundle.tar.gz
+no changes added to commit (use "git add" and/or "git commit -a")
+
+
+=====  The Changes:  gitian.diff ========
+
+./gitian.diff
+
+====  The Changes: Files =======
+
+./Backups.tar.gz
+
+

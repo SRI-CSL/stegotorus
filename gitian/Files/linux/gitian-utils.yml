@@ -1,0 +1,111 @@
+---
+name: "utils-linux"
+suites:
+- "lucid"
+architectures:
+- "i386"
+- "amd64"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "autoconf"
+- "autoconf2.13"
+- "automake"
+- "faketime"
+- "libtool"
+- "hardening-wrapper"
+# These packages are needed for Python due to HTTPS-Everywhere >= 3.5.
+- "libsqlite3-dev"
+- "zlib1g-dev"
+- "libxml2-dev"
+- "libxslt-dev"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://github.com/libevent/libevent.git"
+  "dir": "libevent"
+files:
+- "openssl.tar.gz"
+- "python.tar.bz2"
+- "lxml.tar.gz"
+- "gmp.tar.bz2"
+- "versions"
+- "dzip.sh"
+script: |
+  INSTDIR="$HOME/install"
+  source versions
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  umask 0022
+
+  # Config options for hardening-wrapper
+  export DEB_BUILD_HARDENING=1
+  export DEB_BUILD_HARDENING_STACKPROTECTOR=1
+  export DEB_BUILD_HARDENING_FORTIFY=1
+  export DEB_BUILD_HARDENING_FORMAT=1
+  export DEB_BUILD_HARDENING_PIE=1
+
+  # Building Libevent
+  cd libevent
+  ./autogen.sh
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --disable-static --prefix=$INSTDIR/libevent
+  make $MAKEOPTS
+  make install
+  cd ..
+
+  # Building OpenSSL
+  tar xzf openssl.tar.gz
+  cd openssl-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  if [ $GBUILD_BITS == "64" ];
+  then
+    ./config -shared --prefix=$INSTDIR/openssl enable-ec_nistp_64_gcc_128
+  else
+    ./config -shared --prefix=$INSTDIR/openssl
+  fi
+  # Using $MAKEOPTS breaks the build. Might be the issue mentioned on
+  # http://cblfs.cross-lfs.org/index.php/OpenSSL.
+  make
+  make install
+  cd ..
+
+  # Building Python
+  # Fx 24 ESR and HTTPS Everywhere >= 3.5 do not work with Python < 2.7 anymore.
+  # But 10.04 does only ship with Python 2.6. Thus, we compile 2.7 ourselves...
+  tar xjf python.tar.bz2
+  cd Python-*
+  ./configure
+  make $MAKEOPTS altinstall prefix=$INSTDIR/python exec-prefix=$INSTDIR/python
+  cd ..
+
+  # Building lxml
+  tar xzf lxml.tar.gz
+  cd lxml-*
+  # Make sure we use our freshly built python binary here. Otherwise bad things
+  # may happen when we do so in the bundle step assembling the HTTPS-Everywhere
+  # rules.
+  $INSTDIR/python/bin/python2.7 setup.py build
+  cd build/lib*
+  ~/build/dzip.sh lxml-$LXML_VER-linux$GBUILD_BITS-utils.zip lxml
+  cp *utils.zip $OUTDIR
+  cd ../../../
+
+  # Building GMP
+  tar xjf gmp.tar.bz2
+  cd gmp-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --prefix=$INSTDIR/gmp --disable-static --enable-shared --enable-cxx
+  make
+  make install
+  cd ..
+
+  # Grabbing the remaining results
+  cd $INSTDIR
+  ~/build/dzip.sh openssl-$OPENSSL_VER-linux$GBUILD_BITS-utils.zip openssl
+  ~/build/dzip.sh libevent-${LIBEVENT_TAG#release-}-linux$GBUILD_BITS-utils.zip libevent
+  ~/build/dzip.sh python-$PYTHON_VER-linux$GBUILD_BITS-utils.zip python
+  ~/build/dzip.sh gmp-$GMP_VER-linux$GBUILD_BITS-utils.zip gmp
+  cp *utils.zip $OUTDIR/

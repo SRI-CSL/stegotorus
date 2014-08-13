@@ -1,0 +1,169 @@
+---
+name: "bundle-linux"
+suites:
+- "lucid"
+architectures:
+- "i386"
+- "amd64"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "faketime"
+- "python"
+- "rnv"
+- "xz-utils"
+- "libxslt1.1"
+- "sqlite3"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://git.torproject.org/tor-launcher.git"
+  "dir": "tor-launcher"
+- "url": "https://git.torproject.org/torbutton.git"
+  "dir": "torbutton"
+- "url": "https://git.torproject.org/https-everywhere.git"
+  "dir": "https-everywhere"
+files:
+# TODO: Can we use an env for this file+version??
+- "tor-browser-linux32-gbuilt.zip"
+- "tor-browser-linux64-gbuilt.zip"
+- "tor-linux32-gbuilt.zip"
+- "tor-linux64-gbuilt.zip"
+- "pluggable-transports-linux32-gbuilt.zip"
+- "pluggable-transports-linux64-gbuilt.zip"
+- "python-linux32-utils.zip"
+- "python-linux64-utils.zip"
+- "lxml-linux32-utils.zip"
+- "lxml-linux64-utils.zip"
+- "torrc-defaults-appendix-linux"
+- "bridge_prefs.js"
+- "relativelink-src.zip"
+- "linux-skeleton.zip"
+- "linux-langpacks.zip"
+- "noscript@noscript.net.xpi"
+- "https-everywhere@eff.org.xpi"
+- "dzip.sh"
+- "dtar.sh"
+- "bare-version"
+- "bundle.inputs"
+- "versions"
+- "tbb-docs.zip"
+- "torbrowser.version"
+script: |
+  INSTDIR="$HOME/install"
+  source versions
+  export LIBRARY_PATH="$INSTDIR/lib"
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  export TORBROWSER_VERSION=`cat bare-version`
+  umask 0022
+  #
+  mkdir -p $OUTDIR/
+  mkdir -p tor-browser/Browser/TorBrowser/Data/Browser/profile.default/extensions/https-everywhere@eff.org
+  mkdir -p tor-browser/Browser/TorBrowser/Data/Browser/Caches
+  mkdir -p tor-browser/Browser/TorBrowser/Docs/sources/
+  # Preparing Python for HTTPS-Everywhere.
+  unzip -d $INSTDIR python-linux$GBUILD_BITS-utils.zip
+  export PATH=$INSTDIR/python/bin:$PATH
+  unzip -d $INSTDIR/python/lib/python2.7 lxml-linux$GBUILD_BITS-utils.zip
+  #
+  cd tor-launcher
+  make clean
+  make package
+  # FIXME: Switch to re-dzip.sh here?
+  mkdir pkg/tmp
+  cd pkg/tmp
+  unzip ../*.xpi
+  ~/build/dzip.sh ../../../tor-browser/Browser/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi .
+  cd ../../../
+  #
+  cd torbutton
+  mkdir -p pkg
+  ./makexpi.sh
+  # FIXME: Switch to re-dzip.sh here?
+  mkdir pkg/tmp
+  cd pkg/tmp
+  unzip ../*.xpi
+  ~/build/dzip.sh ../../../tor-browser/Browser/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi .
+  cd ../../../
+  #
+  #cd https-everywhere
+  # XXX: Bloody hack to workaround a bug in HTTPS_E's git hash extraction in
+  # makexpi.sh. See https://trac.torproject.org/projects/tor/ticket/10066
+  #rm -f .git/refs/heads/master
+  #./makexpi.sh
+  #cp pkg/*.xpi ../tor-browser/Browser/TorBrowser/Data/Browser/profile.default/extensions/https-everywhere@eff.org.xpi
+  #cd ..
+  #
+  cp *.xpi tor-browser/Browser/TorBrowser/Data/Browser/profile.default/extensions/
+  cd tor-browser/Browser/TorBrowser/Data/Browser/profile.default/extensions
+  mv noscript@noscript.net.xpi {73a6fe31-595d-460b-a920-fcc0f8843232}.xpi
+  cd https-everywhere@eff.org/
+  unzip ../https-everywhere@eff.org.xpi
+  rm ../https-everywhere@eff.org.xpi
+  cd ~/build/
+  #
+  unzip relativelink-src.zip
+  cp RelativeLink/RelativeLink.sh tor-browser/Browser/start-tor-browser
+  #
+  cd tor-browser
+  ln -s Browser/start-tor-browser
+  unzip ~/build/tor-browser-linux$GBUILD_BITS-gbuilt.zip
+  cd Browser/TorBrowser
+  unzip ~/build/tor-linux$GBUILD_BITS-gbuilt.zip
+  unzip ~/build/linux-skeleton.zip
+  unzip ~/build/tbb-docs.zip
+  if [ $BUILD_PT_BUNDLES ]; then
+    unzip ~/build/pluggable-transports-linux$GBUILD_BITS-gbuilt.zip
+    cat ~/build/torrc-defaults-appendix-linux >> Data/Tor/torrc-defaults
+    cat ~/build/bridge_prefs.js >> Data/Browser/profile.default/preferences/extension-overrides.js
+  fi
+  chmod 700 Data/Browser
+  chmod 700 Data/Tor
+  cd ../../..
+  #
+  # Copy reproducibility info
+  cp versions tor-browser/Browser/TorBrowser/Docs/sources/
+  cp bundle.inputs tor-browser/Browser/TorBrowser/Docs/sources/
+  #
+  cp -a tor-browser tor-browser_en-US
+  #
+  pushd tor-browser_en-US/Browser/browser/
+  unzip omni.ja defaults/preferences/000-tor-browser.js
+  # Set the version of the bundle.
+  grep -v '^pref(\"torbrowser.version\",' defaults/preferences/000-tor-browser.js > defaults/preferences/000-tor-browser.js.fixed
+  cat ~/build/torbrowser.version >> defaults/preferences/000-tor-browser.js.fixed
+  mv defaults/preferences/000-tor-browser.js.fixed defaults/preferences/000-tor-browser.js
+  cp defaults/preferences/000-tor-browser.js ~/build/
+  # Set the locale of the bundle.
+  echo "pref(\"general.useragent.locale\", \"en-US\");" >> defaults/preferences/000-tor-browser.js
+  zip -Xm omni.ja defaults/preferences/000-tor-browser.js
+  popd
+  #
+  ~/build/dtar.sh $OUTDIR/tor-browser-linux${GBUILD_BITS}-${TORBROWSER_VERSION}_en-US.tar.xz tor-browser_en-US
+  rm -rf tor-browser_en-US
+  #
+  unzip linux-langpacks.zip
+  cd linux-langpacks
+  for LANG in $BUNDLE_LOCALES
+  do
+    xpi=$LANG.xpi
+    cp -a ../tor-browser ../tor-browser_$LANG
+    cp $xpi ../tor-browser_$LANG/Browser/TorBrowser/Data/Browser/profile.default/extensions/langpack-$LANG@firefox.mozilla.org.xpi
+    cd ..
+
+    pushd tor-browser_$LANG/Browser/browser/
+    mkdir -p defaults/preferences
+    cp ~/build/000-tor-browser.js defaults/preferences/
+    # Set the locale of the bundle.
+    echo "pref(\"general.useragent.locale\", \"$LANG\");" >> defaults/preferences/000-tor-browser.js
+    zip -Xm omni.ja defaults/preferences/000-tor-browser.js
+    popd
+
+    ~/build/dtar.sh $OUTDIR/tor-browser-linux${GBUILD_BITS}-${TORBROWSER_VERSION}_$LANG.tar.xz tor-browser_$LANG
+
+    rm -rf tor-browser_$LANG
+    cd linux-langpacks
+  done

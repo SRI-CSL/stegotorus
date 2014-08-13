@@ -1,0 +1,85 @@
+---
+name: "torbrowser-mac"
+suites:
+- "precise"
+architectures:
+- "amd64"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "autoconf"
+- "autoconf2.13"
+- "faketime"
+- "yasm"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://git.torproject.org/tor-browser.git"
+  "dir": "tor-browser"
+files:
+- "apple-uni-sdk-10.6_20110407-0.flosoft1_i386.deb"
+- "x86_64-apple-darwin10.tar.xz"
+- "re-dzip.sh"
+- "dzip.sh"
+- "fix-info-plist.sh"
+- "versions"
+script: |
+  INSTDIR="$HOME/install/"
+  source versions
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  umask 0022
+  #
+  mkdir -p $INSTDIR/TorBrowser.app/Contents/MacOS/
+  mkdir -p $OUTDIR/
+  #
+  sudo dpkg -i *.deb
+  tar -xavf x86_64-apple-darwin10.tar.xz
+  # XXX: Needed for the otool patch. But we should replace that one with a
+  # better solution. See: comment 15 in
+  # https://bugzilla.mozilla.org/show_bug.cgi?id=936115
+  export PATH=$PATH:/home/ubuntu/build/x-tools/x86_64-apple-darwin10/bin
+  # FIXME: path hacks:
+  sudo mkdir -p /System/Library/
+  sudo ln -s /usr/lib/apple/SDKs/MacOSX10.6.sdk /usr/lib/apple/SDKs/MacOSX10.5.sdk
+  sudo ln -s /usr/lib/apple/SDKs/MacOSX10.6.sdk /usr/lib/apple/SDKs/MacOSX10.5.sdk
+  sudo ln -s /usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/ /System/Library/
+  sudo ln -s /usr/lib/apple/SDKs/MacOSX10.6.sdk/System/Library/PrivateFrameworks/ /System/Library/
+  sudo ln -s /usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/libstdc++.6.dylib /usr/lib/apple/SDKs/MacOSX10.6.sdk/usr/lib/libstdc++.dylib
+  #
+  cd tor-browser
+  mv .mozconfig-mac .mozconfig
+  # .git and the src takes up a lot of useless space, and we need the space to build
+  #git archive HEAD | tar -x -C $OUTDIR/src
+  rm -rf .git
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  rm -f configure
+  rm -f js/src/configure
+  make -f client.mk configure
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  #
+  make $MAKEOPTS -f client.mk build
+  #
+  make -C obj-macos package INNER_MAKE_PACKAGE=true
+  cp -a obj-macos/dist/firefox/* $INSTDIR
+  # Remove firefox-bin (we don't use it, see ticket #10126)
+  rm -f $INSTDIR/TorBrowser.app/Contents/MacOS/firefox-bin
+  #
+  cd $INSTDIR
+  # XXX: Find a better way to tell that we are having a 32bit build
+  GBUILD_BITS=32
+  # Adjust the Info.plist file
+  INFO_PLIST=TorBrowser.app/Contents/Info.plist
+  mv $INFO_PLIST tmp.plist
+  ~/build/fix-info-plist.sh $TORBROWSER_VERSION < tmp.plist > $INFO_PLIST
+  rm -f tmp.plist
+  ~/build/re-dzip.sh TorBrowser.app/Contents/MacOS/omni.ja
+  ~/build/re-dzip.sh TorBrowser.app/Contents/MacOS/webapprt/omni.ja
+  if [ -f TorBrowser.app/Contents/MacOS/browser/omni.ja  ]; then # FF24 includes a third .ja
+    ~/build/re-dzip.sh TorBrowser.app/Contents/MacOS/browser/omni.ja
+  fi
+  cd TorBrowser.app/
+  ~/build/dzip.sh tor-browser-mac${GBUILD_BITS}-gbuilt.zip ./Contents
+  cp tor-browser-mac${GBUILD_BITS}-gbuilt.zip $OUTDIR

@@ -1,9 +1,0 @@
-Common subdirectories: src/.deps and src-mine/.deps
-diff src/jansson.h src-mine/jansson.h
-55a56,59
-> #ifdef _WIN32
-> #define JSON_INTEGER_FORMAT "ld"
-> typedef long json_int_t;
-> #else 
-57a62
-> #endif

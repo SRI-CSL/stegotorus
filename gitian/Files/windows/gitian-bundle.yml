@@ -1,0 +1,147 @@
+---
+name: "bundle-windows"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+# This package is needed for compiling the StartTorBrowserBundle.exe.
+- "mingw-w64"
+- "nsis"
+- "faketime"
+- "python"
+# Both packages are needed for assembling the HTTPS-Everywhere rules since 3.5.
+- "python-lxml"
+- "sqlite3"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://github.com/moba/tbb-windows-installer.git"
+  "dir": "tbb-windows-installer"
+- "url": "https://git.torproject.org/tor-launcher.git"
+  "dir": "tor-launcher"
+- "url": "https://git.torproject.org/torbutton.git"
+  "dir": "torbutton"
+- "url": "https://git.torproject.org/https-everywhere.git"
+  "dir": "https-everywhere"
+files:
+# TODO: Can we use an env for this file+version??
+- "tor-browser-win32-gbuilt.zip"
+- "tor-win32-gbuilt.zip"
+- "pluggable-transports-win32-gbuilt.zip"
+- "torrc-defaults-appendix-windows"
+- "bridge_prefs.js"
+- "windows-skeleton.zip"
+- "win32-langpacks.zip"
+- "noscript@noscript.net.xpi"
+- "https-everywhere@eff.org.xpi"
+- "dzip.sh"
+- "bare-version"
+- "bundle.inputs"
+- "versions"
+- "tbb-docs.zip"
+- "torbrowser.version"
+script: |
+  INSTDIR="$HOME/install"
+  source versions
+  export LIBRARY_PATH="$INSTDIR/lib"
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export TORBROWSER_VERSION=`cat bare-version`
+  export LC_ALL=C
+  umask 0022
+  #
+  mkdir -p $OUTDIR/
+  mkdir -p tbb-windows-installer/"Tor Browser"/Browser/TorBrowser/Data/Browser/profile.default/extensions/https-everywhere@eff.org
+  mkdir -p tbb-windows-installer/"Tor Browser"/Browser/TorBrowser/Data/Browser/Caches
+  mkdir -p tbb-windows-installer/"Tor Browser"/Browser/TorBrowser/Docs/sources
+  #
+  cd tor-launcher
+  make clean
+  make package
+  # FIXME: Switch to re-dzip.sh here?
+  mkdir pkg/tmp
+  cd pkg/tmp
+  unzip ../*.xpi
+  ~/build/dzip.sh ../../../tbb-windows-installer/"Tor Browser"/Browser/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi .
+  cd ../../../
+  #
+  cd torbutton
+  mkdir -p pkg/tmp
+  ./makexpi.sh
+  # FIXME: Switch to re-dzip.sh here?
+  cd pkg/tmp
+  unzip ../*.xpi
+  ~/build/dzip.sh ../../../tbb-windows-installer/"Tor Browser"/Browser/TorBrowser/Data/Browser/profile.default/extensions/torbutton@torproject.org.xpi .
+  cd ../../../
+  #
+  #cd https-everywhere
+  # XXX: Bloody hack to workaround a bug in HTTPS_E's git hash extraction in
+  # makexpi.sh. See https://trac.torproject.org/projects/tor/ticket/10066
+  #rm -f .git/refs/heads/master
+  #./makexpi.sh
+  #cp ./pkg/*.xpi ../tbb-windows-installer/"Tor Browser"/Browser/TorBrowser/Data/Browser/profile.default/extensions/https-everywhere@eff.org.xpi
+  #cd ..
+  #
+  cp *.xpi tbb-windows-installer/"Tor Browser"/Browser/TorBrowser/Data/Browser/profile.default/extensions
+  cd tbb-windows-installer/"Tor Browser"/Browser/TorBrowser/Data/Browser/profile.default/extensions
+  mv noscript@noscript.net.xpi {73a6fe31-595d-460b-a920-fcc0f8843232}.xpi
+  cd https-everywhere@eff.org
+  unzip ../https-everywhere@eff.org.xpi
+  rm ../https-everywhere@eff.org.xpi
+  cd ~/build/
+  #
+  cd tbb-windows-installer/"Tor Browser"
+  unzip ~/build/tor-browser-win32-gbuilt.zip
+  cd Browser/TorBrowser
+  unzip ~/build/tor-win32-gbuilt.zip
+  unzip ~/build/windows-skeleton.zip
+  unzip ~/build/tbb-docs.zip
+  if [ $BUILD_PT_BUNDLES ]; then
+    unzip ~/build/pluggable-transports-win32-gbuilt.zip
+    cat ~/build/torrc-defaults-appendix-windows >> Data/Tor/torrc-defaults
+    cat ~/build/bridge_prefs.js >> Data/Browser/profile.default/preferences/extension-overrides.js
+  fi
+  cd ../../..
+  #
+  # Copy reproducibility info
+  cp ../versions "Tor Browser"/Browser/TorBrowser/Docs/sources/
+  cp ../bundle.inputs "Tor Browser"/Browser/TorBrowser/Docs/sources/
+  #
+  pushd "Tor Browser"/Browser/browser/
+  unzip omni.ja defaults/preferences/000-tor-browser.js
+  # Set the version of the bundle.
+  grep -v '^pref(\"torbrowser.version\",' defaults/preferences/000-tor-browser.js > defaults/preferences/000-tor-browser.js.fixed
+  cat ~/build/torbrowser.version >> defaults/preferences/000-tor-browser.js.fixed
+  mv defaults/preferences/000-tor-browser.js.fixed defaults/preferences/000-tor-browser.js
+  cp defaults/preferences/000-tor-browser.js ~/build/
+  # Set the locale bundle.
+  echo "pref(\"general.useragent.locale\", \"en-US\");" >> defaults/preferences/000-tor-browser.js
+  zip -Xm omni.ja defaults/preferences/000-tor-browser.js
+  popd
+  makensis torbrowser.nsi
+  mv torbrowser-install.exe $OUTDIR/torbrowser-install-${TORBROWSER_VERSION}_en-US.exe
+  #
+  unzip ../win32-langpacks.zip
+  cd win32-langpacks
+  for LANG in $BUNDLE_LOCALES
+  do
+    xpi=$LANG.xpi
+    cp $xpi ../"Tor Browser"/Browser/TorBrowser/Data/Browser/profile.default/extensions/langpack-$LANG@firefox.mozilla.org.xpi
+    cd ..
+
+    pushd "Tor Browser"/Browser/browser/
+    mkdir -p defaults/preferences
+    cp ~/build/000-tor-browser.js defaults/preferences/
+    echo "pref(\"general.useragent.locale\", \"$LANG\");" >> defaults/preferences/000-tor-browser.js
+    zip -Xm omni.ja defaults/preferences/000-tor-browser.js
+    popd
+
+    makensis torbrowser.nsi
+    mv torbrowser-install.exe $OUTDIR/torbrowser-install-${TORBROWSER_VERSION}_$LANG.exe
+    rm "Tor Browser"/Browser/TorBrowser/Data/Browser/profile.default/extensions/langpack-$LANG@firefox.mozilla.org.xpi
+    cd win32-langpacks
+  done

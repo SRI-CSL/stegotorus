@@ -1,0 +1,108 @@
+---
+name: "torbrowser-linux"
+suites:
+- "lucid"
+architectures:
+- "i386"
+- "amd64"
+packages:
+- "faketime"
+- "unzip"
+- "zip"
+- "libglib2.0-dev"
+- "libgtk2.0-dev"
+- "libdbus-1-dev"
+- "libdbus-glib-1-dev"
+- "yasm-1"
+- "libasound2-dev"
+- "libcurl4-openssl-dev"
+- "libxt-dev"
+- "mesa-common-dev"
+- "autoconf"
+- "autoconf2.13"
+- "libtool"
+- "libiw-dev"
+- "hardening-wrapper"
+- "libgstreamer-plugins-base0.10-dev"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://git.torproject.org/tor-browser.git"
+  "dir": "tor-browser"
+files:
+- "python-linux32-utils.zip"
+- "python-linux64-utils.zip"
+- "re-dzip.sh"
+- "dzip.sh"
+- "versions"
+script: |
+  source versions
+  INSTDIR="$HOME/install"
+  export LIBRARY_PATH="$INSTDIR/lib"
+  export CFLAGS="-frandom-seed=tor"
+  export CXXFLAGS="-frandom-seed=tor"
+  export TZ=UTC
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export LC_ALL=C
+  umask 0022
+  #
+  # Config options for hardening-wrapper
+  export DEB_BUILD_HARDENING=1
+  export DEB_BUILD_HARDENING_STACKPROTECTOR=1
+  export DEB_BUILD_HARDENING_FORTIFY=1
+  export DEB_BUILD_HARDENING_FORMAT=1
+  export DEB_BUILD_HARDENING_PIE=1
+  #
+  mkdir -p $INSTDIR/build/bin/
+  ln -s /usr/bin/yasm-1 $INSTDIR/build/bin/yasm
+  export PATH=$PATH:$INSTDIR/build/bin
+  # Preparing Python for Firefox
+  unzip -d $INSTDIR python-linux$GBUILD_BITS-utils.zip
+  # TODO: We might want to have a smarter solution than hard-coding the version.
+  ln -sf $INSTDIR/python/bin/python2.7 $INSTDIR/python/bin/python
+  export PATH=$INSTDIR/python/bin:$PATH
+  #
+  mkdir -p $INSTDIR/Browser/
+  mkdir -p $INSTDIR/Debug/Browser/components
+  #
+  cd tor-browser
+  # .git and the src takes up a lot of useless space, and we need the space to build
+  rm -rf .git
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  rm -f configure
+  rm -f js/src/configure
+  make -f client.mk configure
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  #
+  make $MAKEOPTS -f client.mk build
+  make -C obj-* package INNER_MAKE_PACKAGE=true
+  cp -a obj-*/dist/firefox/* $INSTDIR/Browser/
+  # Remove firefox-bin (we don't use it, see ticket #10126)
+  rm -f $INSTDIR/Browser/firefox-bin
+  # TODO: There goes FIPS-140.. We could upload these somewhere unique and
+  # subsequent builds could test to see if they've been uploaded before...
+  # But let's find out if it actually matters first..
+  rm -f $INSTDIR/Browser/*.chk
+  #
+  # Strip and generate debuginfo for the firefox binary that we keep, all *.so
+  # files, and the plugin-container (see ticket #10126)
+  cd $INSTDIR
+  for LIB in Browser/*.so Browser/webapprt-stub Browser/mozilla-xremote-client Browser/firefox Browser/plugin-container Browser/components/*.so # Browser/updater
+  do
+    # Build-ID is sometimes non-deterministic, and we use debuglink anyway
+    objcopy --remove-section=.note.gnu.build-id $LIB
+    objcopy --only-keep-debug $LIB Debug/$LIB
+    strip $LIB
+    objcopy --add-gnu-debuglink=./Debug/$LIB $LIB
+  done
+  ~/build/re-dzip.sh Browser/omni.ja
+  ~/build/re-dzip.sh Browser/webapprt/omni.ja
+  ~/build/re-dzip.sh Browser/browser/omni.ja
+  ~/build/dzip.sh tor-browser-linux$GBUILD_BITS-gbuilt.zip Browser/
+  ~/build/dzip.sh tor-browser-linux$GBUILD_BITS-debug.zip Debug/
+  cp tor-browser-linux$GBUILD_BITS-gbuilt.zip $OUTDIR/
+  cp tor-browser-linux$GBUILD_BITS-debug.zip $OUTDIR/
+  #
+  # XXX: Output the exact dpkgs we used to a txt file. Should this be
+  # part of gitian?
+  # dpkg-query -W -f='${Package}=${Version}\n' libglib2.0-dev >> $OUTDIR/bin/deps.txt

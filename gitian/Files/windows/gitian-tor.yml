@@ -1,0 +1,104 @@
+---
+name: "tor-windows"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "autoconf"
+- "automake"
+- "autoconf2.13"
+- "mingw-w64"
+- "faketime"
+- "libtool"
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://git.torproject.org/tor.git"
+  "dir": "tor"
+files:
+- "versions"
+- "bug10297.patch"
+- "bug5018.patch"
+- "bug11156.patch"
+- "bug11200.patch"
+- "bug11069.patch"
+- "bug9665.patch"
+- "bug8402.patch"
+- "bug8402-master.patch"
+- "binutils.tar.bz2"
+- "dzip.sh"
+- "binutils-win32-utils.zip"
+- "openssl-win32-utils.zip"
+- "libevent-win32-utils.zip"
+- "zlib-win32-utils.zip"
+script: |
+  INSTDIR="$HOME/install"
+  source versions
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  umask 0022
+
+  mkdir -p $INSTDIR/bin/
+  mkdir -p $INSTDIR/Tor/
+  mkdir -p $INSTDIR/Data/Tor/
+  unzip -d $INSTDIR binutils-win32-utils.zip
+  unzip -d $INSTDIR zlib-win32-utils.zip
+  unzip -d $INSTDIR libevent-win32-utils.zip
+  unzip -d $INSTDIR openssl-win32-utils.zip
+  cp $INSTDIR/zlib/lib/*.dll $INSTDIR/Tor/
+  cp $INSTDIR/libevent/bin/*.dll $INSTDIR/Tor/
+  cp $INSTDIR/openssl/bin/*.dll $INSTDIR/Tor/
+  # Make sure our custom ld gets used.
+  # See the we-need-only-the-binutils-comment in gitian-utils.yml for the
+  # reasoning behind the "mingw-w64" dir instead of an expected "binutils" one.
+  export PATH=$INSTDIR/mingw-w64/bin:$PATH
+
+  # Building tor
+  cd tor
+  git update-index --refresh -q
+  export GIT_COMMITTER_NAME="nobody"
+  export GIT_COMMITTER_EMAIL="nobody@localhost"
+  export GIT_COMMITTER_DATE="$REFERENCE_DATETIME"
+  if [ ${TOR_TAG::9} == "tor-0.2.4" ];
+  then
+    git am ~/build/bug10297.patch
+  fi
+  if [ $BUILD_PT_BUNDLES ]; then
+    if [ ${TOR_TAG::9} == "tor-0.2.4" ];
+    then
+      git am ~/build/bug5018.patch
+      git am ~/build/bug11069.patch
+      git am ~/build/bug11156.patch
+      git am ~/build/bug9665.patch
+      git am ~/build/bug11200.patch
+      git am ~/build/bug8402.patch
+    else
+      git am ~/build/bug8402-master.patch
+    fi
+  fi
+  mkdir -p $OUTDIR/src
+  #git archive HEAD | tar -x -C $OUTDIR/src
+  # Let's avoid the console window popping up.
+  export CFLAGS="-mwindows"
+  export LDFLAGS="-mwindows"
+  ./autogen.sh
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --disable-asciidoc --host=i686-w64-mingw32 --with-libevent-dir=$INSTDIR/libevent --with-openssl-dir=$INSTDIR/openssl --prefix=$INSTDIR --with-zlib-dir=$INSTDIR/zlib/
+  make $MAKEOPTS
+  make install
+  cd ..
+  install -s $INSTDIR/bin/tor.exe $INSTDIR/Tor/
+  cp $INSTDIR/share/tor/geoip $INSTDIR/Data/Tor/
+  cp $INSTDIR/share/tor/geoip6 $INSTDIR/Data/Tor/
+  cp -a /usr/lib/gcc/i686-w64-mingw32/4.6/libgcc_s_sjlj-1.dll $INSTDIR/Tor/
+  cp -a /usr/lib/gcc/i686-w64-mingw32/4.6/libssp*.dll $INSTDIR/Tor/
+
+  # Grabbing the result
+  cd $INSTDIR
+  ~/build/dzip.sh tor-win32-gbuilt.zip Tor/ Data/
+  cp tor-win32-gbuilt.zip $OUTDIR/

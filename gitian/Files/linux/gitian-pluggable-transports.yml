@@ -1,0 +1,268 @@
+---
+name: "pluggable-transports-linux"
+suites:
+- "lucid"
+architectures:
+- "i386"
+- "amd64"
+packages:
+- "git-core"
+- "unzip"
+- "zip"
+- "swig"
+- "m4"
+- "python-setuptools"
+- "python-dev"
+- "faketime"
+- "hardening-wrapper"
+#<stegotorus>	
+- "libtool"
+- "autoconf"
+- "automake"
+- "pkg-config"
+#</stegotorus>
+reference_datetime: "2000-01-01 00:00:00"
+remotes:
+- "url": "https://git.torproject.org/pluggable-transports/pyptlib.git"
+  "dir": "pyptlib"
+- "url": "https://git.torproject.org/pluggable-transports/obfsproxy.git"
+  "dir": "obfsproxy"
+- "url": "https://git.torproject.org/flashproxy.git"
+  "dir": "flashproxy"
+- "url": "https://github.com/kpdyer/libfte.git"
+  "dir": "libfte"
+- "url": "https://github.com/kpdyer/fteproxy.git"
+  "dir": "fteproxy"
+- "url": "https://github.com/habnabit/txsocksx.git"
+  "dir": "txsocksx"
+#<stegotorus>	
+- "url": "https://github.com/SRI-CSL/jel.git"
+  "dir": "jel"
+- "url": "https://github.com/SRI-CSL/stegotorus.git"
+  "dir": "stegotorus"
+- "url": "https://github.com/akheron/jansson.git"
+  "dir": "jansson"
+- "url": "https://github.com/madler/zlib.git"
+  "dir": "zlib"
+#</stegotorus>
+files:
+- "pycrypto.tar.gz"
+- "argparse.tar.gz"
+- "pyyaml.tar.gz"
+- "zope.interface.zip"
+- "twisted.tar.bz2"
+- "m2crypto.tar.gz"
+- "parsley.tar.gz"
+- "dzip.sh"
+- "gmp-linux32-utils.zip"
+- "gmp-linux64-utils.zip"
+- "openssl-linux32-utils.zip"
+- "openssl-linux64-utils.zip"
+#<stegotorus>	
+- "libevent-linux32-utils.zip"
+- "libevent-linux64-utils.zip"
+- "sribundle.tar.gz"
+#</stegotorus>
+script: |
+  INSTDIR="$HOME/install"
+  PTDIR="$INSTDIR/Tor/PluggableTransports"
+  mkdir -p $PTDIR
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LC_ALL=C
+  export PYTHON=python2
+  umask 0022
+
+  # Config options for hardening-wrapper
+  export DEB_BUILD_HARDENING=1
+  export DEB_BUILD_HARDENING_STACKPROTECTOR=1
+  export DEB_BUILD_HARDENING_FORTIFY=1
+  export DEB_BUILD_HARDENING_FORMAT=1
+  export DEB_BUILD_HARDENING_PIE=1
+
+  unzip -d $INSTDIR gmp-linux$GBUILD_BITS-utils.zip
+
+  unzip -d $INSTDIR openssl-linux$GBUILD_BITS-utils.zip
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/openssl/lib/pkgconfig"	
+
+  unzip -d $INSTDIR libevent-linux$GBUILD_BITS-utils.zip
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/libevent/lib/pkgconfig"	
+
+
+  cp $INSTDIR/gmp/lib/*.so* $INSTDIR/Tor
+
+  #<stegotorus>	
+
+  mkdir -p $INSTDIR/zlib
+  mkdir -p $INSTDIR/jansson
+  mkdir -p $INSTDIR/include
+  mkdir -p $INSTDIR/lib
+  mkdir -p $INSTDIR/jel
+
+  cd zlib
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --prefix=$INSTDIR/zlib --static 
+  make
+  make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/zlib/lib/pkgconfig"	
+  cd ..
+
+  cd jel
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure   --prefix=$INSTDIR/jel
+  make
+  make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jel/lib/pkgconfig"	
+  cd ..
+
+  cd jansson
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --prefix=$INSTDIR/jansson --disable-shared --enable-static
+  make
+  sudo make install
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$INSTDIR/jansson/lib/pkgconfig"	
+  cd ..
+
+  cd stegotorus
+  autoreconf -i
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  ./configure --disable-integration-tests --enable-silent-rules -with-stegtracesdir=./TorBrowser/Tor/PluggableTransports/traces/
+  make
+  cp -a stegotorus $PTDIR/
+  cd ..
+
+  #grab the remaining stuff needed for a working stegotorus
+  tar xvfz sribundle.tar.gz
+  cd sribundle
+
+  cp -r modus_operandi $PTDIR/
+  cp -r traces $PTDIR/
+
+  cd ..
+
+  #</stegotorus>
+
+  # Building pyptlib
+  cd pyptlib
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build --build-lib build
+  cp -a build/pyptlib $PTDIR/
+  cd ..
+
+  # Building PyCrypto
+  tar xzf pycrypto.tar.gz
+  cd pycrypto-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build --build-lib build
+  cp -a build/Crypto $PTDIR/
+  cd ..
+
+  # Building argparse
+  tar xzf argparse.tar.gz
+  cd argparse-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build --build-lib build
+  cp -a build/argparse.py $PTDIR/
+  cd ..
+
+  # Building Zope interfaces
+  unzip zope.interface.zip
+  cd zope.interface-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build --build-lib build
+  cp -a build/zope $PTDIR/
+  cd ..
+
+  # Building PyYAML
+  tar xzf pyyaml.tar.gz
+  cd PyYAML-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build --build-lib build
+  cp -a build/yaml $PTDIR/
+  cd ..
+
+  # Building Twisted
+  tar xjf twisted.tar.bz2
+  cd Twisted-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build --build-lib build
+  cp -a build/twisted $PTDIR/
+  cd ..
+
+  # Building Parsley
+  tar xzf parsley.tar.gz
+  cd Parsley-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build --build-lib build
+  cp -a build/parsley.py $PTDIR/
+  cp -a build/ometa $PTDIR/
+  cp -a build/terml $PTDIR/
+  cd ..
+
+  # Building txsocksx
+  cd txsocksx
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  # Let's pretend we have the setup dependency already as we don't want to get
+  # it downloaded during building. Just pretending and thus avoiding another
+  # dependency should be fine here as txsocksx catches the exception due to
+  # missing __version__ and __sha__ .
+  mkdir vcversioner-1.14.1.1-py2.6.egg
+  $PYTHON setup.py build --build-lib build
+  cp -a build/txsocksx $PTDIR/
+  cd ..
+
+  # Building obfsproxy
+  cd obfsproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build --build-lib build
+  cp -a build/obfsproxy $PTDIR/
+  cp -a bin/obfsproxy $PTDIR/obfsproxy.bin
+  mkdir -p $INSTDIR/Docs/Obfsproxy
+  cp -a {LICENSE,README} $INSTDIR/Docs/Obfsproxy
+  cd ..
+
+  # Building M2Crypto
+  tar xzf m2crypto.tar.gz
+  cd M2Crypto-*
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  $PYTHON setup.py build_ext --build-lib build --openssl $INSTDIR/openssl
+  $PYTHON setup.py build --build-lib build
+  cp -a build/M2Crypto $PTDIR/
+  cd ..
+
+  # Building flashproxy
+  cd flashproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  make dist DISTNAME=flashproxy-client
+  cp -a dist/flashproxy-client/{flashproxy,flashproxy-client,flashproxy-reg-appspot,flashproxy-reg-email,flashproxy-reg-http,flashproxy-reg-url} $PTDIR/
+  mkdir -p $INSTDIR/Docs/FlashProxy
+  cp -a {doc/*,README,LICENSE,ChangeLog} $INSTDIR/Docs/FlashProxy
+  cd ..
+
+  # Building libfte
+  cd libfte
+  ln -s $INSTDIR/gmp thirdparty/gmp
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  make
+  cp -ra fte $PTDIR/
+  mkdir -p $INSTDIR/Docs/libfte
+  cp -a {LICENSE,README.md} $INSTDIR/Docs/libfte
+  cp -a thirdparty/re2/LICENSE $INSTDIR/Docs/libfte/LICENSE.re2
+  cd ..
+
+  # Building fteproxy
+  cd fteproxy
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
+  cp -a bin/fteproxy $PTDIR/fteproxy.bin
+  cp -ra fteproxy $PTDIR/
+  mkdir -p $INSTDIR/Docs/fteproxy
+  cp -a {COPYING,README.md} $INSTDIR/Docs/fteproxy
+  cd ..
+
+  # Grabbing the results
+  cd $INSTDIR
+  ~/build/dzip.sh pluggable-transports-linux$GBUILD_BITS-gbuilt.zip Tor/ Docs/
+  cp pluggable-transports-linux$GBUILD_BITS-gbuilt.zip $OUTDIR/

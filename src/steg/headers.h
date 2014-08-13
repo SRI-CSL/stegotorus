@@ -33,6 +33,7 @@ typedef enum  methods {
 #define HTTP_HEADERS_END               "\r\n\r\n"
 #define HTTP_HEADERS_EOL               "\r\n"
 #define HTTP_HEADERS_CONTENT_LENGTH    "content-length: "
+#define HTTP_HEADERS_CONTENT_TYPE      "content-type: "
 #define HTTP_HEADERS_ACCEPT            "accept: "
 #define HTTP_HEADERS_ACCEPT_ENCODING   "accept-encoding: "
 #define HTTP_HEADERS_CONTENT_ENCODING  "content-encoding: "
@@ -54,6 +55,7 @@ typedef enum HTTP_CONTENT_TYPES {
   HTTP_CONTENT_JSON,
   HTTP_CONTENT_JPEG,
   HTTP_CONTENT_RAW,
+  HTTP_CONTENT_MJPEG,
   HTTP_CONTENT_TYPES_MAX
 } http_content_t;
 
@@ -71,9 +73,11 @@ int get_http_status_code(char* headers, size_t headers_length);
 http_method_t get_method(char* headers, size_t headers_length);
 rcode_t get_cookie(char* headers, size_t headers_length, char** cookiep, size_t& cookie_length);
 rcode_t get_content_length(char* headers, size_t headers_length, size_t& content_length);
+rcode_t get_content_type(char* headers, size_t headers_length, char** typep, size_t& vlength);
 rcode_t get_accept(char* headers, size_t headers_length, char** acceptp, size_t& vlength);
 rcode_t get_accept_encoding(char* headers, size_t headers_length, char** encodingp, size_t& vlength);
 rcode_t get_content_encoding(char* headers, size_t headers_length, char** encodingp, size_t& vlength);
+
 
 http_content_t find_content_type(char* headers, size_t headers_length);
 

@@ -259,6 +259,12 @@ get_content_encoding(char* headers, size_t headers_length, char** encodingp, siz
   return get_header_value(headers, headers_length, encodingp, vlength, HTTP_HEADERS_CONTENT_ENCODING);
 }
   
+rcode_t
+get_content_type(char* headers, size_t headers_length, char** typep, size_t& vlength)
+{
+  return get_header_value(headers, headers_length, typep, vlength, HTTP_HEADERS_CONTENT_TYPE);
+}
+  
 
 bool
 is_gzip_encoded(char *headers, size_t headers_length)
