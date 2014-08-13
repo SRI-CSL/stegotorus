@@ -3,8 +3,8 @@ pref("extensions.torlauncher.default_bridge_recommended_type", "stegotorus");
 
 
 
-// Default bridges
-pref("extensions.torlauncher.default_bridge.stegotorus.1", "stegotorus 127.0.0.1:8081 77BBB57CF3C48EBC621CE3DC96CA7C5B07F64F75");
+// Default bridges 128.18.9.71
+pref("extensions.torlauncher.default_bridge.stegotorus.1", "stegotorus 128.18.9.71:8081 77BBB57CF3C48EBC621CE3DC96CA7C5B07F64F75");
 
 #pref("extensions.torlauncher.default_bridge.stegotorus.1", "stegotorus 127.0.0.1:8081 667537A848DF6FAB3056B4A48D39D5C11E2692B5");
 #pref("extensions.torlauncher.default_bridge.stegotorus.2", "stegotorus 127.0.0.1:8081 77BBB57CF3C48EBC621CE3DC96CA7C5B07F64F75");
