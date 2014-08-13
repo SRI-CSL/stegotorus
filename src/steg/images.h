@@ -29,6 +29,7 @@ typedef struct image_pool {
   char*    the_images_source;        /* from when the images came                         */
 } image_pool_t;
 
+
 void free_image(image_p im);
 
 image_p get_image(image_pool_p pool, int min_capacity);

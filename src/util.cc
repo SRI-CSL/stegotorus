@@ -302,6 +302,8 @@ ascii_strlower(char *s)
 
 /* logging destination; NULL for no logging. */
 static FILE *log_dest;
+static const char *log_path;
+
 /* minimum logging severity */
 static int log_min_sev = LOG_SEV_INFO;
 /* whether timestamps are wanted */
@@ -366,6 +368,8 @@ log_open(const char *filename)
   if (!log_dest)
     return -1;
 
+  log_path = filename;
+  
   setvbuf(log_dest, 0, _IONBF, 0);
   fputs("\nBrand new log:\n", log_dest);
 
@@ -383,6 +387,11 @@ log_close()
     fclose(log_dest);
 }
 
+const char* get_log_path(){
+  return log_path;
+}
+
+
 /**
    Sets the global logging 'method' and also sets and open the logfile
    'filename' in case we want to log into a file.
@@ -392,7 +401,7 @@ int
 log_set_method(int method, const char *filename)
 {
   log_close();
-
+  
   switch (method) {
   case LOG_METHOD_NULL:
     log_dest = NULL;

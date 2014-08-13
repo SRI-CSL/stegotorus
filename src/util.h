@@ -218,6 +218,9 @@ int log_do_debug(void);
 /** Close the logfile if it's open.  Ignores errors. */
 void log_close(void);
 
+/** Obtain the path of the logfile so others can use it */
+const char* get_log_path(void);
+
 /** The actual log-emitting functions.  There are three families of
     these functions: generic, circuit-related, and
     connection-related. */

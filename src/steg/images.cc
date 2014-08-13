@@ -15,8 +15,24 @@
 
 
 static const bool images_debug = 0;
-static const char images_log[] = "/tmp/stegojello.log";
-  
+
+static const char* images_log = NULL;
+
+static void set_jel_log( jel_config *jel ){
+  int ret;
+  if(images_log == NULL){
+    images_log = get_log_path();
+  }
+  if(images_log != NULL){
+    ret = jel_open_log(jel, (char *)images_log);
+    if (ret == JEL_ERR_CANTOPENLOG) {
+      log_warn("set_jel_log: can't open %s!", images_log);
+      jel->logger = stderr;
+    }
+  }
+}
+
+
 static image_p
 load_image(image_pool_p pool, const char* path, char* basename);
 
@@ -35,6 +51,8 @@ static image_pool_p alloc_image_pool(){
   retval->the_images_source = NULL;
   return retval;
 }
+
+
 
 
 int free_image_pool(image_pool_p pool){
@@ -169,12 +187,8 @@ static bool file2bytes(const char* path, unsigned char* bytes, size_t bytes_want
 /* a playground at present */
 static int capacity(image_p image){
   jel_config *jel = jel_init(JEL_NLEVELS);
-  int ret = jel_open_log(jel, (char *)images_log);
-  if (ret == JEL_ERR_CANTOPENLOG) {
-    log_warn("Can't open %s!", images_log);
-    jel->logger = stderr;
-  }
-  ret = jel_set_mem_source(jel, image->bytes, image->size);
+  set_jel_log(jel);
+  int ret = jel_set_mem_source(jel, image->bytes, image->size);
   if (ret != 0) {
     log_warn("jel: Error - exiting (need a diagnostic!)\n");
   } else {
@@ -338,13 +352,11 @@ embed_message_aux(image_p cover, unsigned char* message, int message_length, uns
   image_p retval = NULL;
   if(destination != NULL){
     jel_config *jel = jel_init(JEL_NLEVELS);
-    int ret = jel_open_log(jel, (char *)images_log);
     int bytes_embedded = 0;
-    if (ret == JEL_ERR_CANTOPENLOG) {
-      log_warn("embed_message_aux: can't open %s!", images_log);
-      jel->logger = stderr;
-    }
-    ret = jel_set_mem_source(jel, cover->bytes, cover->size);
+
+    set_jel_log(jel);
+
+    int ret = jel_set_mem_source(jel, cover->bytes, cover->size);
     if (ret != 0) {
       log_warn("embed_message_aux: jel error - setting source memory!");
       return NULL;
@@ -385,12 +397,11 @@ int extract_message(unsigned char** messagep, int message_length, unsigned char*
   if((messagep != NULL) && (jpeg_data != NULL)){
     if(images_debug){ log_warn("extract_message:  %u", jpeg_data_length); }
     jel_config *jel = jel_init(JEL_NLEVELS);
-    int ret = jel_open_log(jel, (char *)images_log);
-    if (ret == JEL_ERR_CANTOPENLOG) {
-      log_warn("extract_message: can't open %s!", images_log);
-      jel->logger = stderr;
-    }
-    ret = jel_set_mem_source(jel, jpeg_data, jpeg_data_length);
+
+    set_jel_log(jel);
+
+    int ret = jel_set_mem_source(jel, jpeg_data, jpeg_data_length);
+    
     if(ret != 0){
       log_warn("extract_message: jel_set_mem_source failed: %d", ret);
       return 0;

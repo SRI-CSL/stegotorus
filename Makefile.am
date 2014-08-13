@@ -37,10 +37,14 @@ STEGANOGRAPHERS = \
 	src/steg/crypto.cc \
 	src/steg/b64cookies.cc \
 	src/steg/embed.cc \
+	src/steg/stream.cc \
 	src/steg/http.cc \
 	src/steg/http_server.cc \
 	src/steg/http_client.cc \
 	src/steg/rawSteg.cc \
+	src/steg/mhexSteg.cc \
+	src/steg/mrawSteg.cc \
+	src/steg/mjpegSteg.cc \
 	src/steg/jel_knobs.cc \
 	src/steg/jpegSteg.cc \
 	src/steg/images.cc \
@@ -151,6 +155,7 @@ noinst_HEADERS = \
 	src/socks.h \
 	src/subprocess.h \
 	src/steg.h \
+	src/steg/stream.h \
 	src/steg/http.h \
 	src/steg/http_server.h \
 	src/steg/http_client.h \
@@ -167,7 +172,9 @@ noinst_HEADERS = \
 	src/steg/images.h \
 	src/steg/pdfs.h \
 	src/steg/jsonSteg.h \
-	src/steg/rawSteg.h \
+	src/steg/mhexSteg.h \
+	src/steg/mrawSteg.h \
+	src/steg/mjpegSteg.h \
 	src/steg/jsutil.h \
 	src/steg/payloads.h \
 	src/steg/pdfSteg.h \
