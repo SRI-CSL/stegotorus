@@ -191,7 +191,7 @@ http_server_receive_POST (http_steg_t * s, struct evbuffer *dest, struct evbuffe
     break;
 
   default:
-    log_warn("http_server_receive: UNKNOWN POST type:  %s", http_content_type_to_string(type_on_wire));
+    log_warn("http_server_receive: UNKNOWN POST type:  %s\n%s\n", http_content_type_to_string(type_on_wire), headers);
     break;
     
   }

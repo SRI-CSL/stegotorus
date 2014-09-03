@@ -656,12 +656,11 @@ find_uri_type(char* buf_orig, size_t buflen) {
 
   buf[buflen] = 0;
   
-  if (strncmp(buf, "GET", 3) != 0
-      && strncmp(buf, "POST", 4) != 0) {
+  if (CASECMPCONST(buf, "GET") != 0 && CASECMPCONST(buf, "POST") != 0) {
     goto clean_up;
   }
 
-  if(!strncmp(buf, "POST", 4)){ ispost = true; }
+  if(CASECMPCONST(buf, "POST") == 0){ ispost = true; }
 
   uri = strchr(buf, ' ') + 1;
 
@@ -728,7 +727,7 @@ find_client_payload(payloads& pl, char* buf, size_t buflen, uint16_t type, size_
     if (p->ptype == type) {
       inbuf = pl.payloads[r];
 
-      if (p->length < 3 || strncmp(inbuf, "GET", 3) != 0) {
+      if (p->length < 3 || CASECMPCONST(inbuf, "GET") != 0) {
 	goto next;
       }
 
