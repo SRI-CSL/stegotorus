@@ -1240,7 +1240,7 @@ init_PDF_payload_pool(payloads& pl, uint32_t len, uint16_t type, uint32_t min_ca
       // cap = min_capacity+1;
       cap = capacity_PDF(msgbuf, p->length);
       if (cap > min_capacity) {
-	pl.type_payload_cap[content_type][cnt] = (cap-PDF_DELIMITER_SIZE)/2;
+	pl.type_payload_cap[content_type][cnt] = cap;
 	pl.type_payload[content_type][cnt] = r;
 	cnt++;
 	

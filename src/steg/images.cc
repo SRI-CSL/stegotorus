@@ -53,8 +53,6 @@ static image_pool_p alloc_image_pool(){
 }
 
 
-
-
 int free_image_pool(image_pool_p pool){
   int retval = 0;
   if(pool != NULL){

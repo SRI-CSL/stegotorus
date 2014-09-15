@@ -322,8 +322,8 @@ schemes_serverside_transmit_room (payloads&  payloads, int content_type, size_t 
     break;
     
   case HTTP_CONTENT_PDF:
-    if (hi >= PDF_MIN_AVAIL_SIZE)
-      hi = PDF_MIN_AVAIL_SIZE;
+    if (hi >= payloads.max_PDF_capacity)
+      hi = payloads.max_PDF_capacity;
     break;
 
   case HTTP_CONTENT_JSON:

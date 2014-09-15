@@ -14,11 +14,6 @@
 // data encoding will be replaced by JS_DELIMITER_REPLACEMENT
 #define JS_DELIMITER_SIZE 1
 
-// #define JS_MIN_AVAIL_SIZE 2050
-#define JS_MIN_AVAIL_SIZE 1026
-// JS_MIN_AVAIL_SIZE should reflect the min number of data bytes
-// a JavaScript may encapsulate
-
 // flag to control whether to remove JavaScript comments
 #define REMOVE_JS_COMMENT 1
 // #define REMOVE_JS_COMMENT 0

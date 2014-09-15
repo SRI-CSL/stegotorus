@@ -28,6 +28,14 @@
 
 #define HTML_MIN_AVAIL_SIZE 1026
 
+#define JS_MIN_AVAIL_SIZE 1026
+// JS_MIN_AVAIL_SIZE should reflect the min number of data bytes
+// a JavaScript may encapsulate
+
+#define PDF_MIN_AVAIL_SIZE 10240
+#define PDF_DELIMITER_SIZE 2
+#define PDF_MAX_AVAIL_SIZE 100000
+
 /*
  * Per default limit to 1 MiB
  * The largest pentry in our server.out is ~5.5 MiB.
@@ -37,9 +45,7 @@
 /* Maximum we accept for loading */
 #define HTTP_MSG_BUF_SIZE_MAX (6 * 1024 * 1024)
 
-#define PDF_DELIMITER_SIZE 2
-#define PDF_MIN_AVAIL_SIZE 10240
-#define PDF_MAX_AVAIL_SIZE 100000
+
 
 // used by the JavaScript steg module to distinguish two cases in which
 // JS may appear in the HTTP msg
