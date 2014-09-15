@@ -32,11 +32,13 @@ typedef enum  methods {
 
 #define HTTP_HEADERS_END               "\r\n\r\n"
 #define HTTP_HEADERS_EOL               "\r\n"
-#define HTTP_HEADERS_CONTENT_LENGTH    "content-length: "
-#define HTTP_HEADERS_CONTENT_TYPE      "content-type: "
-#define HTTP_HEADERS_ACCEPT            "accept: "
-#define HTTP_HEADERS_ACCEPT_ENCODING   "accept-encoding: "
-#define HTTP_HEADERS_CONTENT_ENCODING  "content-encoding: "
+#define HTTP_HEADERS_CONTENT_LENGTH    "\r\ncontent-length: "
+#define HTTP_HEADERS_CONTENT_TYPE      "\r\ncontent-type: "
+#define HTTP_HEADERS_ACCEPT            "\r\naccept: "
+#define HTTP_HEADERS_ACCEPT_ENCODING   "\r\naccept-encoding: "
+#define HTTP_HEADERS_CONTENT_ENCODING  "\r\ncontent-encoding: "
+#define HTTP_HEADERS_COOKIE            "\r\ncookie: "
+#define HTTP_HEADERS_SETCOOKIE         "\r\nset-cookie: "
 
 
 

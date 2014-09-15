@@ -80,8 +80,10 @@ get_cookie (char *headers, size_t headers_length, char** cookiep, size_t& cookie
 {
 
   char *cstart = NULL, *cend = NULL, *cookie = NULL;
-  char cookie_get[] = "Cookie: ";
-  char cookie_set[] = "Set-Cookie: ";
+  //char cookie_get[] = "\r\nCookie: ";
+  //char cookie_set[] = "\r\nSet-Cookie: ";
+  char cookie_get[] = HTTP_HEADERS_COOKIE;
+  char cookie_set[] = HTTP_HEADERS_SETCOOKIE;
   char *cookie_header;
   size_t offset;
   size_t cstart_length;
@@ -157,7 +159,8 @@ get_content_length (char* headers, size_t headers_length, size_t& content_length
   
   offset = field_start - headers;
   field_start_length =  headers_length - offset;
-  field_end = strnstr(field_start, HTTP_HEADERS_EOL, field_start_length);
+  //skip the \r\n
+  field_end = strnstr(&field_start[2], HTTP_HEADERS_EOL, field_start_length - 2); 
 
   if (field_end == NULL) {
     log_warn("unable to find end of line for \"%s\"", HTTP_HEADERS_CONTENT_LENGTH);
@@ -168,6 +171,9 @@ get_content_length (char* headers, size_t headers_length, size_t& content_length
   digit_count = (field_end - field_value);
   if (digit_count >= DIGITS || digit_count == 0) {
     log_warn("value of content-length field too large or invalid field");
+    log_warn("field_start: '%s'", field_start);
+    log_warn("field_value: '%s'", field_value);
+    log_warn("digit_count: '%zu'", digit_count);
     return RCODE_ERROR;
   }
 
@@ -205,8 +211,8 @@ get_header_value(char* headers, size_t headers_length, char** valuep, size_t& va
   
   offset = field_start - headers;
   field_start_length =  headers_length - offset;
-  
-  field_end = strnstr(field_start, HTTP_HEADERS_EOL, field_start_length);
+  //skip the initial \r\n
+  field_end = strnstr(&field_start[2], HTTP_HEADERS_EOL, field_start_length - 2);
   if (field_end == NULL) {
     if(debug){ log_warn("unable to find end of line for \"%s\"", key); }
     goto err;
