@@ -80,8 +80,6 @@ get_cookie (char *headers, size_t headers_length, char** cookiep, size_t& cookie
 {
 
   char *cstart = NULL, *cend = NULL, *cookie = NULL;
-  //char cookie_get[] = "\r\nCookie: ";
-  //char cookie_set[] = "\r\nSet-Cookie: ";
   char cookie_get[] = HTTP_HEADERS_COOKIE;
   char cookie_set[] = HTTP_HEADERS_SETCOOKIE;
   char *cookie_header;
