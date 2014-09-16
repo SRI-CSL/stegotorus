@@ -28,20 +28,27 @@ struct gcm_encryptor;
 namespace chop_blk
 {
 
-/* Packets on the wire have a 16-byte header, consisting of a 32-bit
-   sequence number, two 16-bit length fields ("D" and "P"), an 8-bit
-   opcode ("F"), an 8-bit retransmit count ("R"), and a 48-bit check
+/* Packets on the wire have a 16-byte header, consisting of a 24-bit
+   sequence number, a 24 bit acknowledge field, two 16-bit length 
+   fields ("D" and "P"), an 8-bit opcode ("F"), and a 40-bit check
    field.  All numbers in this header are serialized in network byte
    order.
+
 
    | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F |
    |Sequence Number|   D   |   P   | F | R |       Check           |
 
-   The header is encrypted with AES in ECB mode: this is safe because
-   the header is exactly one AES block long, the sequence number +
-   retransmit count is never repeated, the header-encryption key is
+   | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F |
+   |Seq No     | Ack No    |   D   |   P   | F |      Check        |
+
+
+   Ian says: this "rationalization" needs to be revisited.
+
+   The header is encrypted with AES in ECB mode: this may be safe
+   because the header is exactly one AES block long, the sequence 
+   number is never repeated, the header-encryption key is
    not used for anything else, and the high 24 bits of the sequence
-   number, plus the check field, constitute an 72-bit MAC.  The
+   number, plus the check field, constitute an 64-bit MAC.  The
    receiver maintains a 256-element sliding window of acceptable
    sequence numbers, which begins one after the highest sequence
    number so far _processed_ (not received).  If the sequence number
@@ -51,6 +58,9 @@ namespace chop_blk
    number are therefore less than one in 2^72.  (This is weak compared
    to our default security parameter of 2^128, but should be sufficient
    for the protection of this small amount of data.)
+
+   Ian says: not sure if the rest is fantasy or not. I saw no rekeying
+   code.
 
    Unlike TCP, our sequence numbers always start at zero on a new (or
    freshly rekeyed) circuit, and increment by one per _block_, not per
@@ -111,16 +121,16 @@ opcode_valid(unsigned int o)
 class header
 {
   uint32_t s;
+  uint32_t a;
   uint16_t d;
   uint16_t p;
   opcode_t f : 8;
-  uint8_t  r;
 
 public:
-  header() : s(0), d(0), p(0), f(op_XXX), r(0) {}
+  header() : s(0), a(0), d(0), p(0), f(op_XXX) {}
 
   header(uint32_t s_, uint16_t d_, uint16_t p_, opcode_t f_)
-    : s(0), d(0), p(0), f(op_XXX), r(0)
+    : s(0), a(0), d(0), p(0), f(op_XXX)
   {
     if (!opcode_valid(f_))
       return;
@@ -141,12 +151,21 @@ public:
   // to retransmit the block.
   bool prepare_retransmit(uint16_t new_plen);
 
+  //set the ack no
+  void set_ackno(uint32_t a_)
+  {
+    //could check for loss here
+    a = a_;
+  }
+
+
   // Accessors.
   uint32_t seqno()  const { return s; }
+  uint32_t ackno()  const { return a; }
   size_t   dlen()   const { return d; }
   size_t   plen()   const { return p; }
   opcode_t opcode() const { return f; }
-  uint8_t  rcount() const { return r; }
+
 
   size_t total_len() const
   {

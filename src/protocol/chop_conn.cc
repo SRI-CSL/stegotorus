@@ -411,18 +411,16 @@ chop_conn_t::recv()
 
     steg->successful_reception();
 
-    log_debug(this, "receiving block %u <d=%lu p=%lu f=%s r=%u>",
+    log_debug(this, "receiving block %u <d=%lu p=%lu f=%s>",
               hdr.seqno(), (unsigned long)hdr.dlen(), (unsigned long)hdr.plen(),
-              opname(hdr.opcode(), fallbackbuf),
-              hdr.rcount());
+              opname(hdr.opcode(), fallbackbuf));
 
     if (config->trace_packets)
-      log_warn(this, "T:%.4f: ckt %u <ntp %u outq %lu>: recv %lu <d=%lu p=%lu f=%s r=%u>",
+      log_warn(this, "T:%.4f: ckt %u <ntp %u outq %lu>: recv %lu <d=%lu p=%lu f=%s>",
               TRACEPACKETS_TIMESTAMP, upstream->serial, upstream->recv_queue.window(),
 	      (unsigned long)evbuffer_get_length(bufferevent_get_input(upstream->up_buffer)),
               (unsigned long)hdr.seqno(), (unsigned long)hdr.dlen(),
-              (unsigned long)hdr.plen(), opname(hdr.opcode(), fallbackbuf),
-              hdr.rcount());
+              (unsigned long)hdr.plen(), opname(hdr.opcode(), fallbackbuf));
 
     data = evbuffer_new();
 

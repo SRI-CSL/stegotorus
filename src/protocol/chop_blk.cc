@@ -84,26 +84,27 @@ debug_ack_contents(evbuffer *payload, std::ostream& os)
 
 // Note: this function must take exactly the same amount of time to
 // execute regardless of its inputs.
-  header::header(const uint8_t *ciphr, ecb_decryptor &dc, uint32_t window) : s(0), d(0), p(0), f(op_XXX), r(0)
+  header::header(const uint8_t *ciphr, ecb_decryptor &dc, uint32_t window) : s(0), a(0), d(0), p(0), f(op_XXX)
 {
   uint8_t clear[16];
   dc.decrypt(clear, ciphr);
 
-  uint32_t s_ = ((uint32_t(clear[0]) << 24) |
-                 (uint32_t(clear[1]) << 16) |
-                 (uint32_t(clear[2]) <<  8) |
-                 (uint32_t(clear[3])      ));
+  uint32_t s_ = ((uint32_t(clear[0]) << 16) |
+                 (uint32_t(clear[1]) <<  8) |
+                 (uint32_t(clear[2])      ));
 
-  uint16_t d_ = ((uint16_t(clear[4]) <<  8) |
-                 (uint16_t(clear[5])      ));
-  uint16_t p_ = ((uint16_t(clear[6]) <<  8) |
+  uint8_t a_  = ((uint32_t(clear[3]) << 16) |
+                 (uint32_t(clear[4]) <<  8) |
+                 (uint32_t(clear[5])      ));
+
+  uint16_t d_ = ((uint16_t(clear[6]) <<  8) |
                  (uint16_t(clear[7])      ));
+  uint16_t p_ = ((uint16_t(clear[8]) <<  8) |
+                 (uint16_t(clear[9])      ));
 
-  uint8_t f_  = clear[8];
-  uint8_t r_  = clear[9];
+  uint8_t f_  = clear[10];
 
-  bool checkOK = !(clear[10] | clear[11] | clear[12] |
-                   clear[13] | clear[14] | clear[15]);
+  bool checkOK = !(clear[11] | clear[12] | clear[13] | clear[14] | clear[15]);
 
   uint32_t delta = s_ - window;
   bool deltaOK = !(delta & ~uint32_t(0xFF));
@@ -114,16 +115,16 @@ debug_ack_contents(evbuffer *payload, std::ostream& os)
 
   if (ok) {
     s = s_;
+    a = a_;
     d = d_;
     p = p_;
     f = opcode_t(f_);
-    r = r_;
   } else {
     s = 0;
+    a = 0;
     d = 0;
     p = 0;
     f = op_XXX;
-    r = 0;
   }
 }
 
@@ -132,22 +133,23 @@ header::encode(uint8_t *ciphr, ecb_encryptor &ec) const
 {
   uint8_t clear[16];
 
-  clear[ 0] = (s >> 24) & 0xFF;
-  clear[ 1] = (s >> 16) & 0xFF;
-  clear[ 2] = (s >>  8) & 0xFF;
-  clear[ 3] = (s      ) & 0xFF;
+  clear[ 0] = (s >> 16) & 0xFF;
+  clear[ 1] = (s >>  8) & 0xFF;
+  clear[ 2] = (s      ) & 0xFF;
 
-  clear[ 4] = (d >>  8) & 0xFF;
-  clear[ 5] = (d      ) & 0xFF;
+  clear[ 3] = (a >> 16) & 0xFF;
+  clear[ 4] = (a >>  8) & 0xFF;
+  clear[ 5] = (a      ) & 0xFF;
 
-  clear[ 6] = (p >>  8) & 0xFF;
-  clear[ 7] = (p      ) & 0xFF;
 
-  clear[ 8] = uint8_t(f);
+  clear[ 6] = (d >>  8) & 0xFF;
+  clear[ 7] = (d      ) & 0xFF;
 
-  clear[ 9] = r;
+  clear[ 8] = (p >>  8) & 0xFF;
+  clear[ 9] = (p      ) & 0xFF;
 
-  clear[10] = 0;
+  clear[10] = uint8_t(f);
+
   clear[11] = 0;
   clear[12] = 0;
   clear[13] = 0;
@@ -160,9 +162,6 @@ header::encode(uint8_t *ciphr, ecb_encryptor &ec) const
 bool
 header::prepare_retransmit(uint16_t new_plen)
 {
-  if (r == 255)
-    return false;
-  r++;
   p = new_plen;
   return true;
 }
