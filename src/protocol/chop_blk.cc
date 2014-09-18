@@ -160,8 +160,10 @@ header::encode(uint8_t *ciphr, ecb_encryptor &ec) const
 }
 
 bool
-header::prepare_retransmit(uint16_t new_plen)
+header::prepare_retransmit(uint32_t ackno, uint16_t new_plen)
 {
+  //it seems prudent to update the ackno ...
+  a = ackno;
   p = new_plen;
   return true;
 }
@@ -256,8 +258,9 @@ transmit_queue::enqueue(opcode_t f, evbuffer *data, uint16_t padding)
   log_assert(!full());
 
   uint32_t seqno = next_to_send;
+  uint32_t ackno = next_to_ack;
   transmit_elt &elt = cbuf[seqno & 0xFF];
-  elt.hdr = header(seqno, evbuffer_get_length(data), padding, f);
+  elt.hdr = header(seqno, ackno, evbuffer_get_length(data), padding, f);
   //fprintf(stderr, "setting %p %p %p %p\n", this, cbuf, &elt, data);
   elt.data = data;
   elt.last_sent = 0;
@@ -395,7 +398,8 @@ transmit_queue::retransmit(transmit_elt &elt,
   }    
 
 
-  if (!elt.hdr.prepare_retransmit(new_padding)) {
+  if (!elt.hdr.prepare_retransmit(next_to_ack, new_padding)) {
+    //currently this is dead code
     log_warn("block %u retransmitted too many times", elt.hdr.seqno());
     return -1;
   }

@@ -34,9 +34,12 @@ namespace chop_blk
    field.  All numbers in this header are serialized in network byte
    order.
 
+   old layout:
 
    | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F |
    |Sequence Number|   D   |   P   | F | R |       Check           |
+
+   newlayout:
 
    | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F |
    |Seq No     | Ack No    |   D   |   P   | F |      Check        |
@@ -129,12 +132,13 @@ class header
 public:
   header() : s(0), a(0), d(0), p(0), f(op_XXX) {}
 
-  header(uint32_t s_, uint16_t d_, uint16_t p_, opcode_t f_)
+  header(uint32_t s_, uint32_t a_, uint16_t d_, uint16_t p_, opcode_t f_)
     : s(0), a(0), d(0), p(0), f(op_XXX)
   {
     if (!opcode_valid(f_))
       return;
     s = s_;
+    a = a_;
     d = d_;
     p = p_;
     f = f_;
@@ -149,7 +153,7 @@ public:
   // Returns false if incrementing the retransmit count has caused it
   // to wrap around to zero.  If this happens, we have to stop trying
   // to retransmit the block.
-  bool prepare_retransmit(uint16_t new_plen);
+  bool prepare_retransmit(uint32_t ackno, uint16_t new_plen);
 
   //set the ack no
   void set_ackno(uint32_t a_)
@@ -334,6 +338,12 @@ struct transmit_elt
     * transmitted.
     */
    uint32_t next_seqno() const { return next_to_send; }
+
+   /**
+    * Return the ack number to use for the next block to be
+    * transmitted, used in trace packets.
+    */
+   uint32_t next_ackno() const { return next_to_ack; }
 
    /**
     * True if the transmit queue is full, i.e. we cannot transmit

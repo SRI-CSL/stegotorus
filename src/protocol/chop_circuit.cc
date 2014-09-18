@@ -270,7 +270,7 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
 
   size_t blocksize = 0, p = 0, d = 0;
   chop_conn_t *conn = NULL;
-  uint32_t seqno;
+  uint32_t seqno, ackno;
   char fallbackbuf[4];
   struct evbuffer *block;
 
@@ -307,6 +307,9 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
   // The transmit queue takes ownership of 'payload' at this point.
   seqno = tx_queue.enqueue(f, payload, p);
 
+  //for trace packets only
+  ackno = tx_queue.next_ackno();
+
   // Not having a connection to use right now does not constitute a failure.
   if (!conn) {
     log_debug(conn, "NO CONNECTION so returning 0");
@@ -337,11 +340,11 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
             seqno, (unsigned long)d, (unsigned long)p, opname(f, fallbackbuf));
 
   if (config->trace_packets)
-    log_warn(conn, "T:%.4f: ckt %u <ntp %u outq %lu>: send special %lu <d=%lu p=%lu f=%s>",
-            TRACEPACKETS_TIMESTAMP, this->serial, this->recv_queue.window(),
-            (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
-            (unsigned long)seqno, (unsigned long)d,
-            (unsigned long)p, opname(f, fallbackbuf));
+    log_warn(conn, "T:%.4f: ckt %u <ntp %u outq %lu>: send special %lu <d=%lu p=%lu f=%s> ack %lu",
+             TRACEPACKETS_TIMESTAMP, this->serial, this->recv_queue.window(),
+             (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
+             (unsigned long)seqno, (unsigned long)d,
+             (unsigned long)p, opname(f, fallbackbuf), (unsigned long)ackno);
 
   if (f == op_FIN) {
     sent_fin = true;
@@ -421,11 +424,11 @@ chop_circuit_t::find_best_to_retransmit(chop_conn_t *conn, evbuffer* block) {
 	      opname(el.hdr.opcode(), fallbackbuf));
     
     if (config->trace_packets)
-      log_warn(conn, "T:%.4f: ckt %u <ntp %u outq %lu>: resend2 %lu <d=%lu p=%lu f=%s>",
+      log_warn(conn, "T:%.4f: ckt %u <ntp %u outq %lu>: resend2 %lu <d=%lu p=%lu f=%s> ack %lu",
 	      TRACEPACKETS_TIMESTAMP, this->serial, this->recv_queue.window(),
 	      (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
 	      (unsigned long)el.hdr.seqno(), (unsigned long)el.hdr.dlen(),
-	      (unsigned long)el.hdr.plen(), opname(el.hdr.opcode(), fallbackbuf));
+               (unsigned long)el.hdr.plen(), opname(el.hdr.opcode(), fallbackbuf), (unsigned long)el.hdr.ackno());
     return 0;
   }
 
@@ -565,6 +568,8 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
   // The transmit queue takes ownership of 'data' at this point.
   uint32_t seqno = tx_queue.enqueue(f, data, p);
 
+  uint32_t ackno = tx_queue.next_ackno();
+
 
   struct evbuffer *block = evbuffer_new();
   if (!block) {
@@ -589,12 +594,12 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
 
   if (config->trace_packets)
     log_warn(conn,
-            "T:%.4f: ckt %u <ntp %u outq %lu>: send %lu <d=%lu p=%lu f=%s>",
-            TRACEPACKETS_TIMESTAMP, this->serial,
-            this->recv_queue.window(),
-            (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
-            (unsigned long)seqno, (unsigned long)d, (unsigned long)p,
-            opname(f, fallbackbuf));
+            "T:%.4f: ckt %u <ntp %u outq %lu>: send %lu <d=%lu p=%lu f=%s> ack %lu",
+             TRACEPACKETS_TIMESTAMP, this->serial,
+             this->recv_queue.window(),
+             (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
+             (unsigned long)seqno, (unsigned long)d, (unsigned long)p,
+             opname(f, fallbackbuf), (unsigned long)ackno);
 
   if (f == op_FIN) {
     sent_fin = true;
