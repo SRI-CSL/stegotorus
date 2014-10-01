@@ -417,7 +417,7 @@ int transmit_queue::process_ack(uint32_t ackno)
 {
   // trundle through the transmit queue looking for the
   // transmit_elt with this seqno and toss it.
-  // might look to see if we can move the window forward too.
+  // might look to see if we can move the window forward too?
   
   log_debug("processing header ack: block %u", ackno);
   

@@ -761,9 +761,11 @@ chop_circuit_t::maybe_send_ack()
 
 // Some blocks are to be processed immediately upon receipt.
 int
-chop_circuit_t::recv_block(uint32_t seqno, opcode_t op, evbuffer *data)
+chop_circuit_t::recv_block(uint32_t seqno, uint32_t ackno, opcode_t op, evbuffer *data)
 {
 
+  //process the ackno
+  tx_queue.process_ack(ackno);
 
   switch (op) {
   case op_DAT:
@@ -808,6 +810,8 @@ chop_circuit_t::recv_block(uint32_t seqno, opcode_t op, evbuffer *data)
   // Block has been consumed; fill in the hole in the receive queue.
   op = op_DAT;
   data = evbuffer_new();
+
+  
 
  insert:
   if (initialized == false && seqno > 10) {

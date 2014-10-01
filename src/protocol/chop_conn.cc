@@ -430,7 +430,7 @@ chop_conn_t::recv()
       return -1;
     }
 
-    if (upstream->recv_block(hdr.seqno(), hdr.opcode(), data))
+    if (upstream->recv_block(hdr.seqno(), hdr.ackno(), hdr.opcode(), data))
       return -1; // insert() logs an error
 
     if (config->mode == LSN_SIMPLE_SERVER)
