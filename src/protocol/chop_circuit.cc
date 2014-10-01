@@ -725,6 +725,11 @@ chop_circuit_t::pick_connection(size_t desired, size_t minimum,
 int
 chop_circuit_t::maybe_send_ack()
 {
+
+  // disabled for now
+  return 0;
+
+
   // Send acks aggressively if we are experiencing dead cycles *and*
   // there are blocks on the receive queue.  Otherwise, send them only
   // every 64 blocks received.  This heuristic will probably need
@@ -739,6 +744,8 @@ chop_circuit_t::maybe_send_ack()
     log_debug(this, "NO ACKS BEFORE RECEIVING FIRST BLOCK");
     return 0;
   }
+
+  
 
   if ((recv_queue.window() - last_acked < 15) && (rand() % 3 != 0))
       return 0;
