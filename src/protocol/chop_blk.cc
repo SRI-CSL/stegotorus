@@ -258,9 +258,11 @@ transmit_queue::enqueue(opcode_t f, evbuffer *data, uint16_t padding)
   log_assert(!full());
 
   uint32_t seqno = next_to_send;
-  uint32_t ackno = next_to_ack;
+
   transmit_elt &elt = cbuf[seqno & 0xFF];
-  elt.hdr = header(seqno, ackno, evbuffer_get_length(data), padding, f);
+
+  // set ackno to 0 for now... fill it in when transmitting
+  elt.hdr = header(seqno, 0, evbuffer_get_length(data), padding, f);
   //fprintf(stderr, "setting %p %p %p %p\n", this, cbuf, &elt, data);
   elt.data = data;
   elt.last_sent = 0;
@@ -269,16 +271,17 @@ transmit_queue::enqueue(opcode_t f, evbuffer *data, uint16_t padding)
 }
 
 int
-transmit_queue::transmit(uint32_t seqno,
+transmit_queue::transmit(uint32_t seqno, uint32_t next_to_recv,
                          evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc)
 {
   log_assert(seqno >= next_to_ack && seqno < next_to_send);
   transmit_elt &elt = cbuf[seqno & 0xFF];
-  return transmit(elt, output, ec, gc);
+  return transmit(elt, next_to_recv, output, ec, gc);
 }
 
 int
 transmit_queue::transmit(transmit_elt &elt,
+			 uint32_t next_to_recv,
                          evbuffer *output,
                          ecb_encryptor &ec,
                          gcm_encryptor &gc)
@@ -304,6 +307,8 @@ transmit_queue::transmit(transmit_elt &elt,
   size_t p = elt.hdr.plen();
   size_t blocksize = elt.hdr.total_len();
   struct evbuffer_iovec v;
+
+  elt.hdr.set_ackno(next_to_recv-1);
 
 
 
@@ -352,12 +357,12 @@ transmit_queue::transmit(transmit_elt &elt,
 
 
  int
- transmit_queue::retransmit(uint32_t seqno, uint16_t new_padding,
+ transmit_queue::retransmit(uint32_t seqno, uint32_t next_to_recv, uint16_t new_padding,
                             evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc)
  {
    log_assert(seqno >= next_to_ack && seqno < next_to_send);
    transmit_elt &elt = cbuf[seqno & 0xFF];
-   return retransmit(elt, new_padding, output, ec, gc);
+   return retransmit(elt, next_to_recv, new_padding, output, ec, gc);
  }
 
 
@@ -365,26 +370,19 @@ transmit_queue::transmit(transmit_elt &elt,
 
 
 int
-transmit_queue::retransmit(transmit_elt &elt,
+transmit_queue::retransmit(transmit_elt &elt,  uint32_t next_to_recv,
                            uint16_t new_padding,
-                           evbuffer *output,
-                           ecb_encryptor &ec,
+                           evbuffer *output, ecb_encryptor &ec,
                            gcm_encryptor &gc)
 {
-
-
 
   int rval;
   time_t tval;
 
- 
-
   if (!elt.data)
     return -1;
 
-
   tval = time(NULL);
-
 
   // XXXX fix clock skew issue
   if (tval - elt.last_sent < 6) { 
@@ -406,12 +404,12 @@ transmit_queue::retransmit(transmit_elt &elt,
 
 
  skip:
-
-
-  rval = transmit(elt, output, ec, gc);
-
+  rval = transmit(elt, next_to_recv, output, ec, gc);
   return rval;
 }
+
+
+
 
 int transmit_queue::process_ack(uint32_t ackno)
 {
@@ -419,10 +417,27 @@ int transmit_queue::process_ack(uint32_t ackno)
   // transmit_elt with this seqno and toss it.
   // might look to see if we can move the window forward too?
   
-  log_debug("processing header ack: block %u", ackno);
   
-  return -1;  // 0 when we have implemented this.
+  if (ackno >= next_to_send)  {
+    log_warn("invalid ack... ignoring\n");
+    return -1;
+  }
+
+
+  for (; next_to_ack <= ackno; next_to_ack++) {
+    uint8_t j = next_to_ack & 0xFF;
+    if (cbuf[j].data) {
+      evbuffer_free(cbuf[j].data);
+      cbuf[j].data = 0;
+    }
+  }
+
+  
+  return 0;
 }
+
+
+
 
 int
 transmit_queue::process_ack(evbuffer *data)

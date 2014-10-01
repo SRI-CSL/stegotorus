@@ -308,7 +308,7 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
   seqno = tx_queue.enqueue(f, payload, p);
 
   //for trace packets only
-  ackno = tx_queue.next_ackno();
+  ackno = recv_queue.window() - 1;
 
   // Not having a connection to use right now does not constitute a failure.
   if (!conn) {
@@ -323,7 +323,7 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
     return -1;
   }
 
-  if (tx_queue.transmit(seqno, block, *send_hdr_crypt, *send_crypt)) {
+  if (tx_queue.transmit(seqno,recv_queue.window(), block, *send_hdr_crypt, *send_crypt)) {
     log_warn(conn, "encryption failure for block %u", seqno);
     evbuffer_free(block);
     return -1;
@@ -409,7 +409,7 @@ chop_circuit_t::find_best_to_retransmit(chop_conn_t *conn, evbuffer* block) {
   transmit_queue::iterator i = tx_queue.begin(); 
   transmit_elt& el = i.peek(best_so_far);
 
-  if (!tx_queue.retransmit(el, padding, block, *send_hdr_crypt, *send_crypt)) {
+  if (!tx_queue.retransmit(el, recv_queue.window(), padding, block, *send_hdr_crypt, *send_crypt)) {
     char fallbackbuf[4];
     
     if (conn->send_block(block, this)) {
@@ -576,7 +576,7 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
     log_warn(conn, "memory allocation failure");
     return -1;
   }
-  if (tx_queue.transmit(seqno, block, *send_hdr_crypt, *send_crypt)) {
+  if (tx_queue.transmit(seqno, recv_queue.window(), block, *send_hdr_crypt, *send_crypt)) {
     log_warn(conn, "encryption failure for block %u", seqno);
     evbuffer_free(block);
     return -1;
@@ -764,13 +764,13 @@ int
 chop_circuit_t::recv_block(uint32_t seqno, uint32_t ackno, opcode_t op, evbuffer *data)
 {
 
-  //process the ackno
-  tx_queue.process_ack(ackno);
 
   switch (op) {
   case op_DAT:
     //case op_FIN:
     // No special handling required.
+    //process the ackno
+    tx_queue.process_ack(ackno);
     goto insert;
 
   case op_FIN:

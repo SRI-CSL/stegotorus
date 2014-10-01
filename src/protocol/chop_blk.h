@@ -389,16 +389,16 @@ struct transmit_elt
     * among other reasons, if the block in question has been
     * retransmitted too many times.
     */
-   int transmit(uint32_t seqno,
+   int transmit(uint32_t seqno, uint32_t next_to_recv,
                 evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc);
 
-   int transmit(transmit_elt &elt,
+   int transmit(transmit_elt &elt,uint32_t next_to_recv,
                 evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc);
 
-   int retransmit(uint32_t seqno, uint16_t new_padding,
+   int retransmit(uint32_t seqno, uint32_t next_to_recv, uint16_t new_padding,
                   evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc);
 
-   int retransmit(transmit_elt &elt, uint16_t new_padding,
+   int retransmit(transmit_elt &elt, uint32_t next_to_recv, uint16_t new_padding,
                   evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc);
 
    /**
