@@ -413,6 +413,17 @@ transmit_queue::retransmit(transmit_elt &elt,
   return rval;
 }
 
+int transmit_queue::process_ack(uint32_t ackno)
+{
+  // trundle through the transmit queue looking for the
+  // transmit_elt with this seqno and toss it.
+  // might look to see if we can move the window forward too.
+  
+  log_debug("processing header ack: block %u", ackno);
+  
+  return -1;  // 0 when we have implemented this.
+}
+
 int
 transmit_queue::process_ack(evbuffer *data)
 {

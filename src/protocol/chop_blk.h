@@ -411,6 +411,12 @@ struct transmit_elt
    int process_ack(evbuffer *data);
 
    /**
+    * Process the acknowledgment contained in the received header.
+    * Returns -1 for failure or 0 for success.
+    */
+   int process_ack(uint32_t ackno);
+
+   /**
     * Iteration over the transmit queue produces each block which has
     * been enqueued but not yet discarded by process_ack.  Used for
     * retransmission.
