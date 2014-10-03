@@ -46,7 +46,7 @@ public:
   int send_targeted(chop_conn_t *conn, size_t blocksize);
   int send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
                     struct evbuffer *payload);
-  int maybe_send_ack();
+  int maybe_send_SACK();
 
   chop_conn_t *pick_connection(size_t desired, size_t minimum,
                                size_t *blocksize);

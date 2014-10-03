@@ -6,7 +6,6 @@
 #include "chop_blk.h"
 #include "crypt.h"
 #include "connections.h"
-
 #include <event2/buffer.h>
 #include <iomanip>
 #include <limits>
@@ -29,7 +28,7 @@ opname(unsigned int o, char fallbackbuf[4])
   case op_DAT: return "DAT";
   case op_FIN: return "FIN";
   case op_RST: return "RST";
-  case op_ACK: return "ACK";
+  case op_SACK: return "SACK";
   default:
     if (o > op_LAST)
       return "^^^";
@@ -42,24 +41,26 @@ opname(unsigned int o, char fallbackbuf[4])
   }
 }
 
+
+
 void
 debug_ack_contents(evbuffer *payload, std::ostream& os)
 {
   size_t len = evbuffer_get_length(payload);
   os << "length " << len << "; ";
+
   if (len < 4) {
     os << "too short";
     return;
   }
 
   uint8_t *buf = evbuffer_pullup(payload, len);
-  log_assert(buf);
+  uint32_t hsn = ((uint32_t(buf[0]) << 24) | (uint32_t(buf[1]) << 16) |
+                  (uint32_t(buf[2]) <<  8) | (uint32_t(buf[3])));
 
-  uint32_t hsn = ((uint32_t(buf[0]) << 24) |
-                  (uint32_t(buf[1]) << 16) |
-                  (uint32_t(buf[2]) <<  8) |
-                  (uint32_t(buf[3])      ));
+  log_assert(buf);
   os << "through " << hsn;
+
   if (len == 4)
     return;
 
@@ -73,6 +74,7 @@ debug_ack_contents(evbuffer *payload, std::ostream& os)
       if (c & (1 << j))
         os << ", " << (hsn + 1 + i*8 + j);
   }
+
   if (i + 4 == len)
     return;
 
@@ -82,25 +84,27 @@ debug_ack_contents(evbuffer *payload, std::ostream& os)
     os << (unsigned int)buf[i];
 }
 
+
+
+
 // Note: this function must take exactly the same amount of time to
 // execute regardless of its inputs.
-  header::header(const uint8_t *ciphr, ecb_decryptor &dc, uint32_t window) : s(0), a(0), d(0), p(0), f(op_XXX)
+header::header(const uint8_t *ciphr, ecb_decryptor &dc, uint32_t window) 
+  : s(0), a(0), d(0), p(0), f(op_XXX)
 {
   uint8_t clear[16];
+
   dc.decrypt(clear, ciphr);
 
-  uint32_t s_ = ((uint32_t(clear[0]) << 16) |
-                 (uint32_t(clear[1]) <<  8) |
-                 (uint32_t(clear[2])      ));
+  uint32_t s_ = ((uint32_t(clear[0]) << 16) | (uint32_t(clear[1]) <<  8) |
+                 (uint32_t(clear[2])));
 
-  uint8_t a_  = ((uint32_t(clear[3]) << 16) |
-                 (uint32_t(clear[4]) <<  8) |
-                 (uint32_t(clear[5])      ));
+  uint8_t a_  = ((uint32_t(clear[3]) << 16) | (uint32_t(clear[4]) <<  8) |
+                 (uint32_t(clear[5]) ));
 
-  uint16_t d_ = ((uint16_t(clear[6]) <<  8) |
-                 (uint16_t(clear[7])      ));
-  uint16_t p_ = ((uint16_t(clear[8]) <<  8) |
-                 (uint16_t(clear[9])      ));
+  uint16_t d_ = ((uint16_t(clear[6]) <<  8) | (uint16_t(clear[7])));
+
+  uint16_t p_ = ((uint16_t(clear[8]) <<  8) | (uint16_t(clear[9])));
 
   uint8_t f_  = clear[10];
 
@@ -108,9 +112,7 @@ debug_ack_contents(evbuffer *payload, std::ostream& os)
 
   uint32_t delta = s_ - window;
   bool deltaOK = !(delta & ~uint32_t(0xFF));
-
   bool fOK = ((f_ >= op_RESERVED0) && (f_ < op_STEG0));
-
   bool ok = (checkOK | deltaOK | fOK);
 
   if (ok) {
@@ -128,6 +130,8 @@ debug_ack_contents(evbuffer *payload, std::ostream& os)
   }
 }
 
+
+
 void
 header::encode(uint8_t *ciphr, ecb_encryptor &ec) const
 {
@@ -140,7 +144,6 @@ header::encode(uint8_t *ciphr, ecb_encryptor &ec) const
   clear[ 3] = (a >> 16) & 0xFF;
   clear[ 4] = (a >>  8) & 0xFF;
   clear[ 5] = (a      ) & 0xFF;
-
 
   clear[ 6] = (d >>  8) & 0xFF;
   clear[ 7] = (d      ) & 0xFF;
@@ -159,6 +162,8 @@ header::encode(uint8_t *ciphr, ecb_encryptor &ec) const
   ec.encrypt(ciphr, clear);
 }
 
+
+
 bool
 header::prepare_retransmit(uint32_t ackno, uint16_t new_plen)
 {
@@ -167,6 +172,8 @@ header::prepare_retransmit(uint32_t ackno, uint16_t new_plen)
   p = new_plen;
   return true;
 }
+
+
 
 ack_payload::ack_payload(evbuffer *wire, uint32_t hfloor)
   : hsn_(-1), maxusedbyte(0)
@@ -188,7 +195,6 @@ ack_payload::ack_payload(evbuffer *wire, uint32_t hfloor)
 
   maxusedbyte = evbuffer_remove(wire, window, sizeof window);
 
-
   // there shouldn't be any _more_ data than that, the hsn should
   // be in the range [hfloor-1, hfloor+256), and the first bit of the
   // window should be zero.
@@ -205,12 +211,15 @@ ack_payload::ack_payload(evbuffer *wire, uint32_t hfloor)
   evbuffer_free(wire);
 }
 
+
+
 evbuffer *
 ack_payload::serialize() const
 {
   log_assert(valid());
   evbuffer *wire = evbuffer_new();
   evbuffer_iovec v;
+
   if (evbuffer_reserve_space(wire, 4 + maxusedbyte, &v, 1) != 1 ||
       v.iov_len < 4 + maxusedbyte) {
     evbuffer_free(wire);
@@ -234,10 +243,13 @@ ack_payload::serialize() const
   return wire;
 }
 
-transmit_queue::transmit_queue()
-  : next_to_ack(0), next_to_send(0)
+
+
+transmit_queue::transmit_queue()  : next_to_ack(0), next_to_send(0)
 {
 }
+
+
 
 transmit_queue::~transmit_queue()
 {
@@ -245,6 +257,8 @@ transmit_queue::~transmit_queue()
     if (cbuf[i].data)
       evbuffer_free(cbuf[i].data);
 }
+
+
 
 uint32_t
 transmit_queue::enqueue(opcode_t f, evbuffer *data, uint16_t padding)
@@ -270,21 +284,27 @@ transmit_queue::enqueue(opcode_t f, evbuffer *data, uint16_t padding)
   return seqno;
 }
 
+
+
 int
 transmit_queue::transmit(uint32_t seqno, uint32_t next_to_recv,
                          evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc)
 {
+
+  // next_to_ack == highest received ackno + 1
   log_assert(seqno >= next_to_ack && seqno < next_to_send);
   transmit_elt &elt = cbuf[seqno & 0xFF];
+
+  // next_to_recv == highest inorder seqno received + 1
   return transmit(elt, next_to_recv, output, ec, gc);
 }
 
+
+
+
 int
-transmit_queue::transmit(transmit_elt &elt,
-			 uint32_t next_to_recv,
-                         evbuffer *output,
-                         ecb_encryptor &ec,
-                         gcm_encryptor &gc)
+transmit_queue::transmit(transmit_elt &elt, uint32_t next_to_recv,
+                         evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc)
 {
 
   if (!elt.data){
@@ -295,6 +315,7 @@ transmit_queue::transmit(transmit_elt &elt,
     log_warn("ERRR: transmit_queue:transmit %u %llu", elt.hdr.seqno(), (long long unsigned int)elt.data);
     #endif
   }
+
   log_assert(elt.data);
 
   struct evbuffer *block = evbuffer_new();
@@ -308,9 +329,8 @@ transmit_queue::transmit(transmit_elt &elt,
   size_t blocksize = elt.hdr.total_len();
   struct evbuffer_iovec v;
 
+  // next_to_recv == highest inorder seqno received + 1
   elt.hdr.set_ackno(next_to_recv-1);
-
-
 
   if (evbuffer_reserve_space(block, blocksize, &v, 1) != 1 ||
       v.iov_len < blocksize) {
@@ -318,8 +338,8 @@ transmit_queue::transmit(transmit_elt &elt,
     evbuffer_free(block);
     return -1;
   }
-  v.iov_len = blocksize;
 
+  v.iov_len = blocksize;
   elt.hdr.encode((uint8_t *)v.iov_base, ec);
 
   uint8_t encodebuf[d + p];
@@ -331,9 +351,11 @@ transmit_queue::transmit(transmit_elt &elt,
     evbuffer_free(block);
     return -1;
   }
+
   memset(encodebuf + d, 0, p);
   gc.encrypt((uint8_t *)v.iov_base + HEADER_LEN,
              encodebuf, d + p, (uint8_t *)v.iov_base, HEADER_LEN);
+
   if (evbuffer_commit_space(block, &v, 1)) {
     log_warn("failed to commit block buffer");
     evbuffer_free(block);
@@ -347,12 +369,9 @@ transmit_queue::transmit(transmit_elt &elt,
   }
 
   elt.last_sent = time(NULL);
-
   evbuffer_free(block);
   return 0;
 }
-
-
 
 
 
@@ -371,9 +390,8 @@ transmit_queue::transmit(transmit_elt &elt,
 
 int
 transmit_queue::retransmit(transmit_elt &elt,  uint32_t next_to_recv,
-                           uint16_t new_padding,
-                           evbuffer *output, ecb_encryptor &ec,
-                           gcm_encryptor &gc)
+                           uint16_t new_padding, evbuffer *output, 
+			   ecb_encryptor &ec, gcm_encryptor &gc)
 {
 
   int rval;
@@ -392,7 +410,6 @@ transmit_queue::retransmit(transmit_elt &elt,  uint32_t next_to_recv,
 
     log_debug("Too soon: not retransmitting: block %u", elt.hdr.seqno());
     return -1;
-    
   }    
 
 
@@ -416,14 +433,13 @@ int transmit_queue::process_ack(uint32_t ackno)
   // trundle through the transmit queue looking for the
   // transmit_elt with this seqno and toss it.
   // might look to see if we can move the window forward too?
-  
-  
+    
   if (ackno >= next_to_send)  {
     log_warn("invalid ack... ignoring\n");
     return -1;
   }
 
-
+  // next_to_ack == highest received ackno + 1
   for (; next_to_ack <= ackno; next_to_ack++) {
     uint8_t j = next_to_ack & 0xFF;
     if (cbuf[j].data) {
@@ -431,7 +447,6 @@ int transmit_queue::process_ack(uint32_t ackno)
       cbuf[j].data = 0;
     }
   }
-
   
   return 0;
 }
@@ -445,8 +460,10 @@ transmit_queue::process_ack(evbuffer *data)
 
   ack_payload ack(data, next_to_ack);
 
-
-  if (!ack.valid()) return 0;  // this is okay
+  if (!ack.valid()) {
+    // this is okay... no need for warnings
+    return 0;  
+  }
 
   uint32_t hsn = ack.hsn();
 
@@ -455,6 +472,7 @@ transmit_queue::process_ack(evbuffer *data)
     return -1;
   }
 
+  // next_to_ack == highest received ackno + 1
   for (; next_to_ack <= hsn; next_to_ack++) {
     uint8_t j = next_to_ack & 0xFF;
     if (cbuf[j].data) {
@@ -466,7 +484,6 @@ transmit_queue::process_ack(evbuffer *data)
   if (next_to_ack == next_to_send)
     return 0;
 
-
   for (uint32_t i = next_to_ack; i < next_to_send; i++) {
     uint8_t j = i & 0xFF;
     if (cbuf[j].data && ack.block_received(i)) {
@@ -475,15 +492,18 @@ transmit_queue::process_ack(evbuffer *data)
     }
   } 
 
-
   return 0;
 }
+
+
 
 reassembly_queue::reassembly_queue()
   : next_to_process(0), count(0)
 {
   memset(cbuf, 0, sizeof cbuf);
 }
+
+
 
 reassembly_queue::~reassembly_queue()
 {
@@ -492,6 +512,8 @@ reassembly_queue::~reassembly_queue()
     if (cbuf[i].data)
       evbuffer_free(cbuf[i].data);
 }
+
+
 
 reassembly_elt
 reassembly_queue::remove_next()
@@ -514,6 +536,9 @@ reassembly_queue::remove_next()
   return rv;
 }
 
+
+
+
 bool
 reassembly_queue::insert(uint32_t seqno, opcode_t op, evbuffer *data)
 {
@@ -526,18 +551,21 @@ reassembly_queue::insert(uint32_t seqno, opcode_t op, evbuffer *data)
 
   uint8_t front = next_to_process & 0xFF;
   uint8_t pos = front + (seqno - window());
+
   if (cbuf[pos].data) {
     log_info("duplicate block");
     evbuffer_free(data);
     return false;
   }
 
-
   cbuf[pos].data = data;
   cbuf[pos].op   = op;
   count++;
   return true;
 }
+
+
+
 
 void
 reassembly_queue::reset()
@@ -548,6 +576,8 @@ reassembly_queue::reset()
   }
   next_to_process = 0;
 }
+
+
 
 evbuffer *
 reassembly_queue::gen_ack() const

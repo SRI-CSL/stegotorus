@@ -95,7 +95,7 @@ enum opcode_t
   op_DAT = 1,       // Pass data section along to upstream
   op_FIN = 2,       // No further transmissions (pass data along if any)
   op_RST = 3,       // Protocol error, close circuit now
-  op_ACK = 4,       // Acknowledge data received
+  op_SACK = 4,      // Special acknowledgement packet
   op_RESERVED0 = 5, // 4 -- 127 reserved for future definition
   op_STEG0 = 128,   // 128 -- 255 reserved for steganography modules
   op_LAST = 255

@@ -463,7 +463,6 @@ chop_circuit_t::send_targeted(chop_conn_t *conn)
       return 0;
     
     // rval < 0... nothing to retransmit, so fall through and send something
-
   }
 
 
@@ -484,8 +483,6 @@ chop_circuit_t::send_targeted(chop_conn_t *conn)
   }
 
   size_t room = conn->steg->transmit_room(avail, lo, hi);
-
-  
 
   if (room == 0) {
     //we are probably in receive mode and not ready to send yet on this connection
@@ -722,8 +719,10 @@ chop_circuit_t::pick_connection(size_t desired, size_t minimum,
   }
 }
 
+
+
 int
-chop_circuit_t::maybe_send_ack()
+chop_circuit_t::maybe_send_SACK()
 {
 
   // disabled for now
@@ -760,24 +759,26 @@ chop_circuit_t::maybe_send_ack()
     debug_ack_contents(ackp, ackdump);
     log_debug(this, "sending ACK: %s", ackdump.str().c_str());
   }
-  return send_special(op_ACK, ackp);
+  return send_special(op_SACK, ackp);
 }
 
 
 
-
-// Some blocks are to be processed immediately upon receipt.
 int
 chop_circuit_t::recv_block(uint32_t seqno, uint32_t ackno, opcode_t op, evbuffer *data)
 {
 
+  // regardless of packet type, free blocks based on the ack field in the header
+  // It is possible additional blocks might be freed, if its a special acknowledgement
+  // (SACK) packet
 
+  tx_queue.process_ack(ackno);
+  
   switch (op) {
   case op_DAT:
     //case op_FIN:
     // No special handling required.
     //process the ackno
-    tx_queue.process_ack(ackno);
     goto insert;
 
   case op_FIN:
@@ -788,7 +789,7 @@ chop_circuit_t::recv_block(uint32_t seqno, uint32_t ackno, opcode_t op, evbuffer
     evbuffer_free(data);
     goto zap;
 
-  case op_ACK:
+  case op_SACK:
     if (config->trace_packets) {
       std::ostringstream ackdump;
       debug_ack_contents(data, ackdump);
@@ -900,7 +901,7 @@ chop_circuit_t::process_queue()
   if (sent_error)
     return -1;
 
-  if (maybe_send_ack())
+  if (maybe_send_SACK())
     return -1;
 
   // It may have become possible to send queued data or a FIN.
