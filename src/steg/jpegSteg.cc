@@ -190,6 +190,7 @@ construct_jpeg_body(image_pool_p pool, unsigned char* data,  unsigned int data_l
     image_p cover = embed_message(pool, data, data_length,  knobs.embed_length);
     if(cover != NULL){
       size_t  body_length = (unsigned int)cover->size;
+      log_warn("construct_jpeg_body emedded %d bytes into %s", (int)data_length, cover->path);
       *bodyp = cover->bytes;
       *message_lengthp = knobs.embed_length ? 0 : (int)data_length;
       /* steal ownership of the bytes */
