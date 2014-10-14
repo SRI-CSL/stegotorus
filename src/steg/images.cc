@@ -254,7 +254,7 @@ image_p get_image(image_pool_p pool, int size){
     image_p retval = NULL;
     int index, fails = 0;
     /* try and get a random one first */
-    while((retval != NULL) && (fails++ < 10)){
+    while((retval == NULL) && (fails++ < 10)){
       index = rand() % pool->the_images_offset;
       retval = pool->the_images[index];
       if(retval->capacity > size){
@@ -307,7 +307,7 @@ image_p get_image_by_index(image_pool_p pool, int index){
   return NULL;
 }
 
-image_p embed_message(image_pool_p pool, unsigned char* message, int message_length, bool embed_length);
+//image_p embed_message(image_pool_p pool, unsigned char* message, int message_length, bool embed_length);
 image_p embed_message(image_pool_p pool, unsigned char* message, int message_length, bool embed_length){
   image_p retval = NULL;
   if(message != NULL){
@@ -321,7 +321,7 @@ image_p embed_message(image_pool_p pool, unsigned char* message, int message_len
   return retval;
 }
 
-image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length);
+//image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length);
 image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length){
   image_p retval = NULL;
   if(images_debug){ log_warn("embed_message_in_image:  %d %s",  message_length, cover->path); }
