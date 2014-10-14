@@ -373,6 +373,9 @@ embed_message_aux(image_p cover, unsigned char* message, int message_length, uns
      //log_warn("jel: bytes_embedded = %d message_length = %d jel->jpeglen = %d", bytes_embedded, message_length, jel->jpeglen);
      if(jel->jpeglen > 0){
        retval = alloc_image();
+       if(cover->path != NULL){
+         retval->path = strdup(cover->path);
+       }
        retval->bytes = destination;
        retval->size = jel->jpeglen;
      }
