@@ -91,7 +91,7 @@ nodist_libstegotorus_a_SOURCES = protolist.cc steglist.cc
 stegotorus_SOURCES = \
 	src/main.cc
 
-stegotorus_LDADD = libstegotorus.a $(lib_LIBS)
+stegotorus_LDADD = libstegotorus.a $(lib_LIBS) -ljpeg
 
 # prevent stegotorus from being linked if s-a-g fails
 # it is known that $(lib_LIBS) contains nothing that needs to be depended upon
