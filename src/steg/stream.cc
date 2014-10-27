@@ -1,6 +1,7 @@
 /* Copyright 2011, 2012, 2013 SRI International
  * See LICENSE for other credits and copying information
  */
+#include <string>
 
 #include "stream.h"
 
@@ -11,6 +12,7 @@
 #include "mrawSteg.h"
 #include "mjpegSteg.h"
 #include "strncasestr.h"
+#include "modus_operandi.h"
 #include "oshacks.h"
 
 static size_t obj_counter = 0;
@@ -41,6 +43,21 @@ stream_steg_config_t::stream_steg_config_t(config_t *cfg)
     pool(NULL),
     capacity(0)
 {
+  std::string stream_dir;
+
+  if(cfg->mop != NULL){
+    //not sure why the mop would be NULL, but ...
+    stream_dir = cfg->mop->get_steg_datadir(StegData::STREAM);
+  } else {
+    //these are the same as the mop defaults.
+    stream_dir = STEG_TRACES_DIR "images" "/stream";
+  }
+
+  if(0){
+    log_warn("modus_operandi = %p", cfg->mop);
+    log_warn("shared_secret = %s", cfg->mop->shared_secret().c_str()); 
+    log_warn("stream_dir = %s", stream_dir.c_str()); 
+  }
 
   if(cfg->shared_secret){
     this->shared_secret = xstrdup(cfg->shared_secret);
@@ -49,7 +66,7 @@ stream_steg_config_t::stream_steg_config_t(config_t *cfg)
   }
 
   if(!is_clientside){
-    this->pool = load_images(STEG_TRACES_DIR "images" "/stream", 100);
+    this->pool = load_images(stream_dir.c_str(), 100);
 
     //n.b.  pushing capacity to its limits just causes corruption.
     this->capacity = this->pool->the_images_min_payload / 2;

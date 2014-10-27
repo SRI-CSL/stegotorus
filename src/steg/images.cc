@@ -186,15 +186,16 @@ static bool file2bytes(const char* path, unsigned char* bytes, size_t bytes_want
 static int capacity(image_p image){
   jel_config *jel = jel_init(JEL_NLEVELS);
   set_jel_log(jel);
+  int capacity = 0;
   int ret = jel_set_mem_source(jel, image->bytes, image->size);
   if (ret != 0) {
     log_warn("jel: Error - exiting (need a diagnostic!)\n");
   } else {
-    ret = jel_capacity(jel);
+    capacity = jel_capacity(jel);
   }
   jel_close_log(jel);
   jel_free(jel);
-  return ret;
+  return capacity;
 }
 
 static image_p load_image(image_pool_p pool, const char* path, char* basename){
@@ -324,7 +325,7 @@ image_p embed_message(image_pool_p pool, unsigned char* message, int message_len
 //image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length);
 image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length){
   image_p retval = NULL;
-  if(images_debug){ log_warn("embed_message_in_image:  %d %s",  message_length, cover->path); }
+  if(1 || images_debug){ log_warn("embed_message_in_image:  %d %s",  message_length, cover->path); }
   int failures = 0, destination_length = cover->size;
   unsigned char* destination = NULL;
   

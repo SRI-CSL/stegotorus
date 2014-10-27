@@ -97,7 +97,15 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
     return false;
   }
 
-  cmode = mo.is_ok() ? mo.mode().c_str() : options[0];
+  if(mo.is_ok()){
+    cmode = mo.mode().c_str();
+    this->mop = &mo;
+  } else {
+    cmode = options[0];
+  }
+
+
+  
   
   if (!strcmp(cmode, "client")) {
     defport = "48988"; // bf5c

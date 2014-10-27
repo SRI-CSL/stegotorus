@@ -16,6 +16,9 @@
 using std::vector;
 using std::string;
 
+enum class StegData { TRACES, IMAGES, PDFS, STREAM };
+
+
 /* for parsing in chop.cc */
 class down_address_t {
   
@@ -81,7 +84,10 @@ class modus_operandi_t {
   bool post_reflection(void){ return _post_reflection; }
   void post_reflection(bool val){  _post_reflection = val; }
   
+  /* steg data paths */
 
+  string get_steg_datadir(StegData variety);
+  bool set_steg_datadir(StegData variety, string value);
   
   DISALLOW_COPY_AND_ASSIGN(modus_operandi_t);
  
@@ -112,6 +118,13 @@ class modus_operandi_t {
  private: bool _post_reflection;
 
  private: jel_knobs_t _jel_knobs;
+
+ private: string _traces_dir;
+ private: string _images_dir;
+ private: string _pdfs_dir;
+ private: string _stream_dir;
+
+  
 
 
   /* helper routines */

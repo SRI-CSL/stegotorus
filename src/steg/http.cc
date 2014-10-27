@@ -46,6 +46,28 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
     pl(),
     shared_secret(NULL)
 {
+  string traces_dir, images_dir, pdfs_dir;
+
+  if(cfg->mop != NULL){
+    //not sure why the mop would be NULL, but ...
+    traces_dir = cfg->mop->get_steg_datadir(StegData::TRACES);
+    images_dir = cfg->mop->get_steg_datadir(StegData::IMAGES);
+    pdfs_dir = cfg->mop->get_steg_datadir(StegData::PDFS);
+  } else {
+    //these are the same as the mop defaults.
+    traces_dir = STEG_TRACES_DIR;
+    images_dir = STEG_TRACES_DIR "images" "/usenix-corpus/1953x1301/q30";
+    pdfs_dir   = STEG_TRACES_DIR "pdfs";
+  }
+
+  if(0){
+    log_warn("modus_operandi = %p", cfg->mop);
+    log_warn("shared_secret = '%s'", cfg->mop->shared_secret().c_str()); 
+    log_warn("traces_dir = '%s'", traces_dir.c_str()); 
+    log_warn("images_dir = '%s'", images_dir.c_str()); 
+    log_warn("pdfs_dir = '%s'", pdfs_dir.c_str()); 
+  }
+  
   zero_payloads(pl);
   if(cfg->shared_secret){
     this->shared_secret = xstrdup(cfg->shared_secret);
@@ -54,14 +76,17 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
     this->shared_secret = xstrdup(STEGOTORUS_DEFAULT_SECRET);
   }
 
+  
   //log_warn("shared_secret = %s", this->shared_secret);
   if (is_clientside) {
-    load_payloads(this->pl, STEG_TRACES_DIR "client.out");
+    traces_dir.append("client.out");
+    load_payloads(this->pl, traces_dir.c_str());
     /* if we want to do PDF POSTS, then we'll need to load the pdf payloads */
-    schemes_clientside_init(this->pl, STEG_TRACES_DIR "images" "/usenix-corpus/1953x1301/q30/", STEG_TRACES_DIR "pdfs/");
+    schemes_clientside_init(this->pl, images_dir.c_str(), pdfs_dir.c_str());
   } else {
-    load_payloads(this->pl, STEG_TRACES_DIR "server.out");
-    schemes_serverside_init(this->pl, STEG_TRACES_DIR "images" "/usenix-corpus/1953x1301/q30/", STEG_TRACES_DIR "pdfs/");
+    traces_dir.append("server.out");
+    load_payloads(this->pl, traces_dir.c_str());
+    schemes_serverside_init(this->pl, images_dir.c_str(), pdfs_dir.c_str());
   }
 
   /* useful when valgrinding to know when things have loaded */

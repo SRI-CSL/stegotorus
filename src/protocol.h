@@ -42,9 +42,11 @@ class config_t
   /* experimental trac ticket # 149 */
   char *shared_secret;
   bool persist_mode;
+  modus_operandi_t *mop;
   
  config_t() : 
-  base(0), mode((enum listen_mode)-1), ignore_socks_destination(false), shared_secret(NULL),  persist_mode(false){};
+  base(0), mode((enum listen_mode)-1), ignore_socks_destination(false), 
+    shared_secret(NULL),  persist_mode(false), mop(NULL) {};
 
   virtual ~config_t();
 

@@ -52,8 +52,15 @@ void down_address_t::parse(string line)
 modus_operandi_t::modus_operandi_t()
   :  _is_ok(false),
      _protocol(), _mode(), _up_address(), _down_addresses(),
-     _trace_packets(false), _persist_mode(false), _shared_secret(), _disable_encryption(false), _disable_retransmit(false),
-     _managed(false), _managed_method("stegotorus"), _daemon(false), _logmethod_set(false), _pid_file(), _post_reflection(false), _jel_knobs() {
+     _trace_packets(false), _persist_mode(false), _shared_secret(),
+     _disable_encryption(false), _disable_retransmit(false),
+     _managed(false), _managed_method("stegotorus"),
+     _daemon(false), _logmethod_set(false), _pid_file(),
+     _post_reflection(false), _jel_knobs(),
+     _traces_dir(STEG_TRACES_DIR),  //server or client tacks on the filename
+     _images_dir(STEG_TRACES_DIR "images" "/usenix-corpus/1953x1301/q30"),
+     _pdfs_dir(STEG_TRACES_DIR "pdfs"),
+     _stream_dir(STEG_TRACES_DIR "images" "/stream") {
   init_jel_knobs(_jel_knobs);
 }
 
@@ -227,6 +234,18 @@ bool modus_operandi_t::process_line(string &line, int32_t lineno){
   else if(line_is(line, "trace-packets", rest)){
     return set_bool(this->_trace_packets, rest, lineno);
   }
+  else if(line_is(line, "traces-dir", rest)){
+    return set_steg_datadir(StegData::TRACES, rest);
+  }
+  else if(line_is(line, "images-dir", rest)){
+    return set_steg_datadir(StegData::IMAGES, rest);
+  }
+  else if(line_is(line, "pdfs-dir", rest)){
+    return set_steg_datadir(StegData::PDFS, rest);
+  }
+  else if(line_is(line, "stream-dir", rest)){
+    return set_steg_datadir(StegData::STREAM, rest);
+  }
   else if(line_is(line, "persist-mode", rest)){
     return set_bool(this->_persist_mode, rest, lineno);
   }
@@ -362,4 +381,26 @@ bool modus_operandi_t::set_int(int& intref, string& rest, int32_t lineno){
   }
   
   return false;
+}
+
+string modus_operandi_t::get_steg_datadir(StegData variety){  
+  switch(variety){
+  case StegData::TRACES: return _traces_dir;
+  case StegData::IMAGES: return _images_dir;
+  case StegData::PDFS:   return _pdfs_dir;
+  case StegData::STREAM: return _stream_dir;
+  default: return "";
+  }
+}
+
+bool modus_operandi_t::set_steg_datadir(StegData variety, string value){ 
+  //we could check that they exist if we wanted too.
+  value = trim(value);
+  switch(variety){
+  case StegData::TRACES: _traces_dir = value; return true;
+  case StegData::IMAGES: _images_dir = value; return true;
+  case StegData::PDFS:   _pdfs_dir = value;  return true;
+  case StegData::STREAM: _stream_dir = value; return true;
+  default: return false;
+  }
 }

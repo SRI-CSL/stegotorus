@@ -11,6 +11,7 @@
 #include "steg.h"
 #include "rng.h"
 #include "payloads.h"
+#include "modus_operandi.h"
 
 #include <event2/buffer.h>
 
@@ -25,6 +26,15 @@
 
 void set_post_reflection(bool val);
 bool get_post_reflection();
+
+/*
+ * A johnny come lately way to set some of the once hardcoded 
+ * steg data locations ....
+ *
+ */
+string get_steg_datadir(StegData variety);
+bool set_steg_datadir(StegData variety, string value);
+
 
 //a secret for those that don't set their secret
 #define STEGOTORUS_DEFAULT_SECRET "yadayadablahblah"
