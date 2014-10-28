@@ -603,7 +603,7 @@ http_server_PDF_transmit (http_steg_t * s, struct evbuffer *source) {
 
 recv_t 
 http_client_PDF_receive (http_steg_t * s, struct evbuffer *dest, char* headers, size_t headers_length, char* response, size_t response_length) {
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   recv_t retval = RECV_BAD;
   size_t data_length = 0, body_length = 0;
   unsigned char *data = NULL, *body = NULL;
@@ -868,7 +868,7 @@ http_server_PDF_post_receive (http_steg_t * s, struct evbuffer *dest, char* head
   unsigned char *data = NULL, *body = NULL;
   size_t data_length = 0;
   size_t body_length = 0;
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
 
   /* the draconian flags we got going here... */
   log_debug("http_server_PDF_post_receive: request_length=%" PriSize_t " %s %p", request_length, secret, headers);

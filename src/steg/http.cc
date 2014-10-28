@@ -36,6 +36,7 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
   assert(mop != NULL);
 
   post_reflection = mop->post_reflection();
+  shared_secret = mop->shared_secret().c_str();
     
   traces_dir = cfg->mop->get_steg_datadir(StegData::TRACES);
   images_dir = cfg->mop->get_steg_datadir(StegData::IMAGES);
@@ -51,13 +52,14 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
   }
   
   zero_payloads(pl);
+  /*
   if(cfg->shared_secret){
     this->shared_secret = xstrdup(cfg->shared_secret);
   }
   if(!this->shared_secret){
     this->shared_secret = xstrdup(STEGOTORUS_DEFAULT_SECRET);
   }
-
+  */
   
   //log_warn("shared_secret = %s", this->shared_secret);
   if (is_clientside) {
@@ -78,7 +80,7 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
 http_steg_config_t::~http_steg_config_t()
 {
   free_payloads(this->pl);
-  free(this->shared_secret);
+  //free(this->shared_secret);
 }
 
 steg_t *

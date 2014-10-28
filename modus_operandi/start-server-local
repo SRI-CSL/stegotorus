@@ -12,7 +12,7 @@ SERVER="./stegotorus --config-file=${CONFIG}"
 
 if [ -n "$VALGRIND" ]
 then
-valgrind --leak-check=yes  --db-attach=yes --db-command="/usr/bin/gdb %f %p"  --dsymutil=yes --trace-children=no ${SERVER} 2>&1 | tee 
+valgrind --leak-check=yes  --db-attach=yes --db-command="/usr/bin/gdb %f %p" --track-origins=yes --dsymutil=yes --trace-children=no ${SERVER} 2>&1 | tee 
 else
 ${SERVER} 2>&1 | tee 
 fi

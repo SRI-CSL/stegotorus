@@ -15,7 +15,7 @@ static size_t construct_raw_headers(int method, const char* path, const char* ho
 
 transmit_t
 http_server_RAW_transmit (http_steg_t * s, struct evbuffer *source){
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   transmit_t retval = NOT_TRANSMITTED;
   conn_t *conn = s->conn;
   char* headers = NULL;
@@ -79,7 +79,7 @@ http_server_RAW_transmit (http_steg_t * s, struct evbuffer *source){
 recv_t
 http_client_RAW_receive (http_steg_t * s, struct evbuffer *dest, char* headers, size_t headers_length, char* response, size_t response_length)
 {
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   recv_t retval = RECV_BAD;
   size_t data_length = 0;
   char *data = NULL;
@@ -104,7 +104,7 @@ http_client_RAW_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t *
   unsigned char *data = NULL;
   size_t data_length = 0;
   int addcode;
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
 
   log_debug("secret = %s", secret);
 
@@ -173,7 +173,7 @@ http_server_RAW_post_receive(http_steg_t * s, struct evbuffer *dest, char* heade
   /* RAW POST MODE */
   size_t data_length = 0;
   uchar* data;
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
 
   log_debug("http_server_RAW_post_receive: request_length =  %" PriSize_t " secret = %s", request_length, secret);
   //sigh: to keep the compiler happy with the draconian flags we got going here...

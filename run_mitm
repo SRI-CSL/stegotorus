@@ -1,1 +1,1 @@
-mitmdump -R http://127.0.0.1:8081 -s scripts/jpeg_quality.py
+mitmdump -P http://127.0.0.1:8081 -s scripts/jpeg_quality.py

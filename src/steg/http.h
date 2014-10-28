@@ -16,15 +16,13 @@
 #include <event2/buffer.h>
 
 
-//a secret for those that don't set their secret
-#define STEGOTORUS_DEFAULT_SECRET "yadayadablahblah"
 
 class http_steg_config_t : public steg_config_t
 {
 public:
   bool is_clientside : 1;
   payloads pl;
-  char* shared_secret;
+  const char* shared_secret;
   modus_operandi_t* mop;
 
   /*

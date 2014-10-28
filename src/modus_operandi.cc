@@ -24,6 +24,9 @@ using std::ifstream;
  *
  */
 
+//a secret for those that don't set their secret
+#define STEGOTORUS_DEFAULT_SECRET "yadayadablahblah"
+
 
 down_address_t::down_address_t()
   : ok(false), ip(), steg()
@@ -52,7 +55,7 @@ void down_address_t::parse(string line)
 modus_operandi_t::modus_operandi_t()
   :  _is_ok(false),
      _protocol(), _mode(), _up_address(), _down_addresses(),
-     _trace_packets(false), _persist_mode(false), _shared_secret(),
+     _trace_packets(false), _persist_mode(false), _shared_secret(STEGOTORUS_DEFAULT_SECRET),
      _disable_encryption(false), _disable_retransmit(false),
      _managed(false), _managed_method("stegotorus"),
      _daemon(false), _logmethod_set(false), _pid_file(),

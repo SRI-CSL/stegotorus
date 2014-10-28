@@ -342,6 +342,10 @@ image_p embed_message_in_image(image_p cover, unsigned char* message, int messag
     log_warn("embed_message_in_image:  stegged image size = %" PriSize_t,  retval->size);
   }
 
+  if(retval == NULL){
+    log_warn("embed_message_in_image:  FAILED culprit = %s", cover->path);
+  }
+  
   return retval;
 }
 

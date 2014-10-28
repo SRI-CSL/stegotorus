@@ -79,16 +79,16 @@ static char*
 construct_json_format(int method, size_t payload);
 
 static char*
-construct_json_cookie(char *format, size_t format_length, char *secret);
+construct_json_cookie(char *format, size_t format_length, const char *secret);
 
 static char*
-deconstruct_json_cookie(char *cookie, char *secret);
+deconstruct_json_cookie(char *cookie, const char *secret);
 
 static char*
-construct_json_cookie_aux(char *format, size_t format_length, char *secret, size_t *clenp);
+construct_json_cookie_aux(char *format, size_t format_length, const char *secret, size_t *clenp);
 
 static char*
-deconstruct_json_cookie_aux(char *cookie, size_t cookie_length, char *secret, size_t *flenp);
+deconstruct_json_cookie_aux(char *cookie, size_t cookie_length, const char *secret, size_t *flenp);
 
 static size_t
 construct_json_body_unzipped(char* format, size_t format_length, char* data,  size_t datalen, char**bodyp);
@@ -136,7 +136,7 @@ get_placeholder_count(const char *format, size_t format_length)
 }
 
 char*
-construct_json_cookie(char *format, size_t format_length, char *secret)
+construct_json_cookie(char *format, size_t format_length, const char *secret)
 {
   size_t cookie_length = 0;
   char* cookie = construct_json_cookie_aux(format, format_length, secret, &cookie_length);
@@ -154,7 +154,7 @@ construct_json_cookie(char *format, size_t format_length, char *secret)
 }
 
 char*
-deconstruct_json_cookie(char *cookie, char *secret)
+deconstruct_json_cookie(char *cookie, const char *secret)
 {
   size_t format_length = 0, cookie_length = strlen(cookie);
   char* format = deconstruct_json_cookie_aux(cookie, cookie_length, secret, &format_length);
@@ -175,7 +175,7 @@ deconstruct_json_cookie(char *cookie, char *secret)
 
 
 char*
-construct_json_cookie_aux(char *format, size_t format_length, char * secret, size_t *clenp)
+construct_json_cookie_aux(char *format, size_t format_length, const char * secret, size_t *clenp)
 {
   char  *cookie = NULL;
   size_t data_length = 0;
@@ -193,7 +193,7 @@ construct_json_cookie_aux(char *format, size_t format_length, char * secret, siz
 }
 
 char*
-deconstruct_json_cookie_aux(char *cookie, size_t cookie_length, char * secret, size_t *flenp)
+deconstruct_json_cookie_aux(char *cookie, size_t cookie_length, const char * secret, size_t *flenp)
 {
   uchar* data = (uchar*)xmalloc(2*cookie_length);
   size_t ptext_length = 0;
@@ -660,7 +660,7 @@ transmit_t
 http_server_JSON_transmit (http_steg_t * s,  struct evbuffer *source)
 {
   transmit_t retval = TRANSMIT_GOOD;
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   conn_t *conn = s->conn;
   char* data = NULL, *body = NULL, *format = NULL, *cookie = NULL, *headers = NULL;
   size_t format_length;
@@ -750,7 +750,7 @@ http_server_JSON_transmit (http_steg_t * s,  struct evbuffer *source)
 recv_t
 http_client_JSON_receive (http_steg_t * s, struct evbuffer *dest, char* headers, size_t headers_length, char* response, size_t response_length)
 {
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   recv_t retval = RECV_BAD;
   size_t data_length = 0;
   char *body = NULL, *data = NULL, *format = NULL, *cookie = NULL;
@@ -803,7 +803,7 @@ http_client_JSON_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t 
   unsigned int body_length = 0, headers_length = 0;
   char *data = NULL, *body = NULL, *path = NULL, *format = NULL, *cookie = NULL, *headers = NULL;
   size_t datalen;
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   size_t format_length = 0;
 
   //posts shouldn't be gzipped, since the client can't know that the server supports it.
@@ -893,7 +893,7 @@ http_server_JSON_post_receive(http_steg_t * s, struct evbuffer *dest, char* head
   char *data = NULL, *body = NULL, *format = NULL, *cookie = NULL; 
   size_t data_length = 0; 
   size_t cookie_length = 0, format_length = 0;
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   
   /* posts shouldn't be gzipped, since the client can't know in advance that the server supports it. */
   bool json_zipping = false;
