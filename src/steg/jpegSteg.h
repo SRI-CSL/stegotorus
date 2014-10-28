@@ -19,8 +19,8 @@ recv_t http_client_JPEG_receive(http_steg_t * s, struct evbuffer *dest, char* he
 
 recv_t http_server_JPEG_post_receive(http_steg_t * s, struct evbuffer *dest, char* headers, int headers_length, char* request, int request_length);
 
-void set_jel_preferences_to_default();
+//void set_jel_preferences_to_default();
 
-void set_jel_preferences(jel_knobs_t &knobs_in);
+//void set_jel_preferences(jel_knobs_t &knobs_in);
 
 #endif

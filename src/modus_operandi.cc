@@ -25,7 +25,7 @@ using std::ifstream;
  */
 
 //a secret for those that don't set their secret
-#define STEGOTORUS_DEFAULT_SECRET "yadayadablahblah"
+static const char* stegotorus_default_secret = "yadayadablahblah";
 
 
 down_address_t::down_address_t()
@@ -55,7 +55,7 @@ void down_address_t::parse(string line)
 modus_operandi_t::modus_operandi_t()
   :  _is_ok(false),
      _protocol(), _mode(), _up_address(), _down_addresses(),
-     _trace_packets(false), _persist_mode(false), _shared_secret(STEGOTORUS_DEFAULT_SECRET),
+     _trace_packets(false), _persist_mode(false), _shared_secret(stegotorus_default_secret),
      _disable_encryption(false), _disable_retransmit(false),
      _managed(false), _managed_method("stegotorus"),
      _daemon(false), _logmethod_set(false), _pid_file(),
@@ -325,7 +325,6 @@ bool modus_operandi_t::load_file(const char* path){
     
     if (errors == 0){
       /* the bare minimum for both chop and null */
-      set_jel_preferences(this->_jel_knobs);
       _is_ok = true;
     }
     infile.close();

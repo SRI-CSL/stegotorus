@@ -97,8 +97,6 @@ http_steg_t::http_steg_t(http_steg_config_t *cf, conn_t *cn)
   memset(peer_dnsname, 0, sizeof peer_dnsname);
   persist_mode = cf->cfg->persist_mode;
   schemes_init();
-  //this is a no-op is they have been set in the config file
-  set_jel_preferences_to_default();
 }
 
 http_steg_t::~http_steg_t()

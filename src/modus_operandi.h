@@ -83,11 +83,15 @@ class modus_operandi_t {
   /* steganographic options */
   bool post_reflection(void){ return _post_reflection; }
   void post_reflection(bool val){  _post_reflection = val; }
+
+  jel_knobs_t* jel_knobs(void){ return  &_jel_knobs; }
   
   /* steg data paths */
 
   string get_steg_datadir(StegData variety);
   bool set_steg_datadir(StegData variety, string value);
+  
+  
   
   DISALLOW_COPY_AND_ASSIGN(modus_operandi_t);
  
