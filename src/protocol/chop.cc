@@ -99,12 +99,12 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
 
   if(mo.is_ok()){
     cmode = mo.mode().c_str();
-    this->mop = &mo;
   } else {
     cmode = options[0];
   }
 
-
+  //less adhoc way of passing information down to the steg modules.
+  this->mop = &mo;
   
   
   if (!strcmp(cmode, "client")) {
@@ -179,34 +179,34 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
     
     return true;
   } 
-
+  
   while (options[1][0] == '-') {
     if (!strncmp(options[1], "--server-key=", 13)) {
       // accept and ignore (for now) client only
       if (mode == LSN_SIMPLE_SERVER) {
-	log_warn("chop: --server-key option is not valid in server mode");
-	goto usage;
-      }
-    } else if (!strcmp(options[1], "--trace-packets")) {
-        trace_packets = true;
-        log_enable_timestamps();
-      } else if (!strcmp(options[1], "--persist-mode")) {
-        persist_mode = true;
-      } else if (!strcmp(options[1], "--disable-encryption")) {
-        encryption = false;
-      } else if (!strcmp(options[1], "--disable-retransmit")) {
-        retransmit = false;
-      } else if (!strncmp(options[1], "--shared-secret=", 16)) {
-        shared_secret = xstrdup(&options[1][16]);
-        log_debug("shared_secret is '%s'", shared_secret);
-      } else {
-        log_warn("chop: unrecognized option '%s'", options[1]);
+        log_warn("chop: --server-key option is not valid in server mode");
         goto usage;
       }
+    } else if (!strcmp(options[1], "--trace-packets")) {
+      trace_packets = true;
+      log_enable_timestamps();
+    } else if (!strcmp(options[1], "--persist-mode")) {
+      persist_mode = true;
+    } else if (!strcmp(options[1], "--disable-encryption")) {
+      encryption = false;
+    } else if (!strcmp(options[1], "--disable-retransmit")) {
+      retransmit = false;
+    } else if (!strncmp(options[1], "--shared-secret=", 16)) {
+      shared_secret = xstrdup(&options[1][16]);
+      log_debug("shared_secret is '%s'", shared_secret);
+    } else {
+      log_warn("chop: unrecognized option '%s'", options[1]);
+      goto usage;
+    }
     options++;
     n_options--;
   }
-      
+  
   up_address = resolve_address_port(options[1], 1, listen_up, defport);
     
   if (!up_address) {
