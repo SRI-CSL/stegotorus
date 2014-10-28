@@ -14,29 +14,9 @@
 #include "jpegSteg.h"
 #include "oshacks.h"
 
-/*
- * A useful switch for debugging a scheme. If it is true, then
- * a POST of X  will get a response of X. In other words one
- * could just do JPEG steg between the client and server by
- * turning off all the other schemes, and having post_reflection
- * be true.
- *
- */
-
-static bool post_reflection = true;
-
-void set_post_reflection(bool val){
-  post_reflection = val;
-}
-
-bool get_post_reflection(){
-  return post_reflection;
-}
-
 
 /* define to show URI's */
 #undef ST_SHOWURI
-
 
 STEG_DEFINE_MODULE(http);
 
@@ -44,21 +24,23 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
   : steg_config_t(cfg),
     is_clientside(cfg->mode != LSN_SIMPLE_SERVER),
     pl(),
-    shared_secret(NULL)
+    shared_secret(NULL),
+    mop(NULL),
+    post_reflection(false)
+
 {
   string traces_dir, images_dir, pdfs_dir;
 
-  if(cfg->mop != NULL){
-    //not sure why the mop would be NULL, but ...
-    traces_dir = cfg->mop->get_steg_datadir(StegData::TRACES);
-    images_dir = cfg->mop->get_steg_datadir(StegData::IMAGES);
-    pdfs_dir = cfg->mop->get_steg_datadir(StegData::PDFS);
-  } else {
-    //these are the same as the mop defaults.
-    traces_dir = STEG_TRACES_DIR;
-    images_dir = STEG_TRACES_DIR "images" "/usenix-corpus/1953x1301/q30";
-    pdfs_dir   = STEG_TRACES_DIR "pdfs";
-  }
+  mop = cfg->mop;
+  
+  assert(mop != NULL);
+
+  post_reflection = mop->post_reflection();
+    
+  traces_dir = cfg->mop->get_steg_datadir(StegData::TRACES);
+  images_dir = cfg->mop->get_steg_datadir(StegData::IMAGES);
+  pdfs_dir   = cfg->mop->get_steg_datadir(StegData::PDFS);
+  
 
   if(0){
     log_warn("modus_operandi = %p", cfg->mop);

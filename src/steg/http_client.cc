@@ -28,7 +28,7 @@ http_client_transmit (http_steg_t * s, struct evbuffer *source)
   transmit_t retval = NOT_TRANSMITTED;
   size_t room  = evbuffer_get_length(source);
   int scheme = schemes_get_transmit_scheme(room);
-  bool post_reflection = get_post_reflection();
+  bool post_reflection = s->config->post_reflection;
   
   if (SCHEMES_DEBUG){ log_warn("<http_client_transmit:%" PriSize_t">\n%s", room, schemes_to_string(scheme)); }
 

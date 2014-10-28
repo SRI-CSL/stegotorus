@@ -79,6 +79,7 @@ http_server_receive (http_steg_t *s, struct evbuffer *dest, struct evbuffer* sou
 {
   recv_t retval = RECV_BAD;
   http_method_t method = HTTP_UNKNOWN;
+  bool post_reflection = s->config->post_reflection;
 
 
 #ifdef ST_SHOWURI
@@ -93,7 +94,7 @@ http_server_receive (http_steg_t *s, struct evbuffer *dest, struct evbuffer* sou
   case HTTP_POST: {
     /* http_server_receive_POST sets s->type */
     retval = http_server_receive_POST(s, dest, source, headers, headers_length);
-    if(!get_post_reflection() && retval == RECV_GOOD){
+    if(!post_reflection && retval == RECV_GOOD){
       s->type = HTTP_CONTENT_HTML;
     }
     break;

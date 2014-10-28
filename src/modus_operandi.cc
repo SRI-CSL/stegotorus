@@ -263,7 +263,6 @@ bool modus_operandi_t::process_line(string &line, int32_t lineno){
   }
   else if(line_is(line, "post-reflection", rest)){
     bool val = set_bool(this->_post_reflection, rest, lineno);
-    set_post_reflection(this->_post_reflection);
     return val;
   }
 
