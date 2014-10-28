@@ -325,7 +325,7 @@ image_p embed_message(image_pool_p pool, unsigned char* message, int message_len
 //image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length);
 image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length){
   image_p retval = NULL;
-  if(1 || images_debug){ log_warn("embed_message_in_image:  %d %s",  message_length, cover->path); }
+  if(images_debug){ log_warn("embed_message_in_image:  %d %s",  message_length, cover->path); }
   int failures = 0, destination_length = cover->size;
   unsigned char* destination = NULL;
   
