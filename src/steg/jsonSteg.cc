@@ -748,7 +748,7 @@ http_server_JSON_transmit (http_steg_t * s,  struct evbuffer *source)
 }
 
 recv_t
-http_client_JSON_receive (http_steg_t * s, struct evbuffer *dest, char* headers, size_t headers_length, char* response, size_t response_length)
+http_client_JSON_receive (http_steg_t *s, struct evbuffer *dest, char* headers, size_t headers_length, char* response, size_t response_length)
 {
   const char *secret = s->config->shared_secret;
   recv_t retval = RECV_BAD;
@@ -756,6 +756,8 @@ http_client_JSON_receive (http_steg_t * s, struct evbuffer *dest, char* headers,
   char *body = NULL, *data = NULL, *format = NULL, *cookie = NULL;
   size_t cookie_length;
   size_t format_length;
+
+
 
 
   if(!(headers_length < response_length)){

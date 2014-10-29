@@ -31,7 +31,7 @@ public:
   bool trace_packets;
   bool encryption;
   bool retransmit;
-
+    
   CONFIG_DECLARE_METHODS(chop);
 
   DISALLOW_COPY_AND_ASSIGN(chop_config_t);

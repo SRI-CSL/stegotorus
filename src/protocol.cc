@@ -40,5 +40,4 @@ config_create(int n_options, const char *const *options, modus_operandi_t& mo)
 /* Define this here rather than in the class definition so that the
    vtable will be emitted in only one place. */
 config_t::~config_t() {
-  free(shared_secret);
 }

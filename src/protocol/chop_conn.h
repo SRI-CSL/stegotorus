@@ -34,7 +34,6 @@ public:
   bool sent_handshake : 1;
   bool no_more_transmissions : 1;
   uint32_t last_circuit_id;
-
   CONN_DECLARE_METHODS(chop);
 
   DISALLOW_COPY_AND_ASSIGN(chop_conn_t);

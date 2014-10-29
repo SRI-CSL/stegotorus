@@ -40,7 +40,7 @@ class config_t
   /* stopgap, see create_outbound_connections_socks */
   bool ignore_socks_destination : 1;
   /* experimental trac ticket # 149 */
-  char *shared_secret;
+  const char *shared_secret;
   bool persist_mode;
   modus_operandi_t *mop;
   

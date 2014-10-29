@@ -13,7 +13,9 @@
 #include "chop_circuit.h"
 
 chop_conn_t::chop_conn_t() : config(NULL), upstream_circuits(), steg(NULL), recv_pending(NULL), must_send_timer(NULL), sent_handshake(0), no_more_transmissions(0), last_circuit_id(0)
-{ }
+{
+
+}
 
 
 

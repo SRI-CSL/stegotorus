@@ -60,6 +60,9 @@ chop_config_t::~chop_config_t()
        i != circuits.end(); i++)
     if (i->second)
       delete i->second;
+
+  free((void *)shared_secret);
+  
 }
 
 
@@ -105,6 +108,8 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
 
   //less adhoc way of passing information down to the steg modules.
   this->mop = &mo;
+
+  this->shared_secret = xstrdup(mo.shared_secret().c_str());
   
   
   if (!strcmp(cmode, "client")) {

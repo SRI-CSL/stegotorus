@@ -36,32 +36,17 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
   assert(mop != NULL);
 
   post_reflection = mop->post_reflection();
-  shared_secret = mop->shared_secret().c_str();
+  shared_secret = cfg->shared_secret;
     
   traces_dir = cfg->mop->get_steg_datadir(StegData::TRACES);
   images_dir = cfg->mop->get_steg_datadir(StegData::IMAGES);
   pdfs_dir   = cfg->mop->get_steg_datadir(StegData::PDFS);
-  
 
-  if(0){
-    log_warn("modus_operandi = %p", cfg->mop);
-    log_warn("shared_secret = '%s'", cfg->mop->shared_secret().c_str()); 
-    log_warn("traces_dir = '%s'", traces_dir.c_str()); 
-    log_warn("images_dir = '%s'", images_dir.c_str()); 
-    log_warn("pdfs_dir = '%s'", pdfs_dir.c_str()); 
-  }
-  
+
   zero_payloads(pl);
-  /*
-  if(cfg->shared_secret){
-    this->shared_secret = xstrdup(cfg->shared_secret);
-  }
-  if(!this->shared_secret){
-    this->shared_secret = xstrdup(STEGOTORUS_DEFAULT_SECRET);
-  }
-  */
   
   //log_warn("shared_secret = %s", this->shared_secret);
+
   if (is_clientside) {
     traces_dir.append("client.out");
     load_payloads(this->pl, traces_dir.c_str());
@@ -183,7 +168,7 @@ http_steg_t::transmit(struct evbuffer *source)
   }
     
   transmit_lock = true;
-
+  
   if (config->is_clientside) {
     retval = http_client_transmit(this, source);
   }
