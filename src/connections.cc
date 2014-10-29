@@ -302,7 +302,7 @@ circuit_create(config_t *cfg, size_t index)
 
 circuit_t::~circuit_t()
 {
-  fprintf(stderr, "up_buffer@%p in %p being DESTROYED\n", &this->up_buffer, this);
+  //SIGSEGV BUG: fprintf(stderr, "up_buffer@%p in %p being DESTROYED\n", &this->up_buffer, this);
   
   if (this->up_buffer)
     bufferevent_free(this->up_buffer);
