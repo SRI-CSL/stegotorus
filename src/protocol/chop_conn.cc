@@ -212,7 +212,7 @@ chop_conn_t::recv_handshake(chop_circuit_t*& ckt)
 
       
   if(config->mode != LSN_SIMPLE_SERVER)
-     return -1;
+    return -1;
   
 
   chop_circuit_table::value_type in(circuit_id, (chop_circuit_t *)0);
@@ -300,7 +300,7 @@ chop_conn_t::recv()
       unsigned int bytes = steg->corrupted_reception();
       evbuffer_drain(recv_pending, bytes);
       log_warn(this, "steg->corrupted_reception() A");
-     return -1;
+      return -1;
     }
 
     // If we get here and ->upstream is not set, this is a connection
@@ -372,15 +372,16 @@ chop_conn_t::recv()
 
       if (config->trace_packets)
         log_warn(this, "T:%.4f: ckt %u <ntp %u outq %lu>: recv-error "
-                "%02x%02x%02x%02x <d=%02x%02x p=%02x%02x f=%s r=%02x "
-                "c=%02x%02x%02x%02x%02x%02x>",
-                TRACEPACKETS_TIMESTAMP, upstream->serial,
-                upstream->recv_queue.window(),
-                (unsigned long)evbuffer_get_length(bufferevent_get_input(upstream->up_buffer)),
-                c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7],
-                opname(c[8], fallbackbuf),
-                c[9], c[10], c[11], c[12], c[13], c[14], c[15]);
+                 "%02x%02x%02x%02x <d=%02x%02x p=%02x%02x f=%s r=%02x "
+                 "c=%02x%02x%02x%02x%02x%02x>",
+                 TRACEPACKETS_TIMESTAMP, upstream->serial,
+                 upstream->recv_queue.window(),
+                 (unsigned long)evbuffer_get_length(bufferevent_get_input(upstream->up_buffer)),
+                 c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7],
+                 opname(c[8], fallbackbuf),
+                 c[9], c[10], c[11], c[12], c[13], c[14], c[15]);
 
+      //SIGSEGV BUG: fprintf(stderr, "DEF: invalid block header upstream = %p\n", upstream);
       log_warn(this, "DEF: invalid block header");
       steg->corrupted_reception();
       break;
@@ -389,8 +390,9 @@ chop_conn_t::recv()
     if (avail < hdr.total_len()) {
       log_warn(this, "incomplete block (avail:  %lu need %lu bytes [%lu/%lu])",
                (unsigned long)avail, (unsigned long)hdr.total_len(),
-	       (unsigned long)hdr.dlen(), (unsigned long)hdr.plen());
+               (unsigned long)hdr.dlen(), (unsigned long)hdr.plen());
       steg->corrupted_reception();
+      //SIGSEGV BUG: fprintf(stderr, "steg->corrupted_reception() D upstream = %p\n", upstream);
       log_warn(this, "steg->corrupted_reception() D");
       break;
     }
@@ -420,11 +422,11 @@ chop_conn_t::recv()
 
     if (config->trace_packets)
       log_warn(this, "T:%.4f: ckt %u <ntp %u outq %lu>: recv %lu <d=%lu p=%lu f=%s r=%u>",
-              TRACEPACKETS_TIMESTAMP, upstream->serial, upstream->recv_queue.window(),
-	      (unsigned long)evbuffer_get_length(bufferevent_get_input(upstream->up_buffer)),
-              (unsigned long)hdr.seqno(), (unsigned long)hdr.dlen(),
-              (unsigned long)hdr.plen(), opname(hdr.opcode(), fallbackbuf),
-              hdr.rcount());
+               TRACEPACKETS_TIMESTAMP, upstream->serial, upstream->recv_queue.window(),
+               (unsigned long)evbuffer_get_length(bufferevent_get_input(upstream->up_buffer)),
+               (unsigned long)hdr.seqno(), (unsigned long)hdr.dlen(),
+               (unsigned long)hdr.plen(), opname(hdr.opcode(), fallbackbuf),
+               hdr.rcount());
 
     data = evbuffer_new();
 
@@ -465,8 +467,8 @@ chop_conn_t::recv_eof()
 
   for (unsigned int i=0; i < upstream_circuits.size(); i++) {
     if ((upstream_circuits[i]->sent_fin || no_more_transmissions) &&
-	!must_send_p() && evbuffer_get_length(outbound()) == 0)
-    upstream_circuits[i]->drop_downstream(this);
+        !must_send_p() && evbuffer_get_length(outbound()) == 0)
+      upstream_circuits[i]->drop_downstream(this);
   }
 
   return 0;
@@ -532,23 +534,28 @@ chop_conn_t::send(int site)
   // provide us with data.  For instance, to preserve the cover
   // protocol, we must send an HTTP reply to each HTTP query that
   // comes in for a stale circuit.
-  if (upstream_circuits.size() > 0) {
+
+  size_t circuit_size = upstream_circuits.size();
+  
+  if (circuit_size > 0) {
     log_debug(this, "must send");
     size_t i = 0;
 
     if (config->mode == LSN_SIMPLE_SERVER) {
-      while (i < upstream_circuits.size()) {
-	if (upstream_circuits[i]->circuit_id == last_circuit_id)
-	  break;
-	if (i == upstream_circuits.size()) {
-	  log_warn("circuit_id not found in conn upstreams.. shouldn't happen %d", last_circuit_id);
-	  i = 0;
-	  break;
-	}
-	i++;
+      while (i < circuit_size) {
+        if (upstream_circuits[i]->circuit_id == last_circuit_id)
+          break;
+        i++;
+        if (i == circuit_size) {
+          //SIGSEGV BUG: fprintf(stderr, "circuit_id not found in conn upstreams.. shouldn't happen %d\n", last_circuit_id);
+          log_warn("circuit_id not found in conn upstreams.. shouldn't happen %d", last_circuit_id);
+          i = 0;
+          break;
+        }
       }
     }
-
+    
+    //SIGSEGV BUG: fprintf(stderr, "upstream_circuits[%d]->send_targeted(%p) out of %d\n", (int)i, this, (int)(circuit_size));
     if (upstream_circuits[i]->send_targeted(this)) {
       upstream_circuits[i]->drop_downstream(this);
       conn_do_flush(this);
@@ -567,8 +574,8 @@ chop_conn_t::send(int site)
   if (room < MIN_BLOCK_SIZE || room >= MAX_BLOCK_SIZE) {
     print_trace();
     log_abort(this, "steg size request (%lu) out of range [%lu, %lu] @ site = %d upstream_circuits.size = %d",
-	      (unsigned long)room, (unsigned long)MIN_BLOCK_SIZE,
-	      (unsigned long)MAX_BLOCK_SIZE, site, (int)upstream_circuits.size());
+              (unsigned long)room, (unsigned long)MIN_BLOCK_SIZE,
+              (unsigned long)MAX_BLOCK_SIZE, site, (int)upstream_circuits.size());
   }
     
   // Since we have no upstream, we can't encrypt anything; instead,
@@ -577,11 +584,11 @@ chop_conn_t::send(int site)
   struct evbuffer_iovec v;
 
   if (!chaff || evbuffer_reserve_space(chaff, room, &v, 1) != 1 || v.iov_len < room) {
-      log_warn(this, "memory allocation failed");
-      if (chaff)
-        evbuffer_free(chaff);
-      conn_do_flush(this);
-      return;
+    log_warn(this, "memory allocation failed");
+    if (chaff)
+      evbuffer_free(chaff);
+    conn_do_flush(this);
+    return;
   }
 
   v.iov_len = room;

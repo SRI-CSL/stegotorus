@@ -302,6 +302,8 @@ circuit_create(config_t *cfg, size_t index)
 
 circuit_t::~circuit_t()
 {
+  fprintf(stderr, "up_buffer@%p in %p being DESTROYED\n", &this->up_buffer, this);
+  
   if (this->up_buffer)
     bufferevent_free(this->up_buffer);
   if (this->up_peer)
@@ -317,6 +319,8 @@ circuit_t::~circuit_t()
 void
 circuit_t::close()
 {
+  //SIGSEGV BUG: fprintf(stderr, "up_buffer@%p in %p being CLOSED\n", &this->up_buffer, this);
+
   log_debug(this, "closing circuit; %lu remaining",
             (unsigned long)cgs->circuits.size());
 
@@ -354,7 +358,8 @@ circuit_add_upstream(circuit_t *ckt, struct bufferevent *buf, const char *peer)
 {
   log_assert(!ckt->up_buffer);
   log_assert(!ckt->up_peer);
-
+  
+  //SIGSEGV BUG: fprintf(stderr, "up_buffer@%p initialized to %p  in %p\n", &ckt->up_buffer, buf, ckt);
 
   ckt->up_buffer = buf;
   ckt->up_peer = peer;
