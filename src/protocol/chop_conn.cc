@@ -14,7 +14,6 @@
 
 chop_conn_t::chop_conn_t() : config(NULL), upstream_circuits(), steg(NULL), recv_pending(NULL), must_send_timer(NULL), sent_handshake(0), no_more_transmissions(0), last_circuit_id(0)
 {
-
 }
 
 
@@ -200,8 +199,8 @@ chop_conn_t::recv_handshake(chop_circuit_t*& ckt)
   }
 
   circuit_id = hs->circuit_id;
-  free(hs);
   
+  free(hs);
 
   for (unsigned int i=0; i < upstream_circuits.size(); i++) {
     if (upstream_circuits[i]->circuit_id == circuit_id) {
@@ -210,6 +209,7 @@ chop_conn_t::recv_handshake(chop_circuit_t*& ckt)
     }
   }
 
+  last_circuit_id = circuit_id;
       
   if(config->mode != LSN_SIMPLE_SERVER)
     return -1;
@@ -380,8 +380,6 @@ chop_conn_t::recv()
                  c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7],
                  opname(c[8], fallbackbuf),
                  c[9], c[10], c[11], c[12], c[13], c[14], c[15]);
-
-      //SIGSEGV BUG: fprintf(stderr, "DEF: invalid block header upstream = %p\n", upstream);
       log_warn(this, "DEF: invalid block header");
       steg->corrupted_reception();
       break;
@@ -392,7 +390,6 @@ chop_conn_t::recv()
                (unsigned long)avail, (unsigned long)hdr.total_len(),
                (unsigned long)hdr.dlen(), (unsigned long)hdr.plen());
       steg->corrupted_reception();
-      //SIGSEGV BUG: fprintf(stderr, "steg->corrupted_reception() D upstream = %p\n", upstream);
       log_warn(this, "steg->corrupted_reception() D");
       break;
     }
@@ -439,8 +436,6 @@ chop_conn_t::recv()
     if (upstream->recv_block(hdr.seqno(), hdr.opcode(), data))
       return -1; // insert() logs an error
 
-    if (config->mode == LSN_SIMPLE_SERVER)
-      last_circuit_id = upstream->circuit_id;
   }
 
   return upstream->process_queue();
@@ -547,15 +542,13 @@ chop_conn_t::send(int site)
           break;
         i++;
         if (i == circuit_size) {
-          //SIGSEGV BUG: fprintf(stderr, "circuit_id not found in conn upstreams.. shouldn't happen %d\n", last_circuit_id);
           log_warn("circuit_id not found in conn upstreams.. shouldn't happen %d", last_circuit_id);
           i = 0;
           break;
         }
       }
     }
-    
-    //SIGSEGV BUG: fprintf(stderr, "upstream_circuits[%d]->send_targeted(%p) out of %d\n", (int)i, this, (int)(circuit_size));
+
     if (upstream_circuits[i]->send_targeted(this)) {
       upstream_circuits[i]->drop_downstream(this);
       conn_do_flush(this);

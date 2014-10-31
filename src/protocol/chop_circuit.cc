@@ -441,7 +441,6 @@ int
 chop_circuit_t::send_targeted(chop_conn_t *conn)
 {
   
-  //SIGSEGV BUG: fprintf(stderr, "send_targeted %p %p\n", &up_buffer, this);
   struct evbuffer * ptr = bufferevent_get_input(up_buffer);
   size_t avail = evbuffer_get_length(ptr);
   
