@@ -11,6 +11,7 @@
 #include "oshacks.h"
 
 
+static const size_t max_room = std::numeric_limits<uint16_t>::max();
 
 /*
  *  Cookie transmit uses payloads for URI (thus best to turn off if testing just one scheme)
@@ -260,7 +261,7 @@ schemes_failure (int content_type)
 }
 
 int
-schemes_clientside_transmit_room (payloads& /* payloads */, size_t /* pref */, size_t& lo, size_t& hi)
+schemes_clientside_transmit_room (payloads& /* payloads */, size_t& pref, size_t& lo, size_t& hi)
 {
   bool set = false;
   if(enabled_schemes[COOKIE_TRANSMIT]){
@@ -297,13 +298,21 @@ schemes_clientside_transmit_room (payloads& /* payloads */, size_t /* pref */, s
     hi = 1024;
     log_warn("schemes_clientside_transmit_room NO CANDIDATES lo=%" PriSize_t " hi=%" PriSize_t, lo, hi);
   }
+
+  //cannot accept more the 2^16 bytes; since the dlen field of the header is uint16_t
+  if(hi > max_room){
+    hi = max_room - 1;
+  }
+  if(pref > max_room){
+    pref = max_room - 1;
+  }
   
   //log_warn("schemes_clientside_transmit_room lo=%lu hi=%lu", lo, hi);
   return 0;
 }
 
 int
-schemes_serverside_transmit_room (payloads&  payloads, int content_type, size_t /* pref */, size_t& lo, size_t& hi)
+schemes_serverside_transmit_room (payloads&  payloads, int content_type, size_t& pref, size_t& lo, size_t& hi)
 {
   switch (content_type) {
   case HTTP_CONTENT_SWF:
@@ -338,9 +347,19 @@ schemes_serverside_transmit_room (payloads&  payloads, int content_type, size_t 
     hi = RAW_SIZE_CEILING;
     break;
 
+    
+    
   default:
     log_warn("schemes_serverside_transmit_room: unknown content_type %d lo=%" PriSize_t " hi=%" PriSize_t, content_type, lo, hi);
     hi = 512;
+  }
+
+  //cannot accept more the 2^16 bytes; since the dlen field of the header is uint16_t
+  if(hi > max_room){
+    hi = max_room - 1;
+  }
+  if(pref > max_room){
+    pref = max_room - 1;
   }
   
   return 0;

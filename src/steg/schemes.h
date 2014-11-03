@@ -57,9 +57,9 @@ void schemes_clientside_init(payloads& payloads, const char* imagedir, const cha
 
 void schemes_serverside_init(payloads& payloads, const char* imagedir, const char* pdfdir);
 
-int schemes_clientside_transmit_room(payloads& payloads, size_t pref, size_t& lo, size_t& hi);
+int schemes_clientside_transmit_room(payloads& payloads, size_t& pref, size_t& lo, size_t& hi);
 
-int schemes_serverside_transmit_room(payloads& payloads, int content_type, size_t pref, size_t& lo, size_t& hi);
+int schemes_serverside_transmit_room(payloads& payloads, int content_type, size_t& pref, size_t& lo, size_t& hi);
 
 rcode_t schemes_gen_uri_field(char* uri, size_t uri_sz, char* data, size_t& datalen);
 
