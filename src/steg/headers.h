@@ -39,6 +39,7 @@ typedef enum  methods {
 #define HTTP_HEADERS_CONTENT_ENCODING  "\r\ncontent-encoding: "
 #define HTTP_HEADERS_COOKIE            "\r\ncookie: "
 #define HTTP_HEADERS_SETCOOKIE         "\r\nset-cookie: "
+#define HTTP_HEADERS_HOSTNAME          "\r\nhost: "
 
 
 
@@ -63,12 +64,6 @@ typedef enum HTTP_CONTENT_TYPES {
 
 
 
-/*
- * Fake hostname for Host: headers
- * Typically gets replaced by Jumpbox or ignored by StegoTorus Server
- */
-#define HTTP_FAKE_HOST "localhost"
-
 const char* http_content_type_to_string(http_content_t content_type);
 
 int get_http_status_code(char* headers, size_t headers_length);
@@ -79,6 +74,7 @@ rcode_t get_content_type(char* headers, size_t headers_length, char** typep, siz
 rcode_t get_accept(char* headers, size_t headers_length, char** acceptp, size_t& vlength);
 rcode_t get_accept_encoding(char* headers, size_t headers_length, char** encodingp, size_t& vlength);
 rcode_t get_content_encoding(char* headers, size_t headers_length, char** encodingp, size_t& vlength);
+rcode_t get_hostname(char* headers, size_t headers_length, char** hostp, size_t& vlength);
 
 
 http_content_t find_content_type(char* headers, size_t headers_length);

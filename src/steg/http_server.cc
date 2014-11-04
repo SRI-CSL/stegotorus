@@ -86,6 +86,26 @@ http_server_receive (http_steg_t *s, struct evbuffer *dest, struct evbuffer* sou
   fprintf(stderr, "server headers: %s\n", headers);
 #endif
 
+
+  /* can be used to check that steg modules are doing the right thing with the hostname */
+#ifdef ST_POLICE_CLIENT
+  {
+    char* host = NULL;
+    size_t hostlen = 0;
+    rcode_t rcode = get_hostname(headers, headers_length, &host, hostlen);
+    const char *hostname = s->config->hostname;
+    
+    if(rcode == RCODE_OK){
+      fprintf(stderr, "hostname: %s\n", host);
+      assert(strcmp(host, hostname) == 0);
+    } else {
+      assert(0);
+    }
+    
+  }
+#endif
+
+  
   /* switch on method before anything else */
   method = get_method(headers, headers_length);
 

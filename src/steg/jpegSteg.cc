@@ -332,10 +332,11 @@ http_client_JPEG_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t 
   unsigned char *data = NULL, *body = NULL;
   char *path = NULL, *headers = NULL, *cookie = NULL;
   const char *secret = s->config->shared_secret;
+  const char *hostname = s->config->hostname;
   size_t body_length = 0,  data_length;
   int emessage_length = 0;
   jel_knobs_t* knobs = s->config->mop->jel_knobs();
-
+  
   if (source2raw(source, source_length, &data, data_length) != RCODE_OK) {
     log_warn("extracting raw to send failed");
     goto clean_up;
@@ -354,7 +355,7 @@ http_client_JPEG_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t 
 
   cookie = construct_jpeg_cookie(knobs, emessage_length, secret);
   
-  headers_length = construct_jpeg_headers(HTTP_POST, path, HTTP_FAKE_HOST, cookie, body_length, headers);
+  headers_length = construct_jpeg_headers(HTTP_POST, path, hostname, cookie, body_length, headers);
 
   if(headers_length == 0){
     log_warn("construct_jpeg_headers failed.");

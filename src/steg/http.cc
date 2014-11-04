@@ -25,6 +25,7 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
     is_clientside(cfg->mode != LSN_SIMPLE_SERVER),
     pl(),
     shared_secret(NULL),
+    hostname(NULL),
     mop(NULL),
     post_reflection(false)
 
@@ -36,7 +37,10 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
   assert(mop != NULL);
 
   post_reflection = mop->post_reflection();
+
+  //these are owned by the config_t object;
   shared_secret = cfg->shared_secret;
+  hostname = cfg->hostname;
     
   traces_dir = cfg->mop->get_steg_datadir(StegData::TRACES);
   images_dir = cfg->mop->get_steg_datadir(StegData::IMAGES);
@@ -65,7 +69,6 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
 http_steg_config_t::~http_steg_config_t()
 {
   free_payloads(this->pl);
-  //free(this->shared_secret);
 }
 
 steg_t *
@@ -79,7 +82,7 @@ http_steg_t::http_steg_t(http_steg_config_t *cf, conn_t *cn)
     have_transmitted(false), have_received(false), persist_mode(false),
     transmit_lock(false), accepts_gzip(false), is_gzipped(false), type(HTTP_CONTENT_NONE),  bytes_recvd(0)
 {
-  memset(peer_dnsname, 0, sizeof peer_dnsname);
+  //memset(peer_dnsname, 0, sizeof peer_dnsname);
   persist_mode = cf->cfg->persist_mode;
   schemes_init();
 }
@@ -151,6 +154,7 @@ http_steg_t::transmit_room(size_t pref, size_t lo, size_t hi)
   if(error){
     log_debug("exiting (%p)->transmit_room: error = %d type = %d pref = %d, lo = %d, hi = %d returning %d", this->conn, error, type, (int)pref, (int)lo, (int)hi, (int)retval);
   }
+
   return retval; 
 }
 

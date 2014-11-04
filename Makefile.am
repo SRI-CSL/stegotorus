@@ -11,7 +11,7 @@ PROJECT_GIT_TIME:=$(shell git log --pretty=format:'%ci' -n 1 2>/dev/null || echo
 ACLOCAL_AMFLAGS = -I config-aux --install
 
 #please note that the 32 bit time is needed for consistency inside the mingw64 build  
-AM_CXXFLAGS = -g -O0 -Werror -Wall -Wextra -Wformat=2 -Weffc++ -fstack-protector-all -D_USE_32BIT_TIME_T
+AM_CXXFLAGS = -g -Werror -Wall -Wextra -Wformat=2 -Weffc++ -fstack-protector-all -D_USE_32BIT_TIME_T
 
 
 AM_CPPFLAGS = -I. -I$(srcdir)/src -D_FORTIFY_SOURCE=2 $(lib_CPPFLAGS) $(ws32_CFLAGS) \

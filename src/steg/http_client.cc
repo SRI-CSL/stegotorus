@@ -216,9 +216,12 @@ http_client_cookie_transmit (http_steg_t *s, struct evbuffer *source, conn_t *co
   fprintf(stderr, "Cookie-URI: %s\n", buf);
 #endif
 
+
+  /*
   if (s->peer_dnsname[0] == '\0')
     lookup_peer_name_from_ip(conn->peername, s->peer_dnsname, sizeof(s->peer_dnsname));
-
+  */
+  
   if (encode_cookie(data, sbuflen, &cookie, cookie_len) != RCODE_OK)
     goto clean_up;
 
@@ -239,9 +242,11 @@ http_client_cookie_transmit (http_steg_t *s, struct evbuffer *source, conn_t *co
     goto clean_up;
   }
 
-  rval = evbuffer_add(dest, s->peer_dnsname, strlen(s->peer_dnsname));
+  //rval = evbuffer_add(dest, s->peer_dnsname, strlen(s->peer_dnsname));
+  rval = evbuffer_add(dest, s->config->hostname,  strlen(s->config->hostname));
+  
   if (rval == -1) {
-    log_warn("error adding peername field");
+    log_warn("error adding hostname field");
     goto clean_up;
   }
 
@@ -330,9 +335,11 @@ http_client_uri_transmit (http_steg_t *s, struct evbuffer *source, conn_t *conn)
     goto clean_up;
   }
 
+  /*
   if (s->peer_dnsname[0] == '\0')
     lookup_peer_name_from_ip(conn->peername, s->peer_dnsname, sizeof(s->peer_dnsname));
-
+  */
+  
   // loop till success
   while (schemes_gen_uri_field(outbuf, outbufsz, data, datalen) != RCODE_OK){ };
 
@@ -365,11 +372,19 @@ http_client_uri_transmit (http_steg_t *s, struct evbuffer *source, conn_t *conn)
     goto clean_up;
   }
 
-  if (evbuffer_add(dest, s->peer_dnsname, strlen(s->peer_dnsname))   == -1) {
-    log_warn("evbuffer_add of host failed");
+  if (evbuffer_add(dest, s->config->hostname, strlen(s->config->hostname))   == -1) {
+    log_warn("evbuffer_add of hostname failed");
     goto clean_up;
   }
 
+
+  /*
+    if (evbuffer_add(dest, s->peer_dnsname, strlen(s->peer_dnsname))   == -1) {
+    log_warn("evbuffer_add of host failed");
+    goto clean_up;
+  }
+  */
+  
   eol = strnstr(buf, "\r\n", len);
 
   if (eol == NULL) {

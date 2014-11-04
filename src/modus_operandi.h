@@ -72,7 +72,6 @@ class modus_operandi_t {
   void managed(bool val){  _managed = val; }
 
   string managed_method(void){ return _managed_method; }
-  void managed_method(string method){  _managed_method = method; }
 
   bool daemon(void){ return _daemon; }
 
@@ -81,8 +80,9 @@ class modus_operandi_t {
   string pid_file(void){ return _pid_file; }
 
   /* steganographic options */
+  string hostname(void){ return _hostname; }
+
   bool post_reflection(void){ return _post_reflection; }
-  void post_reflection(bool val){  _post_reflection = val; }
 
   jel_knobs_t* jel_knobs(void){ return  &_jel_knobs; }
   
@@ -90,8 +90,6 @@ class modus_operandi_t {
 
   string get_steg_datadir(StegData variety);
   bool set_steg_datadir(StegData variety, string value);
-  
-  
   
   DISALLOW_COPY_AND_ASSIGN(modus_operandi_t);
  
@@ -120,6 +118,8 @@ class modus_operandi_t {
 
   /* steganographic options */
  private: bool _post_reflection;
+ private: string _hostname;
+  
 
  private: jel_knobs_t _jel_knobs;
 
@@ -139,6 +139,8 @@ class modus_operandi_t {
  private: bool line_is(string&, const char *, string&);
 
  private: bool set_scheme(const char *, string&, int32_t);
+
+ private: bool set_string(string&, const char *, string&, int32_t);
   
  private: bool set_bool(bool&, string&, int32_t);
 

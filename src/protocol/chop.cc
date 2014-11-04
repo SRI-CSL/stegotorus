@@ -62,6 +62,7 @@ chop_config_t::~chop_config_t()
       delete i->second;
 
   free((void *)shared_secret);
+  free((void *)hostname);
   
 }
 
@@ -109,7 +110,11 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
   //less adhoc way of passing information down to the steg modules.
   this->mop = &mo;
 
+  //remember the shared_secret once and forall
   this->shared_secret = xstrdup(mo.shared_secret().c_str());
+
+  //remember the hostname once and forall
+  this->hostname = xstrdup(mo.hostname().c_str());
   
   
   if (!strcmp(cmode, "client")) {

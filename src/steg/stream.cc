@@ -40,30 +40,29 @@ stream_steg_config_t::stream_steg_config_t(config_t *cfg)
   : steg_config_t(cfg),
     is_clientside(cfg->mode != LSN_SIMPLE_SERVER),
     shared_secret(NULL),
+    mop(NULL),
     pool(NULL),
     capacity(0)
 {
   std::string stream_dir;
 
-  if(cfg->mop != NULL){
-    //not sure why the mop would be NULL, but ...
-    stream_dir = cfg->mop->get_steg_datadir(StegData::STREAM);
-  } else {
-    //these are the same as the mop defaults.
-    stream_dir = STEG_TRACES_DIR "images" "/stream";
-  }
+  mop = cfg->mop;
+  
+  assert(mop != NULL);
+
+  stream_dir = cfg->mop->get_steg_datadir(StegData::STREAM);
+
+  //these are owned by the config_t object;
+  shared_secret = cfg->shared_secret;
+  hostname = cfg->hostname;
 
   if(0){
     log_warn("modus_operandi = %p", cfg->mop);
-    log_warn("shared_secret = %s", cfg->mop->shared_secret().c_str()); 
+    log_warn("shared_secret = %s", shared_secret); 
+    log_warn("hostname = %s", hostname); 
     log_warn("stream_dir = %s", stream_dir.c_str()); 
   }
 
-  if(cfg->shared_secret){
-    this->shared_secret = xstrdup(cfg->shared_secret);
-  } else {
-    this->shared_secret = xstrdup(STEGOTORUS_DEFAULT_SECRET);
-  }
 
   if(!is_clientside){
     this->pool = load_images(stream_dir.c_str(), 100);
@@ -79,7 +78,6 @@ stream_steg_config_t::stream_steg_config_t(config_t *cfg)
 
 stream_steg_config_t::~stream_steg_config_t()
 {
-  free(this->shared_secret);
   free_image_pool(this->pool);
 }
 
@@ -100,7 +98,7 @@ stream_steg_t::stream_steg_t(stream_steg_config_t *cf, conn_t *cn)
     have_transmitted(false), have_received(false),
     transmit_lock(false), type(HTTP_CONTENT_NONE),  bytes_recvd(0)
 {
-  memset(peer_dnsname, 0, sizeof peer_dnsname);
+  //memset(peer_dnsname, 0, sizeof peer_dnsname);
   schemes_init();
   //server generates one; the client gets it in the headers (in the content-type)
   if(!config->is_clientside){

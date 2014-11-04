@@ -172,14 +172,11 @@ class circuit_t {
     , write_eof(false)
     , pending_read_eof(false)
     , pending_write_eof(false)
-  {
-    //SIGSEGV BUG: fprintf(stderr, "up_buffer@%p created for %p\n", &up_buffer, this);
-  }
+  {}
 
   /** Deallocate a circuit.  Normally should not be invoked directly,
       use close() instead.  */
   virtual ~circuit_t();
-
 
   DISALLOW_COPY_AND_ASSIGN(circuit_t);
 

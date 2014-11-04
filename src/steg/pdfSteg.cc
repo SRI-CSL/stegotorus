@@ -789,7 +789,8 @@ http_client_PDF_post_transmit (http_steg_t * s, struct evbuffer *source, conn_t 
   size_t headers_length = 0;
   unsigned char *data = NULL, *body = NULL;
   char *path = NULL, *headers = NULL;
-  // char *secret = s->config->shared_secret;
+  //const char *secret = s->config->shared_secret;
+  const char *hostname = s->config->hostname;
   size_t body_length = 0;
   size_t data_length = 0;
 
@@ -813,7 +814,7 @@ http_client_PDF_post_transmit (http_steg_t * s, struct evbuffer *source, conn_t 
     goto clean_up;
   }
 
-  headers_length = construct_pdf_headers(HTTP_POST, path, HTTP_FAKE_HOST, NULL, body_length, headers);
+  headers_length = construct_pdf_headers(HTTP_POST, path, hostname, NULL, body_length, headers);
 
   if(headers_length == 0){
     log_warn("construct_pdf_headers failed.");

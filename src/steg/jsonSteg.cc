@@ -758,8 +758,6 @@ http_client_JSON_receive (http_steg_t *s, struct evbuffer *dest, char* headers, 
   size_t format_length;
 
 
-
-
   if(!(headers_length < response_length)){
     log_warn("http_client_JSON_receive: headers_length = %" PriSize_t "\n response_length = %" PriSize_t, headers_length, response_length);
   }
@@ -806,6 +804,7 @@ http_client_JSON_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t 
   char *data = NULL, *body = NULL, *path = NULL, *format = NULL, *cookie = NULL, *headers = NULL;
   size_t datalen;
   const char *secret = s->config->shared_secret;
+  const char *hostname = s->config->hostname;
   size_t format_length = 0;
 
   //posts shouldn't be gzipped, since the client can't know that the server supports it.
@@ -839,7 +838,7 @@ http_client_JSON_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t 
   //log_warn("http_client_JSON_post_transmit\n<data>\n%d:%s\n</data>\n<cookie>\n%d:%s\n</cookie>\n<body>\n%d:%s\n</body>", datalen, data, (int)strlen(cookie), cookie, (int)strlen(body), body);
 
   schemes_gen_post_request_path(s->config->pl, &path);
-  headers_length = construct_json_headers(HTTP_POST, path, HTTP_FAKE_HOST, cookie, body_length, headers, json_zipping);
+  headers_length = construct_json_headers(HTTP_POST, path, hostname, cookie, body_length, headers, json_zipping);
 
   if(headers_length == 0){
     log_warn("construct_json_headers failed.");

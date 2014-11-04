@@ -23,6 +23,7 @@ public:
   bool is_clientside : 1;
   payloads pl;
   const char* shared_secret;
+  const char* hostname;
   modus_operandi_t* mop;
 
   /*
@@ -49,7 +50,9 @@ class http_steg_t : public steg_t
 public:
   http_steg_config_t *config;
   conn_t *conn;
-  char peer_dnsname[512];
+
+  //ian says: i am replacing this with the hostname read in from the configfile.
+  //char peer_dnsname[512];
   
   bool have_transmitted : 1;
   bool have_received : 1;

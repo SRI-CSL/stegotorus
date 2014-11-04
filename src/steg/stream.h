@@ -22,8 +22,10 @@ class stream_steg_config_t : public steg_config_t
 {
 public:
   bool is_clientside : 1;
-  char* shared_secret;
-
+ const char* shared_secret;
+ const char* hostname;
+ modus_operandi_t* mop;
+  
   /* 
    *  As a first attempt we are not going to stream a real feed, but rather a sequence of images
    *  in an image pool
@@ -49,7 +51,7 @@ class stream_steg_t : public steg_t
 public:
   stream_steg_config_t *config;
   conn_t *conn;
-  char peer_dnsname[512];
+  //char peer_dnsname[512];
   
   size_t stream_id;
   size_t part_count;

@@ -41,6 +41,8 @@ class config_t
   bool ignore_socks_destination : 1;
   /* experimental trac ticket # 149 */
   const char *shared_secret;
+  /* if we want apache out the front of the server, then a hostname is a good idea */
+  const char *hostname;
   bool persist_mode;
   modus_operandi_t *mop;
   

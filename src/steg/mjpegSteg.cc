@@ -79,7 +79,7 @@ deconstruct_mjpeg_part_body(unsigned char *body, unsigned int body_length, unsig
 
 transmit_t
 stream_server_MJPEG_transmit (stream_steg_t *s, struct evbuffer *dest, struct evbuffer *source){
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   transmit_t retval = NOT_TRANSMITTED;
   
   unsigned char* data = NULL, *body = NULL;
@@ -398,6 +398,7 @@ stream_client_MJPEG_transmit (stream_steg_t * s, struct evbuffer *dest, struct e
   size_t datalen = 0;
   size_t outbufsz = 3*1024;
   const char accept[] = "\r\nAccept: */*";
+  const char *hostname = s->config->hostname;
 
   if (source2hex(source, source_length, &data, datalen) != RCODE_OK) {
     log_warn("source2hex called returned negative value");
@@ -410,10 +411,12 @@ stream_client_MJPEG_transmit (stream_steg_t * s, struct evbuffer *dest, struct e
     log_warn("outbuf allocation failed.");
     goto clean_up;
   }
-  
+
+  /*
   if (s->peer_dnsname[0] == '\0')
     lookup_peer_name_from_ip(s->conn->peername, s->peer_dnsname, sizeof(s->peer_dnsname));
-
+  */
+  
   // loop till success
   while (stream_gen_uri(outbuf, outbufsz, data, datalen) != RCODE_OK){ };
   
@@ -428,11 +431,19 @@ stream_client_MJPEG_transmit (stream_steg_t * s, struct evbuffer *dest, struct e
     goto clean_up;
   }
 
+  if (evbuffer_add(dest, hostname, strlen(hostname))   == -1) {
+    log_warn("evbuffer_add of hostname failed");
+    goto clean_up;
+  }
+
+  /*
   if (evbuffer_add(dest, s->peer_dnsname, strlen(s->peer_dnsname))   == -1) {
     log_warn("evbuffer_add of host failed");
     goto clean_up;
   }
+  */
 
+  
   if (evbuffer_add(dest, accept, strlen(accept))   == -1) {
     log_warn("evbuffer_add of accept failed");
     goto clean_up;

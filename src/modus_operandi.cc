@@ -27,7 +27,6 @@ using std::ifstream;
 //a secret for those that don't set their secret
 static const char* stegotorus_default_secret = "yadayadablahblah";
 
-
 down_address_t::down_address_t()
   : ok(false), ip(), steg()
 {
@@ -59,7 +58,9 @@ modus_operandi_t::modus_operandi_t()
      _disable_encryption(false), _disable_retransmit(false),
      _managed(false), _managed_method("stegotorus"),
      _daemon(false), _logmethod_set(false), _pid_file(),
-     _post_reflection(false), _jel_knobs(),
+     _post_reflection(false),
+     _hostname("localhost"),
+     _jel_knobs(),
      _traces_dir(STEG_TRACES_DIR),  //server or client tacks on the filename
      _images_dir(STEG_TRACES_DIR "images" "/usenix-corpus/1953x1301/q30"),
      _pdfs_dir(STEG_TRACES_DIR "pdfs"),
@@ -268,6 +269,9 @@ bool modus_operandi_t::process_line(string &line, int32_t lineno){
     bool val = set_bool(this->_post_reflection, rest, lineno);
     return val;
   }
+  else if(line_is(line, "hostname", rest)){
+    return set_string(this->_hostname, "hostname", rest, lineno);
+  }
 
   fprintf(stderr, "Did not understand line[%" PRId32"] = %s\n", lineno, line.c_str());
 
@@ -353,6 +357,17 @@ bool modus_operandi_t::set_scheme(const char *scheme_name, string& rest, int32_t
     fprintf(stderr, "Missing value %s on line %" PRId32"\n", scheme_name, lineno);
   }
 
+  return false;
+}
+
+bool modus_operandi_t::set_string(string& stringref, const char *name, string& rest, int32_t lineno){
+  rest = trim(rest);
+  if(!rest.empty()){
+    stringref = rest;
+    return true;
+  } else {
+    fprintf(stderr, "Missing value %s on line %" PRId32"\n", name, lineno);
+  }
   return false;
 }
 

@@ -105,6 +105,7 @@ http_client_RAW_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t *
   size_t data_length = 0;
   int addcode;
   const char *secret = s->config->shared_secret;
+  const char *hostname = s->config->hostname;
 
   log_debug("secret = %s", secret);
 
@@ -121,7 +122,7 @@ http_client_RAW_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t *
   }
 
   schemes_gen_post_request_path(s->config->pl, &path);
-  headers_length = construct_raw_headers(HTTP_POST, path, HTTP_FAKE_HOST, NULL, data_length, headers);
+  headers_length = construct_raw_headers(HTTP_POST, path, hostname, NULL, data_length, headers);
 
   if(headers_length == 0){
     log_warn("construct_raw_headers failed.");

@@ -459,7 +459,8 @@ decode_HTTP_body (char *j_data, char *data_buf, size_t jdlen, size_t data_buf_si
 
 transmit_t
 http_server_JS_transmit (http_steg_t * s, struct evbuffer *source, unsigned int content_type) {
-  // char *secret = s->config->shared_secret;
+  //const char *secret = s->config->shared_secret;
+  const char *hostname = s->config->hostname;
   payloads pl = s->config->pl;
   transmit_t retval = NOT_TRANSMITTED;
   conn_t *conn = s->conn;
@@ -497,9 +498,9 @@ http_server_JS_transmit (http_steg_t * s, struct evbuffer *source, unsigned int 
   }
 
   if (content_type == HTTP_CONTENT_JAVASCRIPT) {
-    rcode = construct_js_headers(HTTP_GET, NULL, NULL, NULL, body_length, headers, JAVASCRIPT_CONTENT_TYPE, s->accepts_gzip, headers_length);
+    rcode = construct_js_headers(HTTP_GET, NULL, hostname, NULL, body_length, headers, JAVASCRIPT_CONTENT_TYPE, s->accepts_gzip, headers_length);
   } else if (content_type == HTTP_CONTENT_HTML) {
-    rcode = construct_js_headers(HTTP_GET, NULL, NULL, NULL, body_length, headers, HTML_JAVASCRIPT_CONTENT_TYPE, s->accepts_gzip, headers_length);
+    rcode = construct_js_headers(HTTP_GET, NULL, hostname, NULL, body_length, headers, HTML_JAVASCRIPT_CONTENT_TYPE, s->accepts_gzip, headers_length);
   } else {
     log_warn("unsupported content_type (%d)", content_type);
     goto clean_up;
