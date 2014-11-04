@@ -603,7 +603,7 @@ http_server_PDF_transmit (http_steg_t * s, struct evbuffer *source) {
 
 recv_t 
 http_client_PDF_receive (http_steg_t * s, struct evbuffer *dest, char* headers, size_t headers_length, char* response, size_t response_length) {
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   recv_t retval = RECV_BAD;
   size_t data_length = 0, body_length = 0;
   unsigned char *data = NULL, *body = NULL;
@@ -789,7 +789,8 @@ http_client_PDF_post_transmit (http_steg_t * s, struct evbuffer *source, conn_t 
   size_t headers_length = 0;
   unsigned char *data = NULL, *body = NULL;
   char *path = NULL, *headers = NULL;
-  // char *secret = s->config->shared_secret;
+  //const char *secret = s->config->shared_secret;
+  const char *hostname = s->config->hostname;
   size_t body_length = 0;
   size_t data_length = 0;
 
@@ -813,7 +814,7 @@ http_client_PDF_post_transmit (http_steg_t * s, struct evbuffer *source, conn_t 
     goto clean_up;
   }
 
-  headers_length = construct_pdf_headers(HTTP_POST, path, HTTP_FAKE_HOST, NULL, body_length, headers);
+  headers_length = construct_pdf_headers(HTTP_POST, path, hostname, NULL, body_length, headers);
 
   if(headers_length == 0){
     log_warn("construct_pdf_headers failed.");
@@ -868,7 +869,7 @@ http_server_PDF_post_receive (http_steg_t * s, struct evbuffer *dest, char* head
   unsigned char *data = NULL, *body = NULL;
   size_t data_length = 0;
   size_t body_length = 0;
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
 
   /* the draconian flags we got going here... */
   log_debug("http_server_PDF_post_receive: request_length=%" PriSize_t " %s %p", request_length, secret, headers);

@@ -16,6 +16,9 @@
 using std::vector;
 using std::string;
 
+enum class StegData { TRACES, IMAGES, PDFS, STREAM };
+
+
 /* for parsing in chop.cc */
 class down_address_t {
   
@@ -69,7 +72,6 @@ class modus_operandi_t {
   void managed(bool val){  _managed = val; }
 
   string managed_method(void){ return _managed_method; }
-  void managed_method(string method){  _managed_method = method; }
 
   bool daemon(void){ return _daemon; }
 
@@ -78,10 +80,16 @@ class modus_operandi_t {
   string pid_file(void){ return _pid_file; }
 
   /* steganographic options */
-  bool post_reflection(void){ return _post_reflection; }
-  void post_reflection(bool val){  _post_reflection = val; }
-  
+  string hostname(void){ return _hostname; }
 
+  bool post_reflection(void){ return _post_reflection; }
+
+  jel_knobs_t* jel_knobs(void){ return  &_jel_knobs; }
+  
+  /* steg data paths */
+
+  string get_steg_datadir(StegData variety);
+  bool set_steg_datadir(StegData variety, string value);
   
   DISALLOW_COPY_AND_ASSIGN(modus_operandi_t);
  
@@ -110,8 +118,17 @@ class modus_operandi_t {
 
   /* steganographic options */
  private: bool _post_reflection;
+ private: string _hostname;
+  
 
  private: jel_knobs_t _jel_knobs;
+
+ private: string _traces_dir;
+ private: string _images_dir;
+ private: string _pdfs_dir;
+ private: string _stream_dir;
+
+  
 
 
   /* helper routines */
@@ -122,6 +139,8 @@ class modus_operandi_t {
  private: bool line_is(string&, const char *, string&);
 
  private: bool set_scheme(const char *, string&, int32_t);
+
+ private: bool set_string(string&, const char *, string&, int32_t);
   
  private: bool set_bool(bool&, string&, int32_t);
 

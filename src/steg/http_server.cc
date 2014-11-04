@@ -74,17 +74,40 @@ http_server_transmit (http_steg_t * s, struct evbuffer *source)
   return retval;
 }
 
+#define ST_POLICE_CLIENT
+
 recv_t
 http_server_receive (http_steg_t *s, struct evbuffer *dest, struct evbuffer* source, char *headers, size_t headers_length)
 {
   recv_t retval = RECV_BAD;
   http_method_t method = HTTP_UNKNOWN;
+  bool post_reflection = s->config->post_reflection;
 
 
 #ifdef ST_SHOWURI
   fprintf(stderr, "server headers: %s\n", headers);
 #endif
 
+
+  /* can be used to check that steg modules are doing the right thing with the hostname */
+#ifdef ST_POLICE_CLIENT
+  {
+    char* host = NULL;
+    size_t hostlen = 0;
+    rcode_t rcode = get_hostname(headers, headers_length, &host, hostlen);
+    const char *hostname = s->config->hostname;
+    
+    if(rcode == RCODE_OK){
+      fprintf(stderr, "hostname: %s\n", host);
+      assert(strcmp(host, hostname) == 0);
+    } else {
+      assert(0);
+    }
+    
+  }
+#endif
+
+  
   /* switch on method before anything else */
   method = get_method(headers, headers_length);
 
@@ -93,7 +116,7 @@ http_server_receive (http_steg_t *s, struct evbuffer *dest, struct evbuffer* sou
   case HTTP_POST: {
     /* http_server_receive_POST sets s->type */
     retval = http_server_receive_POST(s, dest, source, headers, headers_length);
-    if(!get_post_reflection() && retval == RECV_GOOD){
+    if(!post_reflection && retval == RECV_GOOD){
       s->type = HTTP_CONTENT_HTML;
     }
     break;

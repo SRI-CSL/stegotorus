@@ -1,6 +1,7 @@
 /* Copyright 2011, 2012, 2013 SRI International
  * See LICENSE for other credits and copying information
  */
+#include <string>
 
 #include "stream.h"
 
@@ -11,6 +12,7 @@
 #include "mrawSteg.h"
 #include "mjpegSteg.h"
 #include "strncasestr.h"
+#include "modus_operandi.h"
 #include "oshacks.h"
 
 static size_t obj_counter = 0;
@@ -38,18 +40,33 @@ stream_steg_config_t::stream_steg_config_t(config_t *cfg)
   : steg_config_t(cfg),
     is_clientside(cfg->mode != LSN_SIMPLE_SERVER),
     shared_secret(NULL),
+    mop(NULL),
     pool(NULL),
     capacity(0)
-{
 
-  if(cfg->shared_secret){
-    this->shared_secret = xstrdup(cfg->shared_secret);
-  } else {
-    this->shared_secret = xstrdup(STEGOTORUS_DEFAULT_SECRET);
+{
+  std::string stream_dir;
+
+  mop = cfg->mop;
+  
+  assert(mop != NULL);
+
+  stream_dir = cfg->mop->get_steg_datadir(StegData::STREAM);
+
+  //these are owned by the config_t object;
+  shared_secret = cfg->shared_secret;
+  hostname = cfg->hostname;
+
+  if(0){
+    log_warn("modus_operandi = %p", cfg->mop);
+    log_warn("shared_secret = %s", shared_secret); 
+    log_warn("hostname = %s", hostname); 
+    log_warn("stream_dir = %s", stream_dir.c_str()); 
   }
 
+
   if(!is_clientside){
-    this->pool = load_images(STEG_TRACES_DIR "images" "/stream", 100);
+    this->pool = load_images(stream_dir.c_str(), 100);
 
     //n.b.  pushing capacity to its limits just causes corruption.
     this->capacity = this->pool->the_images_min_payload / 2;
@@ -62,7 +79,6 @@ stream_steg_config_t::stream_steg_config_t(config_t *cfg)
 
 stream_steg_config_t::~stream_steg_config_t()
 {
-  free(this->shared_secret);
   free_image_pool(this->pool);
 }
 
@@ -83,7 +99,7 @@ stream_steg_t::stream_steg_t(stream_steg_config_t *cf, conn_t *cn)
     have_transmitted(false), have_received(false),
     transmit_lock(false), type(HTTP_CONTENT_NONE),  bytes_recvd(0)
 {
-  memset(peer_dnsname, 0, sizeof peer_dnsname);
+  //memset(peer_dnsname, 0, sizeof peer_dnsname);
   schemes_init();
   //server generates one; the client gets it in the headers (in the content-type)
   if(!config->is_clientside){

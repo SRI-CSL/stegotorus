@@ -269,6 +269,12 @@ get_content_type(char* headers, size_t headers_length, char** typep, size_t& vle
   return get_header_value(headers, headers_length, typep, vlength, HTTP_HEADERS_CONTENT_TYPE);
 }
   
+rcode_t
+get_hostname(char* headers, size_t headers_length, char** hostp, size_t& vlength)
+{
+  return get_header_value(headers, headers_length, hostp, vlength, HTTP_HEADERS_HOSTNAME);
+}
+  
 
 bool
 is_gzip_encoded(char *headers, size_t headers_length)

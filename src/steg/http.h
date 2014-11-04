@@ -11,30 +11,32 @@
 #include "steg.h"
 #include "rng.h"
 #include "payloads.h"
+#include "modus_operandi.h"
 
 #include <event2/buffer.h>
 
-/*
- * A useful switch for debugging a scheme. If it is true, then
- * a POST of X  will get a response of X. In other words one
- * could just do JPEG steg between the client and server by
- * turning off all the other schemes, and having post_reflection
- * be true.
- *
- */
 
-void set_post_reflection(bool val);
-bool get_post_reflection();
-
-//a secret for those that don't set their secret
-#define STEGOTORUS_DEFAULT_SECRET "yadayadablahblah"
 
 class http_steg_config_t : public steg_config_t
 {
 public:
   bool is_clientside : 1;
   payloads pl;
-  char* shared_secret;
+  const char* shared_secret;
+  const char* hostname;
+  modus_operandi_t* mop;
+
+  /*
+   * A useful switch for debugging a scheme. If it is true, then
+   * a POST of X  will get a response of X. In other words one
+   * could just do JPEG steg between the client and server by
+   * turning off all the other schemes, and having post_reflection
+   * be true. The default is false.
+   *
+   */
+  bool post_reflection;
+
+
 
   STEG_CONFIG_DECLARE_METHODS(http);
   
@@ -48,7 +50,9 @@ class http_steg_t : public steg_t
 public:
   http_steg_config_t *config;
   conn_t *conn;
-  char peer_dnsname[512];
+
+  //ian says: i am replacing this with the hostname read in from the configfile.
+  //char peer_dnsname[512];
   
   bool have_transmitted : 1;
   bool have_received : 1;

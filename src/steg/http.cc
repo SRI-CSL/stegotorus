@@ -14,29 +14,9 @@
 #include "jpegSteg.h"
 #include "oshacks.h"
 
-/*
- * A useful switch for debugging a scheme. If it is true, then
- * a POST of X  will get a response of X. In other words one
- * could just do JPEG steg between the client and server by
- * turning off all the other schemes, and having post_reflection
- * be true.
- *
- */
-
-static bool post_reflection = true;
-
-void set_post_reflection(bool val){
-  post_reflection = val;
-}
-
-bool get_post_reflection(){
-  return post_reflection;
-}
-
 
 /* define to show URI's */
 #undef ST_SHOWURI
-
 
 STEG_DEFINE_MODULE(http);
 
@@ -44,24 +24,42 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
   : steg_config_t(cfg),
     is_clientside(cfg->mode != LSN_SIMPLE_SERVER),
     pl(),
-    shared_secret(NULL)
-{
-  zero_payloads(pl);
-  if(cfg->shared_secret){
-    this->shared_secret = xstrdup(cfg->shared_secret);
-  }
-  if(!this->shared_secret){
-    this->shared_secret = xstrdup(STEGOTORUS_DEFAULT_SECRET);
-  }
+    shared_secret(NULL),
+    hostname(NULL),
+    mop(NULL),
+    post_reflection(false)
 
+{
+  string traces_dir, images_dir, pdfs_dir;
+
+  mop = cfg->mop;
+  
+  assert(mop != NULL);
+
+  post_reflection = mop->post_reflection();
+
+  //these are owned by the config_t object;
+  shared_secret = cfg->shared_secret;
+  hostname = cfg->hostname;
+    
+  traces_dir = cfg->mop->get_steg_datadir(StegData::TRACES);
+  images_dir = cfg->mop->get_steg_datadir(StegData::IMAGES);
+  pdfs_dir   = cfg->mop->get_steg_datadir(StegData::PDFS);
+
+
+  zero_payloads(pl);
+  
   //log_warn("shared_secret = %s", this->shared_secret);
+
   if (is_clientside) {
-    load_payloads(this->pl, STEG_TRACES_DIR "client.out");
+    traces_dir.append("client.out");
+    load_payloads(this->pl, traces_dir.c_str());
     /* if we want to do PDF POSTS, then we'll need to load the pdf payloads */
-    schemes_clientside_init(this->pl, STEG_TRACES_DIR "images" "/usenix-corpus/1953x1301/q30/", STEG_TRACES_DIR "pdfs/");
+    schemes_clientside_init(this->pl, images_dir.c_str(), pdfs_dir.c_str());
   } else {
-    load_payloads(this->pl, STEG_TRACES_DIR "server.out");
-    schemes_serverside_init(this->pl, STEG_TRACES_DIR "images" "/usenix-corpus/1953x1301/q30/", STEG_TRACES_DIR "pdfs/");
+    traces_dir.append("server.out");
+    load_payloads(this->pl, traces_dir.c_str());
+    schemes_serverside_init(this->pl, images_dir.c_str(), pdfs_dir.c_str());
   }
 
   /* useful when valgrinding to know when things have loaded */
@@ -71,7 +69,6 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
 http_steg_config_t::~http_steg_config_t()
 {
   free_payloads(this->pl);
-  free(this->shared_secret);
 }
 
 steg_t *
@@ -85,11 +82,9 @@ http_steg_t::http_steg_t(http_steg_config_t *cf, conn_t *cn)
     have_transmitted(false), have_received(false), persist_mode(false),
     transmit_lock(false), accepts_gzip(false), is_gzipped(false), type(HTTP_CONTENT_NONE),  bytes_recvd(0)
 {
-  memset(peer_dnsname, 0, sizeof peer_dnsname);
+  //memset(peer_dnsname, 0, sizeof peer_dnsname);
   persist_mode = cf->cfg->persist_mode;
   schemes_init();
-  //this is a no-op is they have been set in the config file
-  set_jel_preferences_to_default();
 }
 
 http_steg_t::~http_steg_t()
@@ -159,6 +154,7 @@ http_steg_t::transmit_room(size_t pref, size_t lo, size_t hi)
   if(error){
     log_debug("exiting (%p)->transmit_room: error = %d type = %d pref = %d, lo = %d, hi = %d returning %d", this->conn, error, type, (int)pref, (int)lo, (int)hi, (int)retval);
   }
+
   return retval; 
 }
 
@@ -176,7 +172,7 @@ http_steg_t::transmit(struct evbuffer *source)
   }
     
   transmit_lock = true;
-
+  
   if (config->is_clientside) {
     retval = http_client_transmit(this, source);
   }

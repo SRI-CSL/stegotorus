@@ -47,7 +47,7 @@ size_t construct_mraw_part_headers(stream_steg_t *s, size_t body_length, char* p
 
 transmit_t
 stream_server_MRAW_transmit (stream_steg_t *s, struct evbuffer *dest, struct evbuffer *source){
-  char *secret = s->config->shared_secret;
+  const char *secret = s->config->shared_secret;
   transmit_t retval = NOT_TRANSMITTED;
   
   //unsigned char* data = NULL;
@@ -296,6 +296,7 @@ stream_client_MRAW_transmit (stream_steg_t * s, struct evbuffer *dest, struct ev
   size_t datalen = 0;
   size_t outbufsz = 3*1024;
   const char accept[] = "\r\nAccept: */*";
+  const char *hostname = s->config->hostname;
 
   if (source2raw(source, source_length, &data, datalen) != RCODE_OK) {
     log_warn("source2raw called returned negative value");
@@ -308,10 +309,13 @@ stream_client_MRAW_transmit (stream_steg_t * s, struct evbuffer *dest, struct ev
     log_warn("outbuf allocation failed.");
     goto clean_up;
   }
-  
+
+  /*
   if (s->peer_dnsname[0] == '\0')
     lookup_peer_name_from_ip(s->conn->peername, s->peer_dnsname, sizeof(s->peer_dnsname));
+  */
 
+  
   // loop till success
   while (stream_gen_uri(outbuf, outbufsz, (char *)data, datalen) != RCODE_OK){ };
   
@@ -326,10 +330,17 @@ stream_client_MRAW_transmit (stream_steg_t * s, struct evbuffer *dest, struct ev
     goto clean_up;
   }
 
+  if (evbuffer_add(dest, hostname, strlen(hostname))   == -1) {
+    log_warn("evbuffer_add of hostname failed");
+    goto clean_up;
+  }
+
+  /*
   if (evbuffer_add(dest, s->peer_dnsname, strlen(s->peer_dnsname))   == -1) {
     log_warn("evbuffer_add of host failed");
     goto clean_up;
   }
+  */
 
   if (evbuffer_add(dest, accept, strlen(accept))   == -1) {
     log_warn("evbuffer_add of accept failed");

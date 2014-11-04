@@ -40,11 +40,15 @@ class config_t
   /* stopgap, see create_outbound_connections_socks */
   bool ignore_socks_destination : 1;
   /* experimental trac ticket # 149 */
-  char *shared_secret;
+  const char *shared_secret;
+  /* if we want apache out the front of the server, then a hostname is a good idea */
+  const char *hostname;
   bool persist_mode;
+  modus_operandi_t *mop;
   
  config_t() : 
-  base(0), mode((enum listen_mode)-1), ignore_socks_destination(false), shared_secret(NULL),  persist_mode(false){};
+  base(0), mode((enum listen_mode)-1), ignore_socks_destination(false), 
+    shared_secret(NULL),  persist_mode(false), mop(NULL) {};
 
   virtual ~config_t();
 
