@@ -460,18 +460,19 @@ static bool configure_from_knobs(jel_knobs_t* knobs, jel_config *jel, bool embed
   }
 
 
-
   /*
+
   int32_t seed = knobs->random_seed;   
 
-
-  if(images_debug){ log_warn("Setting frequency generation seed to %d\n", seed); }
-  if ( jel_setprop( jel, JEL_PROP_FREQ_SEED, seed ) != seed ){
-    log_warn("Failed to set frequency generation seed.\n");
-    return false;
+  if(seed != 0){
+    if(images_debug){ log_warn("Setting frequency generation seed to %d\n", seed); }
+    if ( jel_setprop( jel, JEL_PROP_FREQ_SEED, seed ) != seed ){
+      log_warn("Failed to set frequency generation seed.\n");
+      return false;
+    }
   }
-  */
 
+  */
 
 
   if(embedding){
