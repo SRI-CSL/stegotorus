@@ -10,6 +10,7 @@
 #include "schemes.h"
 #include "strncasestr.h"
 #include "oshacks.h"
+#include "modus_operandi.h"
 
 
 static const bool debug_headers = false;
@@ -29,19 +30,19 @@ construct_mjpeg_part_headers(stream_steg_t *s, size_t body_length, char* pheader
 
 static
 size_t
-construct_mjpeg_part_body(image_p image, unsigned char* data,  unsigned int data_length, unsigned char**bodyp);
+construct_mjpeg_part_body(jel_knobs_t* knobs, image_p image, unsigned char* data,  unsigned int data_length, unsigned char**bodyp);
 
 static
 size_t
-deconstruct_mjpeg_part_body(unsigned char *body, unsigned int body_length, unsigned char** datap);
+deconstruct_mjpeg_part_body(jel_knobs_t* knobs, unsigned char *body, unsigned int body_length, unsigned char** datap);
 
 
 
 static size_t 
-construct_mjpeg_part_body(image_p image, unsigned char* data,  unsigned int data_length, unsigned char**bodyp){
+construct_mjpeg_part_body(jel_knobs_t* knobs, image_p image, unsigned char* data,  unsigned int data_length, unsigned char**bodyp){
   if(bodyp != NULL){
     //note we have to embed the length since we have no side channel
-    image_p cover = embed_message_in_image(image, data, data_length, true);
+    image_p cover = embed_message_in_image(knobs, image, data, data_length);
     if(cover != NULL){
       size_t  body_length = (unsigned int)cover->size;
       *bodyp = cover->bytes;
@@ -58,13 +59,13 @@ construct_mjpeg_part_body(image_p image, unsigned char* data,  unsigned int data
 
 
 static size_t
-deconstruct_mjpeg_part_body(unsigned char *body, unsigned int body_length, unsigned char** datap){
+deconstruct_mjpeg_part_body(jel_knobs_t* knobs, unsigned char *body, unsigned int body_length, unsigned char** datap){
   size_t rval = 0;
   if(datap != NULL){
     unsigned char *message = NULL;
     int message_size = 0;
     //note we have are embedding the length since we have no side channel
-    message_size = extract_message(&message, message_size, body, body_length);
+    message_size = extract_message(knobs, &message, message_size, body, body_length);
     if(message != NULL){
       *datap = message;
       rval = (unsigned int) message_size;
@@ -80,6 +81,7 @@ deconstruct_mjpeg_part_body(unsigned char *body, unsigned int body_length, unsig
 transmit_t
 stream_server_MJPEG_transmit (stream_steg_t *s, struct evbuffer *dest, struct evbuffer *source){
   const char *secret = s->config->shared_secret;
+  jel_knobs_t* knobs = s->config->mop->jel_knobs();
   transmit_t retval = NOT_TRANSMITTED;
   
   unsigned char* data = NULL, *body = NULL;
@@ -150,7 +152,7 @@ stream_server_MJPEG_transmit (stream_steg_t *s, struct evbuffer *dest, struct ev
     goto clean_up;
   }
 
-  body_length = construct_mjpeg_part_body(cover, data, data_length, &body);
+  body_length = construct_mjpeg_part_body(knobs, cover, data, data_length, &body);
   
   if(body_length == 0){
     log_warn("construct_mjpeg_part_body failed to embed data");
@@ -210,6 +212,7 @@ recv_t
 stream_client_MJPEG_receive (stream_steg_t * s, struct evbuffer *dest, struct evbuffer *source)
 {
   recv_t retval = RECV_BAD;
+  jel_knobs_t* knobs = s->config->mop->jel_knobs();
 
   /* here to stop whining about unused variables sheesh! */
   log_debug("%p %p %p", s, dest, source);
@@ -273,7 +276,7 @@ stream_client_MJPEG_receive (stream_steg_t * s, struct evbuffer *dest, struct ev
   body = (unsigned char*)&response[pheaders_length];
   body_length = response_length - pheaders_length;
 
-  data_length = deconstruct_mjpeg_part_body(body, body_length, &data);
+  data_length = deconstruct_mjpeg_part_body(knobs, body, body_length, &data);
 
   if(traffic_write){
 

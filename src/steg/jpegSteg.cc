@@ -38,7 +38,7 @@ static size_t
 construct_jpeg_body(jel_knobs_t* knobs, image_pool_p pool, unsigned char* data,  unsigned int data_length, unsigned char**bodyp, int* message_lengthp);
 
 static size_t
-deconstruct_jpeg_body(unsigned char *body, unsigned int body_length, unsigned char** datap, int message_length);
+deconstruct_jpeg_body(jel_knobs_t* knobs, unsigned char *body, unsigned int body_length, unsigned char** datap, int message_length);
 
 static char*
 construct_jpeg_cookie(jel_knobs_t* knobs, int message_length, const char *secret);
@@ -163,7 +163,7 @@ deconstruct_jpeg_cookie_aux(char *cookie, size_t cookie_length, const char *secr
 static size_t 
 construct_jpeg_body(jel_knobs_t* knobs, image_pool_p pool, unsigned char* data,  unsigned int data_length, unsigned char**bodyp, int* message_lengthp){
   if((bodyp != NULL) && (message_lengthp != NULL)){
-    image_p cover = embed_message(pool, data, data_length,  knobs->embed_length);
+    image_p cover = embed_message(knobs, pool, data, data_length);
     if(cover != NULL){
       size_t  body_length = (unsigned int)cover->size;
       if(jpeg_debug){
@@ -184,12 +184,12 @@ construct_jpeg_body(jel_knobs_t* knobs, image_pool_p pool, unsigned char* data, 
 
 
 static size_t
-deconstruct_jpeg_body(unsigned char *body, unsigned int body_length, unsigned char** datap, int message_length){
+deconstruct_jpeg_body(jel_knobs_t* knobs, unsigned char *body, unsigned int body_length, unsigned char** datap, int message_length){
   size_t rval = 0;
   log_info("deconstruct_jpeg_body: message_length = %d", message_length);
   if(datap != NULL){
     unsigned char *message = NULL;
-    int message_size = extract_message(&message, message_length, body, body_length);
+    int message_size = extract_message(knobs, &message, message_length, body, body_length);
     if(message != NULL){
       *datap = message;
       rval = (unsigned int) message_size;
@@ -207,11 +207,11 @@ transmit_t
 http_server_JPEG_transmit (http_steg_t * s, struct evbuffer *source){
   image_pool_p pool = s->config->pl.pool;
   const char *secret = s->config->shared_secret;
+  jel_knobs_t* knobs = s->config->mop->jel_knobs();
   transmit_t retval = NOT_TRANSMITTED;
   conn_t *conn = s->conn;
   char *headers = NULL, *cookie = NULL;
   unsigned char* data = NULL, *body = NULL;
-  jel_knobs_t* knobs = s->config->mop->jel_knobs();
     
   if((source == NULL) || (conn == NULL)){
     log_warn("bad args");
@@ -292,6 +292,7 @@ recv_t
 http_client_JPEG_receive(http_steg_t * s, struct evbuffer *dest, char* headers, int headers_length, char* response, int response_length)
 {
   const char *secret = s->config->shared_secret;
+  jel_knobs_t* knobs = s->config->mop->jel_knobs();
   recv_t retval = RECV_BAD;
   unsigned int data_length = 0, body_length = 0;
   unsigned char *data = NULL, *body = NULL;
@@ -308,7 +309,7 @@ http_client_JPEG_receive(http_steg_t * s, struct evbuffer *dest, char* headers, 
 
   body = (unsigned char*)&response[headers_length];
   body_length = response_length - headers_length;
-  data_length =  deconstruct_jpeg_body(body, body_length, &data, message_length);
+  data_length =  deconstruct_jpeg_body(knobs, body, body_length, &data, message_length);
   
   if(jpeg_debug){
     log_warn("http_client_JPEG_receive: data_length = %d; body_length = %d; message_length = %d", (int)data_length,  (int)body_length, message_length);
@@ -326,16 +327,16 @@ transmit_t
 http_client_JPEG_post_transmit (http_steg_t *s, struct evbuffer *source, conn_t *conn){
   transmit_t retval = NOT_TRANSMITTED;
   image_pool_p pool = s->config->pl.pool;
+  const char *secret = s->config->shared_secret;
+  const char *hostname = s->config->hostname;
+  jel_knobs_t* knobs = s->config->mop->jel_knobs();
   struct evbuffer *dest = conn->outbound();
   size_t source_length = evbuffer_get_length(source);
   unsigned int headers_length = 0;
   unsigned char *data = NULL, *body = NULL;
   char *path = NULL, *headers = NULL, *cookie = NULL;
-  const char *secret = s->config->shared_secret;
-  const char *hostname = s->config->hostname;
   size_t body_length = 0,  data_length;
   int emessage_length = 0;
-  jel_knobs_t* knobs = s->config->mop->jel_knobs();
   
   if (source2raw(source, source_length, &data, data_length) != RCODE_OK) {
     log_warn("extracting raw to send failed");
@@ -412,6 +413,7 @@ http_server_JPEG_post_receive(http_steg_t * s, struct evbuffer *dest, char* head
   unsigned char *data = NULL, *body = NULL; 
   unsigned int data_length = 0, body_length = 0; 
   const char *secret = s->config->shared_secret;
+  jel_knobs_t* knobs = s->config->mop->jel_knobs();
   char *cookie = NULL;
   size_t cookie_length;
   int message_length = 0;
@@ -425,7 +427,7 @@ http_server_JPEG_post_receive(http_steg_t * s, struct evbuffer *dest, char* head
 
   body = (unsigned char*)&request[headers_length];
   body_length = request_length - headers_length;
-  data_length =  deconstruct_jpeg_body(body, body_length, &data, message_length);
+  data_length =  deconstruct_jpeg_body(knobs, body, body_length, &data, message_length);
 
 
   if(jpeg_debug){

@@ -184,6 +184,9 @@ bool modus_operandi_t::process_line(string &line, int32_t lineno){
   else if(line_is(line, "jel-embed-length", rest)){
     return set_bool(this->_jel_knobs.embed_length, rest, lineno);
   }
+  else if(line_is(line, "jel-use-ecc", rest)){
+    return set_bool(this->_jel_knobs.use_ecc, rest, lineno);
+  }
   else if(line_is(line, "jel-ecc-blocklen", rest)){
     return set_int(this->_jel_knobs.ecc_blocklen, rest, lineno);
   }

@@ -8,6 +8,9 @@
 
 #include <stddef.h>
 
+#include "jel_knobs.h"
+
+
 typedef struct image *image_p;
 
 typedef struct image {
@@ -36,14 +39,14 @@ image_p get_image(image_pool_p pool, int min_capacity);
 
 image_p get_image_by_index(image_pool_p pool, int index);
 
-int extract_message(unsigned char** messagep, int message_length, unsigned char* jpeg_data, unsigned int jpeg_data_length);
+int extract_message(jel_knobs_t* knobs, unsigned char** messagep, int message_length, unsigned char* jpeg_data, unsigned int jpeg_data_length);
 
 image_pool_p load_images(const char* path, int maxcount);
 
 int free_image_pool(image_pool_p pool);
 
-image_p embed_message_in_image(image_p cover, unsigned char* message, int message_length, bool embed_length);
+image_p embed_message_in_image(jel_knobs_t* knobs, image_p cover, unsigned char* message, int message_length);
 
-image_p embed_message(image_pool_p pool, unsigned char* message, int message_length, bool embed_length);
+image_p embed_message(jel_knobs_t* knobs, image_pool_p pool, unsigned char* message, int message_length);
 
 #endif
