@@ -98,7 +98,7 @@ http_server_receive (http_steg_t *s, struct evbuffer *dest, struct evbuffer* sou
     const char *hostname = s->config->hostname;
     
     if(rcode == RCODE_OK){
-      fprintf(stderr, "hostname: %s\n", host);
+      //      fprintf(stderr, "hostname: %s\n", host);
       assert(strcmp(host, hostname) == 0);
     } else {
       assert(0);

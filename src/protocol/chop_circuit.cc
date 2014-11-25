@@ -428,7 +428,7 @@ chop_circuit_t::find_best_to_retransmit(chop_conn_t *conn, evbuffer* block) {
 	      TRACEPACKETS_TIMESTAMP, this->serial, this->recv_queue.window(),
 	      (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
 	      (unsigned long)el.hdr.seqno(), (unsigned long)el.hdr.dlen(),
-               (unsigned long)el.hdr.plen(), opname(el.hdr.opcode(), fallbackbuf), (unsigned long)el.hdr.ackno());
+               (unsigned long)el.hdr.plen(), opname(el.hdr.opcode(), fallbackbuf), (unsigned long) recv_queue.window()-1);
     return 0;
   }
 
@@ -565,7 +565,7 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
   // The transmit queue takes ownership of 'data' at this point.
   uint32_t seqno = tx_queue.enqueue(f, data, p);
 
-  uint32_t ackno = tx_queue.next_ackno();
+  uint32_t ackno = recv_queue.window() - 1;
 
 
   struct evbuffer *block = evbuffer_new();

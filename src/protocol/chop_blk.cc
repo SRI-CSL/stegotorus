@@ -99,7 +99,7 @@ header::header(const uint8_t *ciphr, ecb_decryptor &dc, uint32_t window)
   uint32_t s_ = ((uint32_t(clear[0]) << 16) | (uint32_t(clear[1]) <<  8) |
                  (uint32_t(clear[2])));
 
-  uint8_t a_  = ((uint32_t(clear[3]) << 16) | (uint32_t(clear[4]) <<  8) |
+  uint32_t a_  = ((uint32_t(clear[3]) << 16) | (uint32_t(clear[4]) <<  8) |
                  (uint32_t(clear[5]) ));
 
   uint16_t d_ = ((uint16_t(clear[6]) <<  8) | (uint16_t(clear[7])));
