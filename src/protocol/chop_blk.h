@@ -28,20 +28,30 @@ struct gcm_encryptor;
 namespace chop_blk
 {
 
-/* Packets on the wire have a 16-byte header, consisting of a 32-bit
-   sequence number, two 16-bit length fields ("D" and "P"), an 8-bit
-   opcode ("F"), an 8-bit retransmit count ("R"), and a 48-bit check
+/* Packets on the wire have a 16-byte header, consisting of a 24-bit
+   sequence number, a 24 bit acknowledge field, two 16-bit length 
+   fields ("D" and "P"), an 8-bit opcode ("F"), and a 40-bit check
    field.  All numbers in this header are serialized in network byte
    order.
+
+   old layout:
 
    | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F |
    |Sequence Number|   D   |   P   | F | R |       Check           |
 
-   The header is encrypted with AES in ECB mode: this is safe because
-   the header is exactly one AES block long, the sequence number +
-   retransmit count is never repeated, the header-encryption key is
+   newlayout:
+
+   | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F |
+   |Seq No     | Ack No    |   D   |   P   | F |      Check        |
+
+
+   Ian says: this "rationalization" needs to be revisited.
+
+   The header is encrypted with AES in ECB mode: this may be safe
+   because the header is exactly one AES block long, the sequence 
+   number is never repeated, the header-encryption key is
    not used for anything else, and the high 24 bits of the sequence
-   number, plus the check field, constitute an 72-bit MAC.  The
+   number, plus the check field, constitute an 64-bit MAC.  The
    receiver maintains a 256-element sliding window of acceptable
    sequence numbers, which begins one after the highest sequence
    number so far _processed_ (not received).  If the sequence number
@@ -51,6 +61,9 @@ namespace chop_blk
    number are therefore less than one in 2^72.  (This is weak compared
    to our default security parameter of 2^128, but should be sufficient
    for the protection of this small amount of data.)
+
+   Ian says: not sure if the rest is fantasy or not. I saw no rekeying
+   code.
 
    Unlike TCP, our sequence numbers always start at zero on a new (or
    freshly rekeyed) circuit, and increment by one per _block_, not per
@@ -82,7 +95,7 @@ enum opcode_t
   op_DAT = 1,       // Pass data section along to upstream
   op_FIN = 2,       // No further transmissions (pass data along if any)
   op_RST = 3,       // Protocol error, close circuit now
-  op_ACK = 4,       // Acknowledge data received
+  op_SACK = 4,      // Special acknowledgement packet
   op_RESERVED0 = 5, // 4 -- 127 reserved for future definition
   op_STEG0 = 128,   // 128 -- 255 reserved for steganography modules
   op_LAST = 255
@@ -111,20 +124,21 @@ opcode_valid(unsigned int o)
 class header
 {
   uint32_t s;
+  uint32_t a;
   uint16_t d;
   uint16_t p;
   opcode_t f : 8;
-  uint8_t  r;
 
 public:
-  header() : s(0), d(0), p(0), f(op_XXX), r(0) {}
+  header() : s(0), a(0), d(0), p(0), f(op_XXX) {}
 
-  header(uint32_t s_, uint16_t d_, uint16_t p_, opcode_t f_)
-    : s(0), d(0), p(0), f(op_XXX), r(0)
+  header(uint32_t s_, uint32_t a_, uint16_t d_, uint16_t p_, opcode_t f_)
+    : s(0), a(0), d(0), p(0), f(op_XXX)
   {
     if (!opcode_valid(f_))
       return;
     s = s_;
+    a = a_;
     d = d_;
     p = p_;
     f = f_;
@@ -139,14 +153,23 @@ public:
   // Returns false if incrementing the retransmit count has caused it
   // to wrap around to zero.  If this happens, we have to stop trying
   // to retransmit the block.
-  bool prepare_retransmit(uint16_t new_plen);
+  bool prepare_retransmit(uint32_t ackno, uint16_t new_plen);
+
+  //set the ack no
+  void set_ackno(uint32_t a_)
+  {
+    //could check for loss here
+    a = a_;
+  }
+
 
   // Accessors.
   uint32_t seqno()  const { return s; }
+  uint32_t ackno()  const { return a; }
   size_t   dlen()   const { return d; }
   size_t   plen()   const { return p; }
   opcode_t opcode() const { return f; }
-  uint8_t  rcount() const { return r; }
+
 
   size_t total_len() const
   {
@@ -317,6 +340,12 @@ struct transmit_elt
    uint32_t next_seqno() const { return next_to_send; }
 
    /**
+    * Return the ack number to use for the next block to be
+    * transmitted, used in trace packets.
+    */
+   uint32_t next_ackno() const { return next_to_ack; }
+
+   /**
     * True if the transmit queue is full, i.e. we cannot transmit
     * anything right now.  (This does not necessarily mean that all
     * 256 slots are occupied; selective acknowledgment may have
@@ -360,16 +389,16 @@ struct transmit_elt
     * among other reasons, if the block in question has been
     * retransmitted too many times.
     */
-   int transmit(uint32_t seqno,
+   int transmit(uint32_t seqno, uint32_t next_to_recv,
                 evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc);
 
-   int transmit(transmit_elt &elt,
+   int transmit(transmit_elt &elt,uint32_t next_to_recv,
                 evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc);
 
-   int retransmit(uint32_t seqno, uint16_t new_padding,
+   int retransmit(uint32_t seqno, uint32_t next_to_recv, uint16_t new_padding,
                   evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc);
 
-   int retransmit(transmit_elt &elt, uint16_t new_padding,
+   int retransmit(transmit_elt &elt, uint32_t next_to_recv, uint16_t new_padding,
                   evbuffer *output, ecb_encryptor &ec, gcm_encryptor &gc);
 
    /**
@@ -380,6 +409,12 @@ struct transmit_elt
     * Consumes DATA regardless of success or failure.
     */
    int process_ack(evbuffer *data);
+
+   /**
+    * Process the acknowledgment contained in the received header.
+    * Returns -1 for failure or 0 for success.
+    */
+   int process_ack(uint32_t ackno);
 
    /**
     * Iteration over the transmit queue produces each block which has

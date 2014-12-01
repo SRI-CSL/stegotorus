@@ -74,6 +74,8 @@ http_server_transmit (http_steg_t * s, struct evbuffer *source)
   return retval;
 }
 
+//#define ST_POLICE_CLIENT
+
 recv_t
 http_server_receive (http_steg_t *s, struct evbuffer *dest, struct evbuffer* source, char *headers, size_t headers_length)
 {

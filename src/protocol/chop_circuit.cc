@@ -270,7 +270,7 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
 
   size_t blocksize = 0, p = 0, d = 0;
   chop_conn_t *conn = NULL;
-  uint32_t seqno;
+  uint32_t seqno, ackno;
   char fallbackbuf[4];
   struct evbuffer *block;
 
@@ -307,6 +307,10 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
   // The transmit queue takes ownership of 'payload' at this point.
   seqno = tx_queue.enqueue(f, payload, p);
 
+  //for trace packets only
+  ackno = recv_queue.window() - 1;
+
+
   // Not having a connection to use right now does not constitute a failure.
   if (!conn) {
     log_debug(conn, "NO CONNECTION so returning 0");
@@ -320,7 +324,7 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
     return -1;
   }
 
-  if (tx_queue.transmit(seqno, block, *send_hdr_crypt, *send_crypt)) {
+  if (tx_queue.transmit(seqno,recv_queue.window(), block, *send_hdr_crypt, *send_crypt)) {
     log_warn(conn, "encryption failure for block %u", seqno);
     evbuffer_free(block);
     return -1;
@@ -337,11 +341,11 @@ chop_circuit_t::send_special(opcode_t f, struct evbuffer *payload)
             seqno, (unsigned long)d, (unsigned long)p, opname(f, fallbackbuf));
 
   if (config->trace_packets)
-    log_warn(conn, "T:%.4f: ckt %u <ntp %u outq %lu>: send special %lu <d=%lu p=%lu f=%s>",
-            TRACEPACKETS_TIMESTAMP, this->serial, this->recv_queue.window(),
-            (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
-            (unsigned long)seqno, (unsigned long)d,
-            (unsigned long)p, opname(f, fallbackbuf));
+    log_warn(conn, "T:%.4f: ckt %u <ntp %u outq %lu>: send special %lu <d=%lu p=%lu f=%s> ack %lu",
+             TRACEPACKETS_TIMESTAMP, this->serial, this->recv_queue.window(),
+             (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
+             (unsigned long)seqno, (unsigned long)d,
+             (unsigned long)p, opname(f, fallbackbuf), (unsigned long)ackno);
 
   if (f == op_FIN) {
     sent_fin = true;
@@ -406,7 +410,7 @@ chop_circuit_t::find_best_to_retransmit(chop_conn_t *conn, evbuffer* block) {
   transmit_queue::iterator i = tx_queue.begin(); 
   transmit_elt& el = i.peek(best_so_far);
 
-  if (!tx_queue.retransmit(el, padding, block, *send_hdr_crypt, *send_crypt)) {
+  if (!tx_queue.retransmit(el, recv_queue.window(), padding, block, *send_hdr_crypt, *send_crypt)) {
     char fallbackbuf[4];
     
     if (conn->send_block(block, this)) {
@@ -421,11 +425,11 @@ chop_circuit_t::find_best_to_retransmit(chop_conn_t *conn, evbuffer* block) {
 	      opname(el.hdr.opcode(), fallbackbuf));
     
     if (config->trace_packets)
-      log_warn(conn, "T:%.4f: ckt %u <ntp %u outq %lu>: resend2 %lu <d=%lu p=%lu f=%s>",
+      log_warn(conn, "T:%.4f: ckt %u <ntp %u outq %lu>: resend2 %lu <d=%lu p=%lu f=%s> ack %lu",
 	      TRACEPACKETS_TIMESTAMP, this->serial, this->recv_queue.window(),
 	      (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
 	      (unsigned long)el.hdr.seqno(), (unsigned long)el.hdr.dlen(),
-	      (unsigned long)el.hdr.plen(), opname(el.hdr.opcode(), fallbackbuf));
+               (unsigned long)el.hdr.plen(), opname(el.hdr.opcode(), fallbackbuf), (unsigned long) recv_queue.window()-1);
     return 0;
   }
 
@@ -462,7 +466,6 @@ chop_circuit_t::send_targeted(chop_conn_t *conn)
       return 0;
     
     // rval < 0... nothing to retransmit, so fall through and send something
-
   }
 
 
@@ -483,8 +486,6 @@ chop_circuit_t::send_targeted(chop_conn_t *conn)
   }
 
   size_t room = conn->steg->transmit_room(avail, lo, hi);
-
-  
 
   if (room == 0) {
     //we are probably in receive mode and not ready to send yet on this connection
@@ -567,13 +568,14 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
   // The transmit queue takes ownership of 'data' at this point.
   uint32_t seqno = tx_queue.enqueue(f, data, p);
 
-
+  uint32_t ackno = recv_queue.window() - 1;
+  
   struct evbuffer *block = evbuffer_new();
   if (!block) {
     log_warn(conn, "memory allocation failure");
     return -1;
   }
-  if (tx_queue.transmit(seqno, block, *send_hdr_crypt, *send_crypt)) {
+  if (tx_queue.transmit(seqno, recv_queue.window(), block, *send_hdr_crypt, *send_crypt)) {
     log_warn(conn, "encryption failure for block %u", seqno);
     evbuffer_free(block);
     return -1;
@@ -591,12 +593,12 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
 
   if (config->trace_packets)
     log_warn(conn,
-            "T:%.4f: ckt %u <ntp %u outq %lu>: send %lu <d=%lu p=%lu f=%s>",
-            TRACEPACKETS_TIMESTAMP, this->serial,
-            this->recv_queue.window(),
-            (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
-            (unsigned long)seqno, (unsigned long)d, (unsigned long)p,
-            opname(f, fallbackbuf));
+            "T:%.4f: ckt %u <ntp %u outq %lu>: send %lu <d=%lu p=%lu f=%s> ack %lu",
+             TRACEPACKETS_TIMESTAMP, this->serial,
+             this->recv_queue.window(),
+             (unsigned long)evbuffer_get_length(bufferevent_get_input(this->up_buffer)),
+             (unsigned long)seqno, (unsigned long)d, (unsigned long)p,
+             opname(f, fallbackbuf), (unsigned long)ackno);
 
   if (f == op_FIN) {
     sent_fin = true;
@@ -719,9 +721,16 @@ chop_circuit_t::pick_connection(size_t desired, size_t minimum,
   }
 }
 
+
+
 int
-chop_circuit_t::maybe_send_ack()
+chop_circuit_t::maybe_send_SACK()
 {
+
+  // disabled for now
+  return 0;
+
+
   // Send acks aggressively if we are experiencing dead cycles *and*
   // there are blocks on the receive queue.  Otherwise, send them only
   // every 64 blocks received.  This heuristic will probably need
@@ -737,6 +746,8 @@ chop_circuit_t::maybe_send_ack()
     return 0;
   }
 
+  
+
   if ((recv_queue.window() - last_acked < 15) && (rand() % 3 != 0))
       return 0;
 
@@ -750,22 +761,26 @@ chop_circuit_t::maybe_send_ack()
     debug_ack_contents(ackp, ackdump);
     log_debug(this, "sending ACK: %s", ackdump.str().c_str());
   }
-  return send_special(op_ACK, ackp);
+  return send_special(op_SACK, ackp);
 }
 
 
 
-
-// Some blocks are to be processed immediately upon receipt.
 int
-chop_circuit_t::recv_block(uint32_t seqno, opcode_t op, evbuffer *data)
+chop_circuit_t::recv_block(uint32_t seqno, uint32_t ackno, opcode_t op, evbuffer *data)
 {
 
+  // regardless of packet type, free blocks based on the ack field in the header
+  // It is possible additional blocks might be freed, if its a special acknowledgement
+  // (SACK) packet
 
+  tx_queue.process_ack(ackno);
+  
   switch (op) {
   case op_DAT:
     //case op_FIN:
     // No special handling required.
+    //process the ackno
     goto insert;
 
   case op_FIN:
@@ -776,7 +791,7 @@ chop_circuit_t::recv_block(uint32_t seqno, opcode_t op, evbuffer *data)
     evbuffer_free(data);
     goto zap;
 
-  case op_ACK:
+  case op_SACK:
     if (config->trace_packets) {
       std::ostringstream ackdump;
       debug_ack_contents(data, ackdump);
@@ -805,6 +820,8 @@ chop_circuit_t::recv_block(uint32_t seqno, opcode_t op, evbuffer *data)
   // Block has been consumed; fill in the hole in the receive queue.
   op = op_DAT;
   data = evbuffer_new();
+
+  
 
  insert:
   if (initialized == false && seqno > 10) {
@@ -886,7 +903,7 @@ chop_circuit_t::process_queue()
   if (sent_error)
     return -1;
 
-  if (maybe_send_ack())
+  if (maybe_send_SACK())
     return -1;
 
   // It may have become possible to send queued data or a FIN.

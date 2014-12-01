@@ -43,6 +43,7 @@ stream_steg_config_t::stream_steg_config_t(config_t *cfg)
     mop(NULL),
     pool(NULL),
     capacity(0)
+
 {
   std::string stream_dir;
 
