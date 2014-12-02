@@ -40,6 +40,7 @@ stream_steg_config_t::stream_steg_config_t(config_t *cfg)
   : steg_config_t(cfg),
     is_clientside(cfg->mode != LSN_SIMPLE_SERVER),
     shared_secret(NULL),
+    hostname(NULL),
     mop(NULL),
     pool(NULL),
     capacity(0)
