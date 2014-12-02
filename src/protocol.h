@@ -48,7 +48,7 @@ class config_t
   
  config_t() : 
   base(0), mode((enum listen_mode)-1), ignore_socks_destination(false), 
-    shared_secret(NULL),  persist_mode(false), mop(NULL) {};
+    shared_secret(NULL),  hostname(NULL), persist_mode(false), mop(NULL) {};
 
   virtual ~config_t();
 

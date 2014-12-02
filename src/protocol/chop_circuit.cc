@@ -568,8 +568,8 @@ chop_circuit_t::send_targeted(chop_conn_t *conn, size_t d, size_t p, opcode_t f,
   // The transmit queue takes ownership of 'data' at this point.
   uint32_t seqno = tx_queue.enqueue(f, data, p);
 
-  uint24_t ackno = recv_queue.window() - 1;
-  log_warn("ackno = %d", ackno);
+  uint32_t ackno = recv_queue.window() - 1;
+  //log_warn("ackno = %d", ackno);
 
 
   struct evbuffer *block = evbuffer_new();
