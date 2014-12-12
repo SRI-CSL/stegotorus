@@ -3,6 +3,8 @@ StegoTorus
 
 Welcome to StegoTorus by SRI International (http://www.sri.com)
 
+The StegoTorus website  is here: http://sri-csl.github.io/stegotorus
+
 What is this?
 -------------
 
