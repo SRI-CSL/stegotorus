@@ -44,6 +44,34 @@ We use g++ but clang++ should also work fine (after it is installed).
 >make
 
 
+5. Testing StegoTorus
+
+
+Install the prerequisites
+
+>sudo apt-get install tor
+
+Make sure you can bootstrap tor:
+
+>cd stegotorus
+
+>tor -f data/torrc
+
+If this bootstrap OK, then kill tor, and remove the cache:
+
+>rm -rf ~/.tor
+
+Now in two windows start stegotorus
+
+>./modus_operandi/start-client-vm06
+
+and then in the other window, start tor, note we are using a different
+configuration file.
+
+>tor -f data/stegotorrc
+
+This should bootstrap but will no doubt be slower than bootstrapping
+directly.
 
 
 
