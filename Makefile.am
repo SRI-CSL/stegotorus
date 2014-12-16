@@ -108,7 +108,7 @@ pgen_fake_SOURCES = \
 	src/rng.cc \
 	src/base64.cc
 
-pgen_fake_LDADD = $(libcrypto_LIBS) $(libz_LIBS) $(ws32_LIBS) $(LIBS)
+pgen_fake_LDADD = $(libcrypto_LIBS) $(libz_LIBS) $(ws32_LIBS)
 
 # pgen_pcap is only built if we have libpcap
 if HAVE_PCAP
