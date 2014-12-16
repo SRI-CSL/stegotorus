@@ -1,0 +1,14 @@
+# Site navigation links
+
+- title: Quick Start
+  url: /quick/
+  excerpt: "Quick commands to run a StegoTorus client."
+
+- title: User Guide
+  url: /userguide/
+  excerpt: "Documentation on building and running StegoTorus as a client and server."
+
+- title: About
+  url: /about/
+  excerpt: "About StegoTorus and relevant papers."
+
