@@ -3,14 +3,14 @@ StegoTorus
 
 Welcome to StegoTorus by SRI International (http://www.sri.com)
 
-The StegoTorus website  is here: http://sri-csl.github.io/stegotorus
+The StegoTorus website  is: http://sri-csl.github.io/stegotorus
 
 What is this?
 -------------
 
 Please see *"StegoTorus: A Camouflage Proxy for the Tor Anonymity System"*
 for a detailed explanation on what this tool does and how it does it.
-A copy can be found at (https://github.com/SRI-CSL/Stegotorus/blob/master/doc/stegotorus.pdf?raw=true)
+A copy can be found at https://github.com/SRI-CSL/Stegotorus/blob/master/doc/stegotorus.pdf?raw=true
 
 General Compilation
 -------------------
