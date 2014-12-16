@@ -1,0 +1,81 @@
+Using Jekyll with GitHub Pages
+==============================
+
+What is Jekyll?
+"Jekyll is, at its core, a text transformation engine. The concept behind the system is this: you give it text written in your favorite markup language, be that Markdown, Textile, or just plain HTML, and it churns that through a layout or series of layout files. Throughout that process you can tweak how you want the site URLs to look, what data gets displayed in the layout, and more. This is all done through editing text files, and the static web site is the final product."
+
+
+On Mac OS X 10.8, I did:
+
+1. Install a newer Ruby
+
+$> ruby -v
+ruby 1.8.7 (2012-02-08 patchlevel 358) [universal-darwin12.0]
+
+Ruby had to be upgraded to at least 1.9.3, and so I chose 'rbenv' as the manager of different Ruby builds:
+
+$> brew update
+$> brew install rbenv ruby-build
+
+$> eval "$(rbenv init -)"  # also added this to my ~/.bashrc
+
+$> rbenv install 2.1.5
+$> rbenv global 2.1.5
+$> rbenv rehash
+$> rbenv versions
+
+$> ruby -v
+ruby 2.1.5p273 (2014-11-13 revision 48405) [x86_64-darwin12.0]
+
+
+2. Install bundler
+
+$> gem install bundler
+Fetching: bundler-1.7.9.gem (100%)
+Successfully installed bundler-1.7.9
+Parsing documentation for bundler-1.7.9
+Installing ri documentation for bundler-1.7.9
+Done installing documentation for bundler after 4 seconds
+1 gem installed
+
+$> rbenv rehash
+$> which bundle
+/Users/linda/.rbenv/shims/bundle
+
+
+3. Gemfile installation
+
+Switch to the gh-pages branch and run install:
+
+$> cd stegotorus
+$> git status
+On branch gh-pages
+
+$> more Gemfile
+source 'https://rubygems.org'
+gem 'github-pages'
+
+$> bundle install
+[...]
+
+
+4. Running Jekyll
+
+When making changes to your sources, you can match the process on the GitHub Pages server using:
+
+$> bundle exec jekyll serve
+
+Your site should be available at http://localhost:4000
+
+
+5. Updating Jekyll
+
+To keep Jekyll up to date, you can run the command:
+
+$> bundle update 
+
+
+6. Links
+
+* [https://help.github.com/articles/using-jekyll-with-pages/]
+* [http://jekyllrb.com/docs/usage/]
