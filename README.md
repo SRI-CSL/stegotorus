@@ -17,7 +17,7 @@ When editing the content for this site, you can preview things by changing the `
 ```
 $> bundle exec jekyll serve
 ```
-Point your browser or reload [http://localhost:4000].
+Point your browser or reload [http://localhost:4000](http://localhost:4000).
 
 ## Notable features
 
