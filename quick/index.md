@@ -5,8 +5,19 @@ image:
   feature: home-feature.png
 ---
 
-How to run a StegoTorus client...
+
+
+Assuming that you are in the top-level source directory.  Then, open two command line windows.
+
+In the first one, start StegoTorus client:
 
 ```
-$> stegotorus --config-file=
+$> ./stegotorus --config-file=modus_operandi/client-vm06-config.conf
 ```
+
+In the second one, bootstrap Tor:
+
+```
+$> tor -f data/stegotorrc
+```
+

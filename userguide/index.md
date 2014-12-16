@@ -8,7 +8,13 @@ image:
 
 
 
-  This is the main documentation for building, installing, and running StegoTorus.
+<nav class="toc" markdown="1">
+* Auto generated table of contents
+{:toc}
+</nav>
+
+This is the main documentation for building, installing, and running StegoTorus.
+
 
 Building StegoTorus
 -------------------
@@ -16,6 +22,7 @@ Building StegoTorus
   * Building on [Linux](https://github.com/SRI-CSL/stegotorus/blob/master/README_linux.md)
   * Building on [Mac OS X](https://github.com/SRI-CSL/stegotorus/blob/master/README_darwin.md)
   * Building on [Windows](https://github.com/SRI-CSL/stegotorus/blob/master/README_windows.md)
+
 
 Running StegoTorus
 ------------------
