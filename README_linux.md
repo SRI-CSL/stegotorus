@@ -46,6 +46,15 @@ We use g++ but clang++ should also work fine (after it is installed).
 >./configure --enable-silent-rules
 >make
   ```
+  
+    Optionally, build a Debian package and use it to install StegoTorus system-wide:
+  
+  ```
+>make deb
+>sudo dpkg -i ../saferdefiance-stegotorus_0.1_amd64.deb
+>which stegotorus
+/usr/sbin/stegotorus
+  ```
 
   5. Testing StegoTorus
 
