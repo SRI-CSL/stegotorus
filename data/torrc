@@ -1,0 +1,12 @@
+SocksPort 9060 # what port to open for local application connections
+SocksListenAddress 127.0.0.1 # accept connections only from localhost
+
+SafeLogging 0
+
+CircuitBuildTimeout 600
+
+#vm06 (this is used)
+Bridge 128.18.9.71:8888
+
+UseBridges 1
+
