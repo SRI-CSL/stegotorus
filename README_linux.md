@@ -26,16 +26,7 @@ We use g++ but clang++ should also work fine (after it is installed).
 >autoreconf -i
 >./configure --enable-silent-rules
 >make
-  ```
-  
-    Either install with Make:
-  ```
 >sudo make install
-  ```
-    or build the Debian package:
-  ```
->dpkg-buildpackage -b -us -uc
->sudo dpkg -i ../saferdefiance-jel_0.1_amd64.deb
   ```
 
   4. Build StegoTorus
@@ -47,15 +38,6 @@ We use g++ but clang++ should also work fine (after it is installed).
 >make
   ```
   
-    Optionally, build a Debian package and use it to install StegoTorus system-wide:
-  
-  ```
->make deb
->sudo dpkg -i ../saferdefiance-stegotorus_0.1_amd64.deb
->which stegotorus
-/usr/sbin/stegotorus
-  ```
-
   5. Testing StegoTorus
 
     1. Install the prerequisites
