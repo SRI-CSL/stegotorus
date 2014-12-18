@@ -415,6 +415,14 @@ string modus_operandi_t::get_steg_datadir(StegData variety){
 bool modus_operandi_t::set_steg_datadir(StegData variety, string value){ 
   //we could check that they exist if we wanted too.
   value = trim(value);
+
+  //we remove any trailing, for ease, and consistency.
+  size_t length = value.length(); 
+  if(length > 0 && ('/' == value[length - 1])){
+    value = value.substr(0, length - 1);
+  }
+  
+  
   switch(variety){
   case StegData::TRACES: _traces_dir = value; return true;
   case StegData::IMAGES: _images_dir = value; return true;

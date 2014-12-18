@@ -449,6 +449,7 @@ static void set_jel_log( jel_config *jel ){
     if (ret == JEL_ERR_CANTOPENLOG) {
       log_warn("set_jel_log: can't open %s!", images_log);
       jel->logger = stderr;
+      exit(0);
     }
   }
 }

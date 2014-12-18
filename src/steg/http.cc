@@ -52,12 +52,12 @@ http_steg_config_t::http_steg_config_t(config_t *cfg)
   //log_warn("shared_secret = %s", this->shared_secret);
 
   if (is_clientside) {
-    traces_dir.append("client.out");
+    traces_dir.append("/client.out");
     load_payloads(this->pl, traces_dir.c_str());
     /* if we want to do PDF POSTS, then we'll need to load the pdf payloads */
     schemes_clientside_init(this->pl, images_dir.c_str(), pdfs_dir.c_str());
   } else {
-    traces_dir.append("server.out");
+    traces_dir.append("/server.out");
     load_payloads(this->pl, traces_dir.c_str());
     schemes_serverside_init(this->pl, images_dir.c_str(), pdfs_dir.c_str());
   }
