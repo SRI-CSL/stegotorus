@@ -7,7 +7,9 @@ image:
 
 
 
-Assuming that you are in the top-level source directory.  Then, open two command line windows.
+Assuming that you are in the top-level source directory.
+
+Then, open two command line windows.
 
 In the first one, start StegoTorus client:
 
@@ -19,5 +21,11 @@ In the second one, bootstrap Tor:
 
 ```
 $> tor -f data/stegotorrc
+```
+
+Once the bootstrapping has reached 100% (this may take a moment), you can test the connection using a third command line window:
+
+```
+$> curl --socks4a 127.0.0.1:9060 https://check.torproject.org | grep Congrat
 ```
 
