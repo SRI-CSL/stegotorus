@@ -95,7 +95,7 @@ $> ./stegotorus --config-file=/tmp/stegotorus-client.conf
     
 	trace-packets      1
 	persist-mode       1
-	#shared-secret      bingoBedbug
+	shared-secret      bingoBedbug
 	disable-encryption 0
 	disable-retransmit 0
     
@@ -232,7 +232,7 @@ The server log is then found at `/tmp/stego.log` as configured.
     
     trace-packets      1
     persist-mode       1
-    #shared-secret      bingoBedbug
+    shared-secret      bingoBedbug
     disable-encryption 0
     disable-retransmit 0
     
