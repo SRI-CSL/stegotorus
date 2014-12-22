@@ -1,0 +1,7 @@
+#!/bin/bash
+
+CONFIG="modus_operandi/server-vm05-config.conf"
+
+rm -rvf /tmp/stego.*
+rm -vf nohup.out
+nohup ./stegotorus --config-file=${CONFIG} &
