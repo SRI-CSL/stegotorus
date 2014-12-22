@@ -49,7 +49,7 @@ The client process needs to be configured to talk to a known StegoTorus server. 
 $> ./stegotorus --config-file=modus_operandi/client-vm06-config.conf
 ```
 
-Or, to use vm05, create a [configuration file](/userguide/stegotorus-client.conf "example client configuration for vm05") like seen below.  You may adjust the settings as you see fit.  Assuming that this configuration file is at `/tmp/stegotorus-client.conf`, start stegotorus from the source tree:
+Or, to use vm05, create a [configuration file](https://github.com/SRI-CSL/stegotorus/raw/gh-pages/userguide/stegotorus-client.conf "example client configuration for vm05") like seen below.  You may adjust the settings as you see fit.  Assuming that this configuration file is at `/tmp/stegotorus-client.conf`, start stegotorus from the source tree:
 
 ```
 $> ./stegotorus --config-file=/tmp/stegotorus-client.conf
@@ -187,7 +187,7 @@ Or, point your browser to a proxy at the local SOCKS port `127.0.0.1:9060`.  In 
 
 > _**CAVEAT:** To run a StegoTorus server, you will need a much larger set of trace files than what is currently distributed with our source code._
 
-For hosting a StegoTorus server at `128.18.9.70:8080`, we use the following [configuration file](/userguide/stegotorus-server.conf "example server configuration").  It assumes that the server traces are located under `/usr/share/stegotorus/traces/`. The server may or may not be located on the same host as the Tor bridge that is used as an entry point into the Tor network.  In the example here, we are using the Tor bridge running on the same host.
+For hosting a StegoTorus server at `128.18.9.70:8080`, we use the following [configuration file](https://github.com/SRI-CSL/stegotorus/raw/gh-pages/userguide/stegotorus-server.conf "example server configuration").  It assumes that the server traces are located under `/usr/share/stegotorus/traces/`. The server may or may not be located on the same host as the Tor bridge that is used as an entry point into the Tor network.  In the example here, we are using the Tor bridge running on the same host.
 
 If this configuration file is located at `/tmp/stegotorus-server.conf` then we start the server using:
 
