@@ -54,7 +54,16 @@ Overide apple's deprecation of openssl:
 >make
   ```
 
+If this produces linking errors (e.g., on Mac OS X `10.8.5`) one can also use `clang` as the compiler:
 
+  ```
+>CC=clang CXX=clang++ ./configure
+...
+checking for gcc... clang
+...
+>make
+  ```
+  
   5. Testing StegoTorus
 
     1. Install the prerequisites
