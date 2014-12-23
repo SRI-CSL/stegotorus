@@ -386,8 +386,16 @@ log_open(const char *filename)
 void
 log_close()
 {
-  if (log_dest && log_dest != stderr)
+  if (log_dest && log_dest != stderr){
     fclose(log_dest);
+    log_dest = NULL;
+  }
+
+  if(log_path != NULL){
+    free((void *)log_path);
+    log_path = NULL;
+  }
+  
 }
 
 const char* get_log_path(){
