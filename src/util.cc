@@ -364,12 +364,15 @@ log_open(const char *filename)
   if (!filename)
     return -1;
 
-  log_dest = fopen(filename, "a");
-  if (!log_dest)
-    return -1;
-
-  log_path = filename;
   
+  log_dest = fopen(filename, "a");
+  if (!log_dest){
+    return -1;
+  }
+    
+
+  log_path = xstrdup(filename);
+
   setvbuf(log_dest, 0, _IONBF, 0);
   fputs("\nBrand new log:\n", log_dest);
 
@@ -400,6 +403,7 @@ const char* get_log_path(){
 int
 log_set_method(int method, const char *filename)
 {
+
   log_close();
   
   switch (method) {

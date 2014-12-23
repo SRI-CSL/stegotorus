@@ -126,9 +126,10 @@ image_pool_p load_images(const char* path, int maxcount){
     while((closedir(dirp) == -1) && (errno  == EINTR)){ };
   }
 
+  log_warn("load_images: count now %d", pool->the_images_offset);
+
   /* need to do something about multiple connections loading multiple images; does this happen with payloads too? */
   if(images_debug){
-    log_warn("load_images: count now %d", pool->the_images_offset);
     log_warn("load_images: min capacity: %d", pool->the_images_min_payload);
     log_warn("load_images: max capacity: %d", pool->the_images_max_payload);
   }
