@@ -385,7 +385,7 @@ embed_message_aux(jel_knobs_t* knobs, image_p cover, unsigned char* message, int
    } else {
      int  errcode = jel_error_code(jel);    /* Returns the most recent error code. */
      char *errstr = jel_error_string(jel);  /* Returns the most recent error string. */
-     log_warn("jel: bytes_embedded = %d message_length = %d (%d %s)", bytes_embedded, message_length, errcode, errstr);
+     log_warn("jel: bytes_embedded = %d message_length = %d (%d %s) %s", bytes_embedded, message_length, errcode, errstr, cover->path);
    }
    jel_close_log(jel);
    jel_free(jel);
