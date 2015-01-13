@@ -67,9 +67,9 @@ get_http_status_code(char *headers, size_t headers_length){
 http_method_t
 get_method (char *headers, size_t /* headers_length */)
 {
-  if(!strncasecmp(headers, "GET ",  sizeof("GET ") - 1)){ return HTTP_GET; }
-  if(!strncasecmp(headers, "HEAD ", sizeof("HEAD ") - 1)){ return HTTP_HEAD; }
-  if(!strncasecmp(headers, "POST ", sizeof("POST ") - 1)){ return HTTP_POST; }
+  if(!strncmp(headers, "GET ",  sizeof("GET ") - 1)){ return HTTP_GET; }
+  if(!strncmp(headers, "HEAD ", sizeof("HEAD ") - 1)){ return HTTP_HEAD; }
+  if(!strncmp(headers, "POST ", sizeof("POST ") - 1)){ return HTTP_POST; }
   return HTTP_UNKNOWN;
 }
 
