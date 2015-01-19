@@ -1,0 +1,5 @@
+This is the code that generates the client.out and
+server.out files
+
+Usage: ./payload_gen -r <filename.pcap> "tcp and port 80"
+       ./payload_gen -d <directory> "tcp and port 80"
