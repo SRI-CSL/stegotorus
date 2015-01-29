@@ -1,3 +1,20 @@
+1) Create .pcap files:
+
+  a) Clear cache of browser and quit browser
+  b) Start packet capture:
+    $> sudo tcpdump -s 0 -i eth0 -w <file.pcap> tcp port http
+  c) Start browser and perform web browsing for a while
+  d) Close browser and then CTRL-C packet capture
+
+2) Build payload generator:
+
+$> sudo apt-get install libpcap-dev
+$> make
+
+3) Use the -r option below and the .pcap file from step 1) to generate
+  - client.out
+  - server.out
+
 This is the code that generates the client.out and
 server.out files
 

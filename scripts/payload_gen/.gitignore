@@ -1,0 +1,7 @@
+# build product
+payload_gen
+
+# results from running the binary
+client.out
+server.out
+autom.out
