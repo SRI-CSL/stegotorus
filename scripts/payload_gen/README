@@ -1,3 +1,5 @@
+We have tested this on Ubuntu 12.04 -- it failed to build on Mac OS X 10.8.5.
+
 1) Create .pcap files:
 
   a) Clear cache of browser and quit browser
@@ -14,9 +16,6 @@ $> make
 3) Use the -r option below and the .pcap file from step 1) to generate
   - client.out
   - server.out
-
-This is the code that generates the client.out and
-server.out files
 
 Usage: ./payload_gen -r <filename.pcap> "tcp and port 80"
        ./payload_gen -d <directory> "tcp and port 80"
