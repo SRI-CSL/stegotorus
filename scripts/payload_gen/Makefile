@@ -21,7 +21,7 @@ payload_gen:	$(PAYLOAD_GEN_OBJ)
 
 
 clean:
-	rm -f *.o core* payload_gen *~
+	rm -fv *.o core* payload_gen *~ client.out server.out
 
 
 
