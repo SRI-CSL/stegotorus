@@ -185,7 +185,7 @@ Or, point your browser to a proxy at the local SOCKS port `127.0.0.1:9060`.  In 
 
 ### As a Server
 
-> _**CAVEAT:** To run a StegoTorus server, you will need a much larger set of trace files than what is currently distributed with our source code._
+> _**CAVEAT:** To run a StegoTorus server, you will need a much larger set of trace files than what is currently distributed with our source code.  To generate the bare minimum of `server.out` from a file with suitable packet capture, refer to the section ["Generating Payload"](#generating-payload) below._
 
 For hosting a StegoTorus server at `128.18.9.70:8080`, we use the following [configuration file](https://github.com/SRI-CSL/stegotorus/raw/gh-pages/userguide/stegotorus-server.conf "example server configuration").  It assumes that the server traces are located under `/usr/share/stegotorus/traces/`. The server may or may not be located on the same host as the Tor bridge that is used as an entry point into the Tor network.  In the example here, we are using the Tor bridge running on the same host.
 
@@ -270,3 +270,43 @@ The server log is then found at `/tmp/stego.log` as configured.
 
 ---
 
+
+Generating Payload
+------------------
+
+We have added a small utility to generate your own payload if you want to use a different trace file `client.out` for HTTP steganography or if you wish to run your own StegoTorus server and need a `server.out` file to get going.
+
+Find the source code under [https://github.com/SRI-CSL/stegotorus/tree/master/scripts/payload_gen](https://github.com/SRI-CSL/stegotorus/tree/master/scripts/payload_gen).  Currently, this has been tested under Ubuntu 12.04 but it did not compile under Mac OS X 10.8 for us.
+
+Assuming you are in the top-level directory of the StegoTorus source tree:
+
+```
+$> cd scripts/payload_gen
+```
+
+Before building successfully, you may have to install the developer libraries for `libpcap` like this:
+
+```
+$> sudo apt-get install libpcap-dev
+```
+
+The build:
+
+```
+$> make
+```
+
+If building was successful, you need to obtain a file with packet captures of a web browsing session.  To generate this file yourself, you can do the following:
+
+1. Clear cache of your browser and quit
+1. Start packet capture: `$> sudo tcpdump -s 0 -i eth0 -w <file.pcap> tcp port http`
+1. Start browser and perform web browsing for a while
+1. Close browser and then `CTRL-C` packet capture
+
+Finally, run the binary built above on the now generated PCAP file:
+
+```
+$> ./payload_gen -r <file.pcap> "tcp and port 80"
+```
+
+This will generate 2 files `client.out` and `server.out`.  Note that you will probably not be able to support PDF or image steganography with only these HTTP traces.
