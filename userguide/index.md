@@ -274,14 +274,18 @@ The server log is then found at `/tmp/stego.log` as configured.
 Generating Payload
 ------------------
 
+The client and server configuration allows fine-tuning of steganography schemes employed.  Here we give some pointers on generating the appropriate cover traffic for both sides.
+
+### HTTP Steganography
+
 We have added a small utility to generate your own payload if you want to use a different trace file `client.out` for HTTP steganography or if you wish to run your own StegoTorus server and need a `server.out` file to get going.
 
-Find the source code under [https://github.com/SRI-CSL/stegotorus/tree/master/scripts/payload_gen](https://github.com/SRI-CSL/stegotorus/tree/master/scripts/payload_gen).  Currently, this has been tested under Ubuntu 12.04 but it did not compile under Mac OS X 10.8 for us.
+Find the source code under [https://github.com/SRI-CSL/stegotorus/tree/master/payload_gen](https://github.com/SRI-CSL/stegotorus/tree/master/payload_gen).  Currently, this has been tested under Ubuntu 12.04 but it did not run under Mac OS X.
 
 Assuming you are in the top-level directory of the StegoTorus source tree:
 
 ```
-$> cd scripts/payload_gen
+$> cd payload_gen
 ```
 
 Before building successfully, you may have to install the developer libraries for `libpcap` like this:
@@ -300,7 +304,7 @@ If building was successful, you need to obtain a file with packet captures of a 
 
 1. Clear cache of your browser and quit
 1. Start packet capture: `$> sudo tcpdump -s 0 -i eth0 -w <file.pcap> tcp port http`
-1. Start browser and perform web browsing for a while
+1. Start browser and perform web browsing for a while; if you want to employ the PDF scheme, make sure to click on some PDF files
 1. Close browser and then `CTRL-C` packet capture
 
 Finally, run the binary built above on the now generated PCAP file:
@@ -309,4 +313,19 @@ Finally, run the binary built above on the now generated PCAP file:
 $> ./payload_gen -r <file.pcap> "tcp and port 80"
 ```
 
-This will generate 2 files `client.out` and `server.out`.  Note that you will probably not be able to support PDF or image steganography with only these HTTP traces.
+This will generate 2 files `client.out` and `server.out`.  Note that you will not be able to support full PDF or image steganography with only these HTTP traces.
+
+### PDF Steganography
+
+For PDF steganography, StegoTorus obtains the pdf (cover) payloads from `server.out` for PDF GET, and from the `pdfs-dir` directory in your configuration file for PDF POST.
+
+In other words, the output of the `payload_gen` tool above should be good for providing cover payloads for PDF GET.  For PDF POST, you can crawl the Internet to download some pdf files and put them in the `pdfs-dir` directory.
+
+Not all pdf's can be used by StegoTorus (e.g., pdf's involving features such as incremental updates cannot be parsed), but it would skip the ones that it cannot use.
+
+### Image Steganography
+
+We use JPG image files for cover traffic.  Simply crawl the web and download JPG files to the `images-dir` directory specified in your configuration file.
+
+For using streams as cover, you would again save images to the `stream-dir` location as specified by the configuration file.  But these images need to be called 0.jpg through 99.jpg as they mimic a webcam. They should all be the same quality. If you have a web cam, use that to generate these image files.
+
