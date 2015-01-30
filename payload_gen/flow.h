@@ -17,7 +17,6 @@
 #include <signal.h>
 #include <time.h>
 #include <dirent.h>
-// #define __USE_BSD
 #include <netinet/ip.h>
 #define __FAVOR_BSD
 #include <netinet/udp.h>
@@ -39,7 +38,6 @@ typedef unsigned char uchar;
 #define CONN_DATA_REPLY 2  /* payload packet sent by server */
 
 #define RECV_MTU 64000
-// #define PKT_MTU 1500
 #define MAX_CHAIN_LEN 4000
 
 
@@ -56,7 +54,6 @@ typedef unsigned char uchar;
 
 
 typedef struct msg {
-  // u_char buf[PKT_MTU];
   u_char *buf;
   ushort len;
   uint32_t seqno;

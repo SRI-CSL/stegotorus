@@ -61,31 +61,12 @@ int write_inflate_msg(flow* f, FILE* file, pentry_header* ph) {
   if (f->msg_buf_chain == NULL)
     return CHAIN_EMPTY;
 
-  if (strstr((char*) m->buf, "Transfer-Encoding: chunked")) {
+  if (strnstr((char*) m->buf, "Transfer-Encoding: chunked", m->len)) {
     return MSG_INVALID; 
-    /*    hdr_end = (u_char*) strstr((char*) m->buf, "\r\n\r\n");
-	  if (hdr_end == NULL) {
-	     fprintf(stderr, "hdr too long?? \n");
-	     return MSG_INVALID;
-	  }
-
-
-	  hdr_end = (u_char*) strstr(hdr_end + 4, "\r\n");
-
-	  if (hdr_end == NULL) 
-             return MSG_INVALID;
-
-
-
-	  hdr_end += 2;
-
-
-    */
     // we don't handle this yet....need a loop to unzip chunks individually...
-    
   }
   else {
-   hdr_end = (u_char*) strstr((char*) m->buf, "\r\n\r\n");
+   hdr_end = (u_char*) strnstr((char*) m->buf, "\r\n\r\n", m->len);
    if (hdr_end == NULL) {
      fprintf(stderr, "hdr too long?? \n");
      return MSG_INVALID;
@@ -121,12 +102,6 @@ int write_inflate_msg(flow* f, FILE* file, pentry_header* ph) {
     m = m->next_msg;
   }
 
-  /*  printf("HELLO: ");
-      for (i=0; i < 15; i++)
-      printf("%x ", buf[i]);
-      printf("\n");
-  */
-
   outlen = gzInflate(buf, f->msg_len_so_far - hdrlen, outbuf, f->msg_len_so_far*20);
 
   if (outlen < 0) {
@@ -161,7 +136,7 @@ int write_msg_chains(flow* f, FILE* file, pentry_header* ph) {
   if (m == NULL)
     return  CHAIN_EMPTY;
 
-  if (strstr((char*) m->buf, "200 OK") && strstr((char*) m->buf, "Content-Encoding: gzip"))
+  if (strnstr((char*) m->buf, "200 OK",  m->len) && strnstr((char*)m->buf, "Content-Encoding: gzip",  m->len))
     return write_inflate_msg(f, file, ph);
 
   fwrite(ph, sizeof(pentry_header), 1, file);
@@ -222,9 +197,9 @@ int add_msg_to_flow(flow* f, u_char* buf, uint seq, int len) {
   if (m == NULL) {
     m = malloc(sizeof(msg));
     bzero(m, sizeof(msg));
-    m->buf = (u_char *)malloc(len);
+    m->buf = (u_char *)calloc(len, sizeof(char));
     if (!(m->buf)) {
-        fprintf(stderr, "add_msg_to_flow: malloc failed; abort\n");
+        fprintf(stderr, "add_msg_to_flow: calloc failed; abort\n");
         exit(1);
     }
     memcpy(m->buf, buf, len);
@@ -260,9 +235,9 @@ int add_msg_to_flow(flow* f, u_char* buf, uint seq, int len) {
       if (p == NULL) {
 	p = malloc(sizeof(msg));
 	bzero(p, sizeof(msg));
-        p->buf = (u_char *)malloc(len);
+        p->buf = (u_char *)calloc(len, sizeof(char));
         if (!(p->buf)) {
-            fprintf(stderr, "add_msg_to_flow: malloc failed; abort\n");
+            fprintf(stderr, "add_msg_to_flow: calloc failed; abort\n");
             exit(1);
         }
 	memcpy(p->buf, buf, len);
@@ -277,9 +252,9 @@ int add_msg_to_flow(flow* f, u_char* buf, uint seq, int len) {
       
       n = malloc(sizeof(msg));
       bzero(n, sizeof(msg));
-      n->buf = (u_char *)malloc(len);
+      n->buf = (u_char *)calloc(len, sizeof(char));
       if (!(n->buf)) {
-          fprintf(stderr, "add_msg_to_flow: malloc failed; abort\n");
+          fprintf(stderr, "add_msg_to_flow: calloc failed; abort\n");
           exit(1);
       }
       memcpy(n->buf, buf, len);
@@ -295,9 +270,9 @@ int add_msg_to_flow(flow* f, u_char* buf, uint seq, int len) {
 
   m = malloc(sizeof(msg));
   bzero(m, sizeof(msg));
-  m->buf = (u_char *)malloc(len);
+  m->buf = (u_char *)calloc(len, sizeof(char));
   if (!(m->buf)) {
-      fprintf(stderr, "add_msg_to_flow: malloc failed; abort\n");
+      fprintf(stderr, "add_msg_to_flow: calloc failed; abort\n");
       exit(1);
   }
   memcpy(m->buf, buf, len);
