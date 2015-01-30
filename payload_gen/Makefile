@@ -3,7 +3,7 @@ CFLAGS = -Wall  -g  -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 LDLIBS =  -lpcap -lz 
 
 
-PAYLOAD_GEN_SRC = payload_gen.c msg.c flow.c 
+PAYLOAD_GEN_SRC = payload_gen.c msg.c flow.c ../src/strncasestr.cc
 
 PAYLOAD_GEN_OBJ = payload_gen.o msg.o flow.o 
 

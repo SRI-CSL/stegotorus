@@ -1,6 +1,6 @@
 #include "flow.h"
 #include "zpack.c"
-
+#include "../src/strncasestr.h"
 
 
 void free_msg_chain(flow* f) {
