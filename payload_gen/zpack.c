@@ -295,7 +295,7 @@ int gzInflate(char *source, int slen, char *dest, int dlen)
 
 
 
-
+/*
 
 static int gzDeflate(char* start, off_t insz, char *buf, off_t outsz, time_t mtime) {
   unsigned char *c;
@@ -309,7 +309,7 @@ static int gzDeflate(char* start, off_t insz, char *buf, off_t outsz, time_t mti
   if (Z_OK != deflateInit2(&z,
 			   Z_DEFAULT_COMPRESSION,
 			   Z_DEFLATED,
-			   -MAX_WBITS,  /* supress zlib-header */
+        -MAX_WBITS,  // supress zlib-header 
 			   8,
 			   Z_DEFAULT_STRATEGY)) {
     return -1;
@@ -320,19 +320,19 @@ static int gzDeflate(char* start, off_t insz, char *buf, off_t outsz, time_t mti
   z.total_in = 0;
 
 
-  /* write gzip header */
+  // write gzip header 
 
   c = (unsigned char *) buf;
   c[0] = 0x1f;
   c[1] = 0x8b;
   c[2] = Z_DEFLATED;
-  c[3] = 0; /* options */
+  c[3] = 0; 
   c[4] = (mtime >>  0) & 0xff;
   c[5] = (mtime >>  8) & 0xff;
   c[6] = (mtime >> 16) & 0xff;
   c[7] = (mtime >> 24) & 0xff;
-  c[8] = 0x00; /* extra flags */
-  c[9] = 0x03; /* UNIX */
+  c[8] = 0x00; 
+  c[9] = 0x03; 
 
   z.next_out = c + 10;
   z.avail_out = outsz - 10 - 8;
@@ -368,7 +368,7 @@ static int gzDeflate(char* start, off_t insz, char *buf, off_t outsz, time_t mti
 }
 
 
-
+*/
 
 
 /* compress or decompress from stdin to stdout */
