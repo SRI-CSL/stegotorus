@@ -1,4 +1,4 @@
-We have tested this on Ubuntu 12.04 -- it failed to build on Mac OS X 10.8.5.
+We have tested this on Ubuntu 12.04.  Note: it currently fails to run on Mac OS X.
 
 1) Create .pcap files:
 
