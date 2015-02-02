@@ -1,4 +1,4 @@
-We have tested this on Ubuntu 12.04.  Note: it currently fails to run on Mac OS X.
+We have tested this on Ubuntu 12.04 and on Mac OS X 10.8.5
 
 1) Create .pcap files:
 
@@ -17,5 +17,6 @@ $> make
   - client.out
   - server.out
 
-Usage: ./payload_gen -r <filename.pcap> "tcp and port 80"
-       ./payload_gen -d <directory> "tcp and port 80"
+Usage: ./payload_gen -r <filename.pcap> "tcp and port 80" 
+       ./payload_gen -d <directory> "tcp and port 80"     # not sure what this does?
+
