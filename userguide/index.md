@@ -280,7 +280,7 @@ The client and server configuration allows fine-tuning of steganography schemes 
 
 We have added a small utility to generate your own payload if you want to use a different trace file `client.out` for HTTP steganography or if you wish to run your own StegoTorus server and need a `server.out` file to get going.
 
-Find the source code under [https://github.com/SRI-CSL/stegotorus/tree/master/payload_gen](https://github.com/SRI-CSL/stegotorus/tree/master/payload_gen).  Currently, this has been tested under Ubuntu 12.04 but it did not run under Mac OS X.
+Find the source code under [https://github.com/SRI-CSL/stegotorus/tree/master/payload_gen](https://github.com/SRI-CSL/stegotorus/tree/master/payload_gen).  Currently, this has been tested under Ubuntu 12.04 and Mac OS X 10.8.5 -- newer version may work, too.
 
 Assuming you are in the top-level directory of the StegoTorus source tree:
 
