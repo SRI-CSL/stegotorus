@@ -18,7 +18,7 @@ install:
   - ./configure --enable-silent-rules
   - make clean
   - make
-  - make install
+  - sudo make install
 
 
 #tests
