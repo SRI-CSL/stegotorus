@@ -11,7 +11,7 @@ RETURN="$?"
 
 
 if [ "${RETURN}" != "0" ]; then
-    echo "Building jel failed!"
+    echo "Building stegotorus failed!"
     exit 1
 fi
 
