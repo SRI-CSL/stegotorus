@@ -1,0 +1,29 @@
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+
+#dependencies
+install:
+  - sudo apt-get update
+  - sudo apt-get install git autoconf libtool libjpeg-dev
+  - export STEGOTORUS_HOME=`pwd`
+  - mkdir build
+  - cd build
+  - git clone https://github.com/SRI-CSL/jel.git
+  - cd jel
+  - autoreconf -i
+  - ./configure --enable-silent-rules
+  - make clean
+  - make
+  - make install
+
+
+#tests
+script:
+  - ${STEGOTORUS_HOME}/.travis/build.sh
+
+  
+

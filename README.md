@@ -1,3 +1,7 @@
+
+[![Build Status](https://travis-ci.org/SRI-CSL/stegotorus.svg?branch=master)](https://travis-ci.org/SRI-CSL/stegotorus)
+
+
 StegoTorus
 ==========
 
