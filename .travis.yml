@@ -19,7 +19,6 @@ install:
   - make clean
   - make
   - sudo make install
-  - cd ..
 
 #tests
 script:
