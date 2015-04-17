@@ -123,7 +123,7 @@ image_pool_p load_images(const char* path, int maxcount){
  clean_up:
 
   if(dirp != NULL){
-    while((closedir(dirp) == -1) && (errno  == EINTR)){ };
+    closedir(dirp);
   }
 
   log_warn("load_images: count now %d", pool->the_images_offset);
@@ -166,6 +166,9 @@ static bool file2bytes(const char* path, unsigned char* bytes, size_t bytes_want
   }
   /* not very signal proof */
   bytes_read = fread(bytes, sizeof(unsigned char), bytes_wanted, f);
+
+  fclose(f);
+  
   if(bytes_read < bytes_wanted){
     log_warn("load_image fread(%s) only read %" PriSize_t " of %" PriSize_t " bytes", path, bytes_read, bytes_wanted);
     return false;

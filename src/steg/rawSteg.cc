@@ -20,16 +20,19 @@ http_server_RAW_transmit (http_steg_t * s, struct evbuffer *source){
   conn_t *conn = s->conn;
   char* headers = NULL;
   unsigned char* data = NULL;
-  size_t source_length = evbuffer_get_length(source);
   size_t data_length = 0, headers_length = 0;
   int addcode = 0;
-  struct evbuffer *dest = conn->outbound();
+  struct evbuffer *dest;
+  size_t source_length;
 
   if((source == NULL) || (conn == NULL)){
     log_warn("bad args");
     goto clean_up;
-  } 
+  }
   
+  dest = conn->outbound();
+  source_length = evbuffer_get_length(source);
+ 
   headers = (char *)xzalloc(MAX_HEADERS_SIZE);
 
   if(headers == NULL){

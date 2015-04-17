@@ -82,7 +82,7 @@ bool
 chop_config_t::init(int n_options, const char *const *options, modus_operandi_t &mo)
 {
   const char* defport;
-  const char* cmode;
+  char* cmode;
   int listen_up;
   int i;
 
@@ -102,9 +102,9 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
   }
 
   if(mo.is_ok()){
-    cmode = mo.mode().c_str();
+    cmode = xstrdup(mo.mode().c_str());
   } else {
-    cmode = options[0];
+    cmode = xstrdup(options[0]);
   }
 
   //less adhoc way of passing information down to the steg modules.
@@ -186,8 +186,9 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
     if(!mo.shared_secret().empty()){
       shared_secret = xstrdup(mo.shared_secret().c_str());
     }
+
     
-    return true;
+    goto success;
   } 
   
   while (options[1][0] == '-') {
@@ -249,7 +250,7 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
     steg_targets.push_back(steg_new(options[i], this));
   }
 
-  return true;
+  goto success;
     
  usage:
   log_warn("chop syntax:\n"
@@ -264,6 +265,11 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
            "\tstegotorus chop server 127.0.0.1:9005 "
            "192.168.1.99:11253 http 192.168.1.99:11254 skype");
   return false;
+
+ success:
+  free(cmode);
+  return true;
+  
 }
 
 

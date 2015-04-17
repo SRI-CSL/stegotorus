@@ -181,7 +181,7 @@ MKEMParams::~MKEMParams()
   if (n1)   BN_free((BIGNUM *)n1);
   if (maxu) BN_free((BIGNUM *)maxu);
 
-  if (c0)   EC_GROUP_free((EC_GROUP *)c1);
+  if (c0)   EC_GROUP_free((EC_GROUP *)c0);
   if (c1)   EC_GROUP_free((EC_GROUP *)c1);
 
   if (g0)   EC_POINT_free((EC_POINT *)g0);

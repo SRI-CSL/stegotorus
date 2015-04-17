@@ -46,6 +46,11 @@ opname(unsigned int o, char fallbackbuf[4])
 void
 debug_ack_contents(evbuffer *payload, std::ostream& os)
 {
+
+  std::ios init(NULL);
+  init.copyfmt(os);
+
+
   size_t len = evbuffer_get_length(payload);
   os << "length " << len << "; ";
 
@@ -82,6 +87,9 @@ debug_ack_contents(evbuffer *payload, std::ostream& os)
 
   for (i += 4; i < len; i++)
     os << (unsigned int)buf[i];
+
+  os.copyfmt(init);
+
 }
 
 

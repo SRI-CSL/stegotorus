@@ -363,7 +363,7 @@ test_socks_socks5_request_reply(void *data)
 
   evbuffer_remove(s->dest,rep2,255);
 
-  tt_assert(rep2[3] = SOCKS5_ATYP_IPV6);
+  tt_assert(rep2[3] == SOCKS5_ATYP_IPV6);
   /* Test returned address against inet_pton(d:1:5:e:a:5:e:0) */
   tt_mem_op(rep2+4, ==,
             "\x00\x0d\x00\x01\x00\x05\x00\x0e\x00"

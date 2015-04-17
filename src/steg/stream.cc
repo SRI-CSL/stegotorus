@@ -430,7 +430,7 @@ char *generateBoundary(){
   } else {
     // the length will be between 10 and 70
     int buffz = 11 + (rand() % 60);
-    char *buff = (char *)xzalloc(buffz);
+    char *buff = (char *)xzalloc(buffz + 1);
     
     
     for(int i = 0; i < buffz; i++){

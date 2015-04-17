@@ -526,12 +526,13 @@ pidfile::pidfile(std::string const& p)
 
   std::ostringstream ss;
   ss << getpid() << '\n';
-  const char *b = ss.str().c_str();
+  char *b = xstrdup(ss.str().c_str());
   size_t n = ss.str().size();
 
   int f = open(path.c_str(), O_WRONLY|O_CREAT|O_EXCL, 0666);
   if (f == -1) {
     errcode = errno;
+    free(b);
     return;
   }
 
@@ -552,6 +553,7 @@ pidfile::pidfile(std::string const& p)
     errcode = errno;
     remove(path.c_str());
   }
+  free(b);
 }
 
 pidfile::~pidfile()

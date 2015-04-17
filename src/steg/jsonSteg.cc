@@ -634,6 +634,11 @@ deconstruct_json_body_unzipped(char* format, size_t format_length, char * body, 
 size_t 
 deconstruct_json_body(char* format, size_t format_length, char *body, size_t bodylen, char** datap, int zipped)
 {
+  //coverity thinks this can happen; i don't.
+  if(format == NULL){
+    return 0;
+  }
+  
   if(zipped){
     //unzip here
     char *decompressed_body = NULL;
@@ -773,9 +778,9 @@ http_client_JSON_receive (http_steg_t *s, struct evbuffer *dest, char* headers, 
     retval = RECV_BAD;
     goto  clean_up;
   }
-
+  
   //log_warn("<cookie = %s>", cookie);
-
+  
   if(format == NULL){
     log_warn("no cookie didn't decode to a format");
     retval = RECV_BAD;
@@ -907,6 +912,10 @@ http_server_JSON_post_receive(http_steg_t * s, struct evbuffer *dest, char* head
   /* log_warn("post headers = <headers>\n%s</headers>\n cookie_length = %" PriSize_t, headers, cookie_length); */
   
   if(get_cookie(headers, headers_length, &cookie, cookie_length) == RCODE_OK  && cookie_length > 0) {
+    if(cookie == NULL){ /* coverity is a bit thick. */
+      log_warn("cookie NULL");
+      return RECV_BAD;
+    }
     format = deconstruct_json_cookie(cookie, secret);
     if (format == NULL) {
       log_warn("invalid cookie received");

@@ -1078,10 +1078,10 @@ init_JS_payload_pool(payloads& pl, uint32_t len, uint16_t type, uint32_t min_cap
      content_type, pl.type_payload_count[content_type]); 
   log_debug("min_payload_size = %d", min_payload_size); 
   log_debug("max_payload_size = %d", max_payload_size); 
-  log_debug("avg_payload_size = %f", (float)sum_payload_size/(float)cnt); 
+  log_debug("avg_payload_size = %f", (float)sum_payload_size/(float)(cnt == 0 ? 1 : cnt)); 
   log_debug("min_payload_cap  = %d", min_payload_cap); 
   log_debug("max_payload_cap  = %d", max_payload_cap); 
-  log_debug("avg_payload_cap  = %f", (float)sum_payload_cap/(float)cnt); 
+  log_debug("avg_payload_cap  = %f", (float)sum_payload_cap/(float)(cnt == 0 ? 1 : cnt)); 
   return RCODE_OK;
 }
 
@@ -1191,10 +1191,10 @@ init_HTML_payload_pool(payloads& pl, uint32_t len, uint16_t type, uint32_t min_c
      content_type, pl.type_payload_count[content_type]); 
   log_debug("min_payload_size = %d", min_payload_size); 
   log_debug("max_payload_size = %d", max_payload_size); 
-  log_debug("avg_payload_size = %f", (float)sum_payload_size/(float)cnt); 
+  log_debug("avg_payload_size = %f", (float)sum_payload_size/(float)(cnt == 0 ? 1 : cnt)); 
   log_debug("min_payload_cap  = %d", min_payload_cap); 
   log_debug("max_payload_cap  = %d", max_payload_cap); 
-  log_debug("avg_payload_cap  = %f", (float)sum_payload_cap/(float)cnt); 
+  log_debug("avg_payload_cap  = %f", (float)sum_payload_cap/(float)(cnt == 0 ? 1 : cnt)); 
   return RCODE_OK;
 }
 
@@ -1267,10 +1267,10 @@ init_PDF_payload_pool(payloads& pl, uint32_t len, uint16_t type, uint32_t min_ca
      content_type, pl.type_payload_count[content_type]); 
   log_debug("min_payload_size = %d", min_payload_size); 
   log_debug("max_payload_size = %d", max_payload_size); 
-  log_debug("avg_payload_size = %f", (float)sum_payload_size/(float)cnt); 
+  log_debug("avg_payload_size = %f", (float)sum_payload_size/(float)(cnt == 0 ? 1 : cnt)); 
   log_debug("min_payload_cap  = %d", min_payload_cap); 
   log_debug("max_payload_cap  = %d", max_payload_cap); 
-  log_debug("avg_payload_cap  = %f", (float)sum_payload_cap/(float)cnt); 
+  log_debug("avg_payload_cap  = %f", (float)sum_payload_cap/(float)(cnt == 0 ? 1 : cnt)); 
   return RCODE_OK;
 }
 
@@ -1423,7 +1423,7 @@ init_SWF_payload_pool(payloads& pl, uint32_t len, uint16_t type, uint32_t /*unus
      content_type, pl.type_payload_count[content_type]); 
   log_debug("min_payload_size = %d", min_payload_size); 
   log_debug("max_payload_size = %d", max_payload_size); 
-  log_debug("avg_payload_size = %f", (float)sum_payload_size/(float)cnt); 
+  log_debug("avg_payload_size = %f", (float)sum_payload_size/(float)(cnt == 0 ? 1 : cnt)); 
   return RCODE_OK;
 }
 

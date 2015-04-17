@@ -77,7 +77,7 @@ embed_steg_config_t::embed_steg_config_t(config_t *cfg)
   if (!trace_file)
     log_abort("opening " STEG_TRACES_DIR "embed.txt: %s", strerror(errno));
 
-  int num_traces;
+  int num_traces = 0;
   if (fscanf(trace_file, "%d", &num_traces) < 1)
     log_abort("couldn't read number of traces");
 

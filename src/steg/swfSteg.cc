@@ -59,6 +59,10 @@ swf_wrap(payloads& pl, char* inbuf, size_t in_len, char*& outbuf, size_t out_sz,
    tmp_buf = (char *)xmalloc(tmp_buf_len);
    tmp_buf2 = (char *)xmalloc(tmp_buf_len);
 
+   if((tmp_buf == NULL) || (tmp_buf == NULL)){
+     goto err;
+   }
+
    if (parse_swf((unsigned char*) resp, resp_len, (unsigned char*) tmp_buf, tmp_buf_len, 
 		 (unsigned char*) b64_buf, b64_len, out_data_len) != RCODE_OK)
      goto err;

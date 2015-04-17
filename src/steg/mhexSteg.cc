@@ -196,6 +196,7 @@ stream_client_MHEX_receive (stream_steg_t * s, struct evbuffer *dest, struct evb
   else if(pheaders_length == 0){
     log_info("Didn't parse pheaders %" PriSize_t, pheaders_length);
     retval = RECV_INCOMPLETE;
+    goto exit;
   }
 
   /* !! at this point headers are a null terminated string freshly allocated !! */

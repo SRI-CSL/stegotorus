@@ -732,7 +732,7 @@ chop_circuit_t::maybe_send_SACK()
   // disabled for now
   return 0;
 
-
+  /*
   // Send acks aggressively if we are experiencing dead cycles *and*
   // there are blocks on the receive queue.  Otherwise, send them only
   // every 64 blocks received.  This heuristic will probably need
@@ -764,6 +764,7 @@ chop_circuit_t::maybe_send_SACK()
     log_debug(this, "sending ACK: %s", ackdump.str().c_str());
   }
   return send_special(op_SACK, ackp);
+  */
 }
 
 
