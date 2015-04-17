@@ -1,6 +1,4 @@
 #!/bin/bash
-rm -rf cov-int
-cov-build --dir cov-int make
 rm stegotorus.tgz
 tar czvf stegotorus.tgz cov-int
 curl --form token=9HTLY4Sodl9-Lcs54orMXQ \
