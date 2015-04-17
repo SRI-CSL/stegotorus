@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 rm -rf cov-int
 cov-build --dir cov-int make
 rm stegotorus.tgz

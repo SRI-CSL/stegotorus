@@ -59,7 +59,7 @@ swf_wrap(payloads& pl, char* inbuf, size_t in_len, char*& outbuf, size_t out_sz,
    tmp_buf = (char *)xmalloc(tmp_buf_len);
    tmp_buf2 = (char *)xmalloc(tmp_buf_len);
 
-   if((tmp_buf == NULL) || (tmp_buf == NULL)){
+   if((tmp_buf == NULL) || (tmp_buf2 == NULL)){
      goto err;
    }
 

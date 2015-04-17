@@ -250,6 +250,8 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
     steg_targets.push_back(steg_new(options[i], this));
   }
 
+  free(cmode);
+  
   goto success;
     
  usage:
@@ -267,7 +269,6 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
   return false;
 
  success:
-  free(cmode);
   return true;
   
 }

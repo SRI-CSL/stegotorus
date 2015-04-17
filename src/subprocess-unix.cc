@@ -542,6 +542,7 @@ pidfile::pidfile(std::string const& p)
       errcode = errno;
       close(f);
       remove(path.c_str());
+      free(b);
       return;
     }
     n -= r;
