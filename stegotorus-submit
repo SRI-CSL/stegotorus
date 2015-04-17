@@ -1,0 +1,11 @@
+#!bin/bash
+rm -rf cov-int
+cov-build --dir cov-int make
+rm stegotorus.tgz
+tar czvf stegotorus.tgz cov-int
+curl --form token=9HTLY4Sodl9-Lcs54orMXQ \
+  --form email=iam@csl.sri.com \
+  --form file=@stegotorus.tgz \
+  --form version="Final DEFIANCE version" \
+  --form description="Final DEFIANCE version" \
+  https://scan.coverity.com/builds?project=Stegotorus
