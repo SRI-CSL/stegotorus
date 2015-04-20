@@ -3,6 +3,7 @@
  */
 
 #include "util.h"
+#include "rng.h"
 #include "payloads.h"
 #include "jsonSteg.h"
 #include "base64.h"
@@ -224,7 +225,7 @@ random_format()
   std::string field;
   
   while((fields[K_INT] == 0) || (fields[K_STRING] == 0) || (fields[K_DATA] == 0)){
-    int toss = rand() % 3;
+    int toss = randomg() % 3;
     
     if((toss == K_STRING) &&  fields[K_STRING] != 0){ continue; }   //too much stuff considered bloat
     
@@ -286,11 +287,11 @@ std::string
 random_string(int minlength, int maxlength)
 {
   std::string retval;
-  int length = minlength + (rand() % (maxlength - minlength)) + 1;
+  int length = minlength + (randomg() % (maxlength - minlength)) + 1;
   int c, offset = 0;
   
   while (offset < length) {
-    c = rand() % (127 - 33) + 33;
+    c = randomg() % (127 - 33) + 33;
 
     if(!isalnum(c)){
       continue;
@@ -308,7 +309,7 @@ random_integer(int maxdigits)
 {
   std::string retval;
   int digits = maxdigits + 1, moduli = pow(10, digits);
-  int r = rand() % moduli;
+  int r = randomg() % moduli;
   char ibuff[digits + 1];
   sprintf(ibuff, "%d", r);
   retval.append(ibuff);

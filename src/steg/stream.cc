@@ -183,7 +183,7 @@ stream_steg_t::transmit_room(size_t pref, size_t lo, size_t hi)
       goto exit_point; 
     }
 
-    if (rand() % 5 != 0) {
+    if (randomg() % 5 != 0) {
       error = 3;
       goto exit_point;
     }
@@ -425,16 +425,16 @@ char *generateBoundary(){
     boundaryOK = true;
   }
   
-  if((common_boundaries_length > 0) && (rand() % 2) == 0){
-    return strdup(common_boundaries[rand() % 4]);
+  if((common_boundaries_length > 0) && (randomg() % 2) == 0){
+    return strdup(common_boundaries[randomg() % 4]);
   } else {
     // the length will be between 10 and 70
-    int buffz = 11 + (rand() % 60);
+    int buffz = 11 + (randomg() % 60);
     char *buff = (char *)xzalloc(buffz + 1);
     
     
     for(int i = 0; i < buffz; i++){
-      buff[i] =  yahexchar[rand() % yahexcharlen];
+      buff[i] =  yahexchar[randomg() % yahexcharlen];
     }
     buff[buffz] = '\0';
     

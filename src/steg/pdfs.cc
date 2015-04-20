@@ -303,7 +303,7 @@ get_cover_pdf(pdf_pool_p pool, int size)
 
     /* try and get a random one first */
     while((retval == NULL) && (fails++ < 10)){
-      index = rand() % pool->the_pdfs_offset;
+      index = randomg() % pool->the_pdfs_offset;
 
       log_debug("INDEX: get_cover_pdf got random index %d", index);
 

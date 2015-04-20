@@ -99,9 +99,9 @@ construct_jpeg_cookie_aux(jel_knobs_t* knobs, int message_length, const char * s
   char content[64];
   size_t content_length = 0;
   if( knobs->embed_length ){
-    snprintf(content, 64, "0 padding %d", rand());
+    snprintf(content, 64, "0 padding %d", randomg());
   } else {
-    snprintf(content, 64, "%d padding %d", message_length, rand());
+    snprintf(content, 64, "%d padding %d", message_length, randomg());
   }
   content_length = strlen(content);
   uchar* data  = defiant_pwd_encrypt(secret, (uchar *)content, content_length, &data_length);

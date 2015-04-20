@@ -3,6 +3,7 @@
  */
 
 #include "util.h"
+#include "rng.h"
 #include "images.h"
 #include "oshacks.h"
 
@@ -251,7 +252,7 @@ image_p get_image(image_pool_p pool, int size){
     int index, fails = 0;
     /* try and get a random one first */
     while((retval == NULL) && (fails++ < 10)){
-      index = rand() % pool->the_images_offset;
+      index = randomg() % pool->the_images_offset;
       retval = pool->the_images[index];
       if(retval->capacity > size){
         return retval;

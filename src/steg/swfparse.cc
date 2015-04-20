@@ -4,6 +4,7 @@
 
 #include <event2/buffer.h>
 #include "util.h"
+#include "rng.h"
 #include "swfSteg.h"
 #include "compression.h"
 #include "connections.h"
@@ -77,7 +78,7 @@ add_definesprite_tag(unsigned char*& out_swf, size_t& out_sz, unsigned char*& b6
 
 
   while(b64_len > 0) {
-    unsigned short cnt = rand() % 20 + 1;
+    unsigned short cnt = randomg() % 20 + 1;
     ((short*) buf)[0] = (0x1a << 6) | 0x3F;
 
     if ( cnt >= b64_len)
@@ -89,7 +90,7 @@ add_definesprite_tag(unsigned char*& out_swf, size_t& out_sz, unsigned char*& b6
     buf += 4;
     buf[0] = 0x26;
     buf++;
-    buf[0] = rand() % 3;  // 0 for depth
+    buf[0] = randomg() % 3;  // 0 for depth
     buf++;
     buf[0] = 0;
     buf++;

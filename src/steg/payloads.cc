@@ -224,9 +224,9 @@ perturb_uri(char* line, size_t len) {
 	|| !strncasecmp(buf, ".jsp ", 5) || !strncasecmp(buf, ".asp ", 5))
       return 0;
 
-    if (rand() % 3 == 0) 
+    if (randomg() % 3 == 0) 
       if (buf[0] >= '0' && buf[0] <= '9')
-        buf[0] = (rand() % 8) + '1';
+        buf[0] = (randomg() % 8) + '1';
     
     buf++;
   }
@@ -434,7 +434,7 @@ gen_rfc_1123_date(char* buf, size_t buf_size) {
 
 void 
 gen_rfc_1123_expiry_date(char* buf, size_t buf_size) {
-  time_t t = time(NULL) + rand() % 10000;
+  time_t t = time(NULL) + randomg() % 10000;
   struct tm *my_tm = gmtime(&t);
   strftime(buf, buf_size, "Expires: %a, %d %b %Y %H:%M:%S GMT\r\n", my_tm);
 }
@@ -468,7 +468,7 @@ gen_response_header(const char* content_type, const char *cookie, int gzip, size
   sprintf(ptr, "Server: Apache\r\n");
   ptr = ptr + strlen(ptr);
 
-  switch(rand() % 9) {
+  switch(randomg() % 9) {
   case 1:
     sprintf(ptr, "Vary: Cookie\r\n");
     ptr = ptr + strlen(ptr);
@@ -486,7 +486,7 @@ gen_response_header(const char* content_type, const char *cookie, int gzip, size
 
   }
 
-  if (rand() % 4 == 0) {
+  if (randomg() % 4 == 0) {
     gen_rfc_1123_expiry_date(ptr, buflen - (ptr - buf));
     ptr = ptr + strlen(ptr);
   }
@@ -717,7 +717,7 @@ find_uri_type(char* buf_orig, size_t buflen) {
 
 rcode_t
 find_client_payload(payloads& pl, char* buf, size_t buflen, uint16_t type, size_t& bytes_written) {
-  unsigned int r = rand() % pl.payload_count;
+  unsigned int r = randomg() % pl.payload_count;
   unsigned int cnt = 0;
   char* inbuf = NULL;
   size_t len = 0;
@@ -1450,7 +1450,7 @@ get_next_payload (payloads& pl, int content_type, char*& buf, size_t& size, size
       pl.type_payload_count[content_type] == 0)
     return RCODE_ERROR;
 
-  r = rand() % pl.type_payload_count[content_type];
+  r = randomg() % pl.type_payload_count[content_type];
   log_debug("SERVER: picked payload with index %d", r);
 
   buf = pl.payloads[pl.type_payload[content_type][r]];
@@ -1481,7 +1481,7 @@ get_payload (payloads& pl, int content_type, int cap, char*& buf, size_t& size) 
 
 
   cnt = pl.type_payload_count[content_type];
-  r = rand() % cnt;
+  r = randomg() % cnt;
   best = r;
   first = r;
 

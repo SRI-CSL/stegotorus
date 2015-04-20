@@ -197,8 +197,8 @@ http_server_SWF_transmit(payloads& pl, struct evbuffer *source, conn_t *conn)
   char padbuf[2];
   size_t buflen = evbuffer_get_length(source);
 
-  padbuf[0] = rand() % 255;
-  padbuf[1] = rand() % 255;
+  padbuf[0] = randomg() % 255;
+  padbuf[1] = randomg() % 255;
 
   if (buflen % 3 == 2) 
     evbuffer_add(source, padbuf, 1);

@@ -530,10 +530,10 @@ stream_gen_uri(char* uri, size_t uri_sz, char* data, size_t& datalen)
   so_far = 5;
 
   while (datalen > 0 && uri_sz - so_far >= 7) {
-    unsigned int r = rand() % 4;
+    unsigned int r = randomg() % 4;
 
     if (r == 1) {
-      r = rand() % 46;
+      r = randomg() % 46;
 
       if (r < 20)
         uri[so_far++] = 'g' + r;
@@ -546,7 +546,7 @@ stream_gen_uri(char* uri, size_t uri_sz, char* data, size_t& datalen)
       datalen--;
     }
 
-    r = rand() % 8;
+    r = randomg() % 8;
 
     if (r == 0 && datalen > 0)
       uri[so_far++] = '/';

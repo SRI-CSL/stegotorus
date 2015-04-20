@@ -2,6 +2,7 @@
 
 #include "headers.h"
 #include "util.h"
+#include "rng.h"
 #include "jsonSteg.h"
 #include "jpegSteg.h"
 #include "pdfSteg.h"
@@ -82,7 +83,7 @@ bool schemes_set_scheme(int scheme, int value){
 int
 schemes_get_transmit_scheme (size_t size)
 {
-  int retval = -1, coin_toss = rand() % 4;
+  int retval = -1, coin_toss = randomg() % 4;
   
   if(enabled_schemes[URI_TRANSMIT] && size < 300){
     retval = URI_TRANSMIT;
@@ -213,7 +214,7 @@ static void
 receptions_reset (int content_type)
 {
   //periodically reset
-  if (rand() % 40 == 0) {
+  if (randomg() % 40 == 0) {
     successful_receptions[content_type] = 0;
     corrupted_receptions[content_type] = 0;
   }
@@ -425,10 +426,10 @@ schemes_gen_uri_field (char* uri, size_t uri_sz, char* data, size_t& datalen)
   so_far = 5;
 
   while (datalen > 0 && uri_sz - so_far >= 7) {
-    unsigned int r = rand() % 4;
+    unsigned int r = randomg() % 4;
 
     if (r == 1) {
-      r = rand() % 46;
+      r = randomg() % 46;
 
       if (r < 20)
         uri[so_far++] = 'g' + r;
@@ -441,7 +442,7 @@ schemes_gen_uri_field (char* uri, size_t uri_sz, char* data, size_t& datalen)
       datalen--;
     }
 
-    r = rand() % 8;
+    r = randomg() % 8;
 
     if (r == 0 && datalen > 0)
       uri[so_far++] = '/';
@@ -456,7 +457,7 @@ schemes_gen_uri_field (char* uri, size_t uri_sz, char* data, size_t& datalen)
   }
 
  retry:
-  coin_toss  = rand() % 8;
+  coin_toss  = randomg() % 8;
 
   switch(coin_toss){
   case 0:

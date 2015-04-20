@@ -84,11 +84,11 @@ embed_steg_config_t::embed_steg_config_t(config_t *cfg)
   traces.resize(num_traces);
 
   for (vector<trace_t>::iterator p = traces.begin(); p != traces.end(); ++p) {
-    int num_pkt;
+    int num_pkt = 0;
     if (fscanf(trace_file, "%d", &num_pkt) < 1)
       log_abort("couldn't read number of packets in trace %ld",
                 (long)(p - traces.begin()));
-
+    
     p->pkt_sizes.resize(num_pkt);
     p->pkt_times.resize(num_pkt);
     for (int i = 0; i < num_pkt; i++)
@@ -96,7 +96,7 @@ embed_steg_config_t::embed_steg_config_t(config_t *cfg)
         log_abort("couldn't read trace entry %ld/%d",
                   (long)(p - traces.begin()), i);
   }
-
+  
   fclose(trace_file);
   
   log_debug("read %d traces", num_traces);

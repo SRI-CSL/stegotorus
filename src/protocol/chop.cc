@@ -82,7 +82,7 @@ bool
 chop_config_t::init(int n_options, const char *const *options, modus_operandi_t &mo)
 {
   const char* defport;
-  char* cmode;
+  char* cmode = NULL;
   int listen_up;
   int i;
 
@@ -250,7 +250,6 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
     steg_targets.push_back(steg_new(options[i], this));
   }
 
-  free(cmode);
   
   goto success;
     
@@ -266,9 +265,11 @@ chop_config_t::init(int n_options, const char *const *options, modus_operandi_t 
            "192.168.1.99:11253 http 192.168.1.99:11254 skype\n"
            "\tstegotorus chop server 127.0.0.1:9005 "
            "192.168.1.99:11253 http 192.168.1.99:11254 skype");
+  free(cmode);
   return false;
 
  success:
+  free(cmode);
   return true;
   
 }

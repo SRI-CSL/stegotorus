@@ -7,6 +7,7 @@
 
 #include "protocol.h"
 #include "types.h"
+#include "rng.h"
 #include "steg/crypto.h"
 #include "chop_blk.h"
 #include "chop_conn.h"
@@ -101,9 +102,9 @@ chop_conn_t::send_block(struct evbuffer *block, chop_circuit_t* upstream)
                 upstream ? '+' : '-', upstream ? upstream->circuit_id : 0);
     struct handshake hs;
     
-    hs.random = rand();
+    hs.random = randomg();
     hs.circuit_id = upstream->circuit_id;
-    hs.random2 = rand();
+    hs.random2 = randomg();
     hs.cksum = hs.random + hs.random2 + upstream->circuit_id;
 
     if (config->shared_secret == NULL)

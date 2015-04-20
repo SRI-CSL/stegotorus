@@ -5,6 +5,7 @@
 
 #include <ctype.h>
 #include "util.h"
+#include "rng.h"
 #include "payloads.h"
 #include "jsutil.h"
 #include "strncasestr.h"
@@ -79,7 +80,7 @@ perturb_word (char *word, size_t wlen, char* buf, size_t buflen, size_t& new_wle
    if (isdigit(*cp) && wlen > 1) {
      // if the first char is a digit, replace it with a random char in keypad
      // so that we don't introduce a syntactically invalid word
-     *cp = keypad[rand()%keypadlen]; 
+     *cp = keypad[randomg()%keypadlen]; 
    }
 
    if (wlen > 1024) {
@@ -99,9 +100,9 @@ perturb_word (char *word, size_t wlen, char* buf, size_t buflen, size_t& new_wle
    while (cp < word+wlen) {
      if (isalnum(*cp) && !isxdigit(*cp)) {
        // we flip a coin to decide whether to replace *cp
-       if ((rand()%100) < prob) {
+       if ((randomg()%100) < prob) {
 	 // pick a random char from keypad
-	 *tp++ = keypad[rand()%keypadlen]; 
+	 *tp++ = keypad[randomg()%keypadlen]; 
        } 
        else {
 	 // if PERTURB_JS_DROP_NONHEX and this isn't the first char of a word,
@@ -111,14 +112,14 @@ perturb_word (char *word, size_t wlen, char* buf, size_t buflen, size_t& new_wle
 	 }
        }
      } else if (isxdigit(*cp)) {
-       if ((rand()%100) < prob && cp != word) {
+       if ((randomg()%100) < prob && cp != word) {
 	 // don't replace this char if it's the first char of a word
-	 *tp++ = hexpad[rand()%hexpadlen]; 
+	 *tp++ = hexpad[randomg()%hexpadlen]; 
        } else {
 	 *tp++ = *cp; 
        }
      } else if (*cp == '.') {
-       *tp++ = keypad[rand()%keypadlen];
+       *tp++ = keypad[randomg()%keypadlen];
      } else {
        *tp++ = *cp; 
      }

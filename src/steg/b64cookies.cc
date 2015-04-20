@@ -3,6 +3,7 @@
  */
 
 #include "util.h"
+#include "rng.h"
 #include "b64cookies.h"
 
 #include "oshacks.h"
@@ -51,13 +52,13 @@ gen_one_cookie(char *&outbuf, size_t outbuflen, const char *&inbuf, size_t inlen
   }
 
   if (inlen < 10) {
-    namelen = rand() % 5 + 1;
+    namelen = randomg() % 5 + 1;
   } 
   else {
-    namelen = rand() % 10 + 1;
+    namelen = randomg() % 10 + 1;
   }
 
-  cookielen = rand() % (inlen * 2 / 3);
+  cookielen = randomg() % (inlen * 2 / 3);
   if (cookielen > inlen - namelen)
     cookielen = inlen - namelen;
 
