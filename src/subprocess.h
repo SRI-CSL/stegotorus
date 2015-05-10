@@ -105,6 +105,7 @@ public:
 private:
   std::string path;
   int errcode;
+  int rmcode;
 };
 
 #endif

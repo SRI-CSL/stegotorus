@@ -541,7 +541,7 @@ pidfile::pidfile(std::string const& p)
     if (r < 0) {
       errcode = errno;
       close(f);
-      remove(path.c_str());
+      rmcode = remove(path.c_str());
       free(b);
       return;
     }
@@ -552,7 +552,7 @@ pidfile::pidfile(std::string const& p)
   // Sadly, close() can fail, and in this case it actually matters.
   if (close(f)) {
     errcode = errno;
-    remove(path.c_str());
+    rmcode = remove(path.c_str());
   }
   free(b);
 }
@@ -560,7 +560,7 @@ pidfile::pidfile(std::string const& p)
 pidfile::~pidfile()
 {
   if (!errcode && !path.empty())
-    remove(path.c_str());
+    rmcode = remove(path.c_str());
 }
 
 pidfile::operator bool() const
