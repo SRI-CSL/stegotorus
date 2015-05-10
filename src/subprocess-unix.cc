@@ -519,7 +519,7 @@ daemonize()
 }
 
 pidfile::pidfile(std::string const& p)
-  : path(p), errcode(0)
+  : path(p), errcode(0), rmcode(0)
 {
   if (path.empty())
     return;
@@ -542,6 +542,7 @@ pidfile::pidfile(std::string const& p)
       errcode = errno;
       close(f);
       rmcode = remove(path.c_str());
+      if(rmcode != 0){ rmcode = errno; }
       free(b);
       return;
     }
@@ -553,14 +554,17 @@ pidfile::pidfile(std::string const& p)
   if (close(f)) {
     errcode = errno;
     rmcode = remove(path.c_str());
+    if(rmcode != 0){ rmcode = errno; }
   }
   free(b);
 }
 
 pidfile::~pidfile()
 {
-  if (!errcode && !path.empty())
+  if (!errcode && !path.empty()){
     rmcode = remove(path.c_str());
+    if(rmcode != 0){ rmcode = errno; }
+  }
 }
 
 pidfile::operator bool() const
