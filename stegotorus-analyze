@@ -1,3 +1,4 @@
 #!/bin/bash
+make clean
 rm -rf cov-int
 cov-build --dir cov-int make
