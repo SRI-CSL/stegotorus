@@ -14,7 +14,7 @@ if [ -n "$VALGRIND" ]
 then
 valgrind --leak-check=yes  --dsymutil=yes --trace-children=no ${CLIENT} 2>&1 | tee 
 else
-${CLIENT} 2>&1 | tee 
+${CLIENT} #2>&1 | tee 
 fi
 
 
