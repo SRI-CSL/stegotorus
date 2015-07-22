@@ -1,7 +1,18 @@
 #!/bin/bash
+
+if [ -z $1 ];
+then
+    echo "We need the coverity token: e.g. "
+    echo  "./stegotorus-submit tHiSiSnOtMyKeY"
+    echo  "Ask Ian: iam@csl.sri.com"
+    exit 1
+else
+   COVERITY_TOKEN=$1
+fi
+
 rm stegotorus.tgz
 tar czvf stegotorus.tgz cov-int
-curl --form token=9HTLY4Sodl9-Lcs54orMXQ \
+curl --form token=${COVERITY_TOKEN} \
   --form email=iam@csl.sri.com \
   --form file=@stegotorus.tgz \
   --form version="Final DEFIANCE version" \
